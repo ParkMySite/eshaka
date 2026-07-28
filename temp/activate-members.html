@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Activate Members</title>
+    
+    <!-- Local CSS Resources -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+    
+    
+</head>
+<body>
+<div class="page-header">
+                <div class="page-header-left">
+                     <i class="bi bi-person-check"></i>
+                    <div>
+                        <h1>Activate Members</h1>
+                        <p>Search and reactivate deactivated members</p>
+                    </div>
+                </div>
+            </div>
+<div class="app-card">
+  
+    
+    <div class="content-pane">
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Branch ID</label>
+                    <select id="filterBranch" class="form-select select2-filter-tag"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Home ID</label>
+                    <select id="filterHome" class="form-select select2-filter-tag"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Deactivation Reason</label>
+                    <select id="filterReason" class="form-select select2-filter-tag"></select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="report-actions">
+                        <button id="applyFilter" class="btn btn-primary-custom">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                        <button id="resetFilter" class="btn btn-secondary-custom">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <h5 class="fs-6 mb-0"><i class="bi bi-list-ul"></i> Deactivated Members</h5>
+            </div>
+            <div>
+                <span class="stats-badge" id="recordCount">0 Records</span>
+                <span class="stats-badge ms-2" id="totalCount">Total: 0</span>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table id="membersTable" class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Member ID</th>
+                        <th>Relation</th>
+                        <th>Name</th>
+                        <th>DoB</th>
+                        <th>Gender</th>
+                        <th>Contact</th>
+                        <th>Education</th>
+                        <th>Job</th>
+                        <th>Marital Status</th>
+                        <th>Photo</th>
+                        <th>Reason</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="13" class="text-center py-5 text-muted">
+                            <i class="bi bi-funnel fs-1"></i>
+                            <h6>Apply filters to load data</h6>
+                            <p>Select filters and click "Apply Filters"</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Activate Member Modal -->
+<div class="modal fade" id="activateMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-person-check"></i> Activate Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="activateRowIndex">
+                <input type="hidden" id="activateMemberId">
+                
+                <div class="member-details-card">
+                    <div class="detail-row">
+                        <span class="label">Member ID:</span>
+                        <span class="value" id="activateMemberIdDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Name:</span>
+                        <span class="value" id="activateNameDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Relation:</span>
+                        <span class="value" id="activateRelationDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Branch ID:</span>
+                        <span class="value" id="activateBranchDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Home ID:</span>
+                        <span class="value" id="activateHomeDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Job:</span>
+                        <span class="value" id="activateJobDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Deactivation Reason:</span>
+                        <span class="value" id="activateReasonDisplay">—</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Deactivated Date:</span>
+                        <span class="value" id="activateDateDisplay">—</span>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Confirm Activation:</strong> This member will be moved back to the Members sheet with status "Active".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmActivateBtn" class="btn btn-success">
+                    <i class="bi bi-person-check"></i> Activate Member
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="image-lightbox" id="imageLightbox">
+    <div class="close-btn" id="lightboxCloseBtn">
+        <i class="bi bi-x-lg"></i>
+    </div>
+    <img id="lightboxImage" src="" alt="Enlarged Image">
+    <div class="zoom-info">Click anywhere to close</div>
+</div>
+    <script src="config.js"></script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../js/dataTables.bootstrap5.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/flatpickr.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+
+<script>
+
+ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwg9darzxFH9tFThtsbvWbKezsndUmPPhwIbALsM6ykbjmlLxrUYGK3P3Weq8Vssy_eIA/exec";
+    
+    let allDeactivatedMembers = [];
+    let dataTable = null;
+    let schemaDataCache = {};
+
+    // ================= HELPER FUNCTIONS =================
+    function showGlobalLoading(msg) {
+        if($('#global-loading-overlay').length) return;
+        $('body').append(`<div id="global-loading-overlay"><div style="background:white;padding:30px;border-radius:24px;text-align:center;"><i class="bi bi-arrow-repeat" style="font-size:48px;color:#0f3b5f;animation:spin 1s linear infinite;"></i><p>${msg}</p></div></div>`);
+        $('head').append('<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>');
+    }
+    function hideGlobalLoading() { $('#global-loading-overlay').remove(); }
+    
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    
+    function formatDateDMY(dateObj) {
+        if(!dateObj) return "";
+        let d = dateObj.getDate().toString().padStart(2,'0');
+        let m = (dateObj.getMonth()+1).toString().padStart(2,'0');
+        let y = dateObj.getFullYear();
+        return `${d}/${m}/${y}`;
+    }
+
+    function parseDateDMY(str) {
+        if(!str) return null;
+        const parts = str.split('/');
+        if(parts.length === 3) {
+            return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+        }
+        return null;
+    }
+
+    // ================= SELECT2 INIT =================
+    function initSelect2WithTags(selector, placeholder, allowClear = true) {
+        $(selector).select2({
+            theme: 'bootstrap-5',
+            placeholder: placeholder,
+            allowClear: allowClear,
+            tags: true,
+            width: '100%',
+            dropdownParent: $(selector).closest('.modal-content, .content-pane'),
+            createTag: function(params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                };
+            }
+        });
+    }
+
+    // ================= FETCH SCHEMA DATA =================
+    async function fetchSchemaData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SCHEMA_SPREADSHEET_ID}/values/${SCHEMA_TABLE_NAME}!A:L?key=${SCHEMA_API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const schemaData = {
+                branch: new Set(),
+                homeId: new Set(),
+                deactivationReasons: new Set()
+            };
+            
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0) {
+                    if(row[0]) schemaData.branch.add(row[0]);
+                    if(row[1]) schemaData.homeId.add(row[1]);
+                    if(row[11]) schemaData.deactivationReasons.add(row[11]);
+                }
+            }
+            
+            const result = {};
+            for (const key in schemaData) {
+                result[key] = Array.from(schemaData[key]).filter(Boolean).sort();
+            }
+            
+            schemaDataCache = result;
+            return result;
+        } catch(e) {
+            console.error("Error fetching schema data:", e);
+            return { branch: [], homeId: [], deactivationReasons: [] };
+        }
+    }
+
+    // ================= FETCH BRANCH AND HOME IDS =================
+    async function fetchBranchAndHomeIds() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Deactive_Members!A:P?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const branchIds = new Set();
+            const homeIds = new Set();
+            const reasons = new Set();
+            
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    // Column K (index 10) = Branch ID
+                    if(row[10]) branchIds.add(row[10]);
+                    // Column L (index 11) = Home ID
+                    if(row[11]) homeIds.add(row[11]);
+                    // Column O (index 14) = Deactivation Reason
+                    if(row[14]) reasons.add(row[14]);
+                }
+            }
+            
+            return {
+                branchIds: Array.from(branchIds).filter(Boolean).sort(),
+                homeIds: Array.from(homeIds).filter(Boolean).sort(),
+                reasons: Array.from(reasons).filter(Boolean).sort()
+            };
+        } catch(e) {
+            console.error("Error fetching branch/home IDs:", e);
+            return { branchIds: [], homeIds: [], reasons: [] };
+        }
+    }
+
+    // ================= FETCH ALL DEACTIVATED MEMBERS =================
+    async function fetchAllDeactivatedMembers() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Deactive_Members!A:P?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const members = [];
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    members.push({
+                        index: i,
+                        memberId: row[0] || '',
+                        relation: row[1] || '',
+                        name: row[2] || '',
+                        dob: row[3] || '',
+                        gender: row[4] || '',
+                        contact: row[5] || '',
+                        education: row[6] || '',
+                        maritalStatus: row[7] || '',
+                        photo: row[8] || '',
+                        remarks: row[9] || '',
+                        branchId: row[10] || '',
+                        homeId: row[11] || '',
+                        status: row[12] || 'Deactivated',
+                        job: row[13] || '',
+                        deactivationReason: row[14] || '',
+                        deactivatedDate: row[15] || ''
+                    });
+                }
+            }
+            allDeactivatedMembers = members;
+            return members;
+        } catch(e) {
+            console.error("Error fetching deactivated members:", e);
+            return [];
+        }
+    }
+
+    // ================= POPULATE FILTERS =================
+    function populateFilters(branchIds, homeIds, reasons) {
+        populateSelect2Options('#filterBranch', branchIds, 'All Branches');
+        populateSelect2Options('#filterHome', homeIds, 'All Homes');
+        populateSelect2Options('#filterReason', reasons, 'All Reasons');
+        
+        initSelect2WithTags('#filterBranch', 'All Branches');
+        initSelect2WithTags('#filterHome', 'All Homes');
+        initSelect2WithTags('#filterReason', 'All Reasons');
+    }
+
+    function populateSelect2Options(selector, options, placeholder) {
+        const $select = $(selector);
+        $select.empty();
+        $select.append(`<option value="">${placeholder}</option>`);
+        options.forEach(opt => {
+            $select.append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+        });
+    }
+
+    // ================= RENDER TABLE =================
+    function renderTable(data) {
+        if(dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+            $('#membersTable tbody').empty();
+        }
+        
+        if(!data || data.length === 0) {
+            $('#membersTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <h6>No deactivated members found</h6>
+                <p>Try adjusting your filters</p>
+            </td></tr>`);
+            $('#recordCount').text('0 Records');
+            $('#totalCount').text('Total: 0');
+            return;
+        }
+        
+        $('#recordCount').text(`${data.length} Records`);
+        $('#totalCount').text(`Total: ${data.length}`);
+        
+        dataTable = $('#membersTable').DataTable({
+            data: data,
+            columns: [
+                { data: "memberId" },
+                { data: "relation" },
+                { data: "name" },
+                { data: "dob" },
+                { data: "gender" },
+                { data: "contact" },
+                { data: "education" },
+                { data: "job" },
+                { data: "maritalStatus" },
+                { 
+                    data: null,
+                    render: function(row) {
+                        if(row.photo && row.photo.trim() !== "") {
+                            return `<img src="${escapeHtml(row.photo)}" class="photo-thumb" alt="Photo" title="Click to enlarge">`;
+                        }
+                        return '<span class="text-muted">—</span>';
+                    }
+                },
+                { 
+                    data: "deactivationReason",
+                    render: function(data) {
+                        return data ? `<span class="reason-text">${escapeHtml(data)}</span>` : '—';
+                    }
+                },
+                { data: "deactivatedDate" },
+                { 
+                    data: null,
+                    render: function(row) {
+                        return `<button class="activate-btn" data-index="${row.index}">
+                            <i class="bi bi-person-check"></i> Activate
+                        </button>`;
+                    }
+                }
+            ],
+            order: [[2, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+            language: { 
+                search: "Filter:",
+                searchPlaceholder: "Search records...",
+                emptyTable: "No records found"
+            },
+            scrollX: true,
+            autoWidth: true,
+            columnDefs: [
+                { targets: '_all', className: 'text-truncate' }
+            ],
+            dom: '<"d-flex justify-content-between align-items-center flex-wrap"lf>tip',
+            drawCallback: function() {
+                attachTableEvents();
+            }
+        });
+        attachTableEvents();
+    }
+
+    // ================= ATTACH TABLE EVENTS =================
+    function attachTableEvents() {
+        $('.activate-btn').off('click').on('click', function() {
+            const index = $(this).data('index');
+            const record = allDeactivatedMembers.find(m => m.index === index);
+            if(record) {
+                openActivateModal(record);
+            }
+        });
+    }
+
+    // ================= IMAGE LIGHTBOX =================
+    function setupImageLightbox() {
+        const lightbox = document.getElementById('imageLightbox');
+        const lightboxImg = document.getElementById('lightboxImage');
+        const closeBtn = document.getElementById('lightboxCloseBtn');
+        
+        $(document).on('click', '.photo-thumb', function(e) {
+            e.stopPropagation();
+            const imgSrc = $(this).attr('src');
+            if(imgSrc && imgSrc !== '#') {
+                lightboxImg.src = imgSrc;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            lightboxImg.src = '';
+        }
+        
+        closeBtn.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', closeLightbox);
+        
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape' && lightbox.classList.contains('active')) {
+                closeLightbox();
+            }
+        });
+    }
+
+    // ================= ACTIVATE MEMBER =================
+    function openActivateModal(record) {
+        $('#activateRowIndex').val(record.index);
+        $('#activateMemberId').val(record.memberId);
+        $('#activateMemberIdDisplay').text(record.memberId);
+        $('#activateNameDisplay').text(record.name);
+        $('#activateRelationDisplay').text(record.relation);
+        $('#activateBranchDisplay').text(record.branchId);
+        $('#activateHomeDisplay').text(record.homeId);
+        $('#activateJobDisplay').text(record.job || '');
+        $('#activateReasonDisplay').text(record.deactivationReason || 'Not specified');
+        $('#activateDateDisplay').text(record.deactivatedDate || 'Unknown');
+        
+        const modal = new bootstrap.Modal(document.getElementById('activateMemberModal'));
+        modal.show();
+    }
+
+    async function activateMember() {
+        const index = parseInt($('#activateRowIndex').val());
+        const memberId = $('#activateMemberId').val();
+        
+        const $btn = $("#confirmActivateBtn");
+        const originalHtml = $btn.html();
+        $btn.html('<i class="bi bi-arrow-repeat"></i> Activating...').prop('disabled', true);
+        showGlobalLoading("Activating member...");
+        
+        try {
+            const payload = {
+                action: "ACTIVATE_MEMBER",
+                rowIndex: index,
+                memberId: memberId
+            };
+            
+            await fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            await loadDataAfterAction();
+            
+            // Check if member still exists in Deactive_Members
+            const stillExists = allDeactivatedMembers.some(m => 
+                m.memberId === memberId
+            );
+            
+            hideGlobalLoading();
+            
+            if(stillExists) {
+                Swal.fire({ 
+                    icon: 'warning', 
+                    title: 'Partial Success', 
+                    text: 'Member may still exist in Deactive_Members sheet. Please check manually.',
+                    timer: 3000,
+                    showConfirmButton: true
+                });
+            } else {
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Activated!', 
+                    text: 'Member has been activated successfully.', 
+                    timer: 2000, 
+                    showConfirmButton: false 
+                });
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('activateMemberModal')).hide();
+            
+        } catch(err) {
+            hideGlobalLoading();
+            console.error(err);
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Error', 
+                text: 'Failed to activate member. Please try again or check the sheet manually.' 
+            });
+        } finally {
+            $btn.html(originalHtml).prop('disabled', false);
+        }
+    }
+
+    // ================= LOAD DATA AFTER ACTION =================
+    async function loadDataAfterAction() {
+        await fetchAllDeactivatedMembers();
+        const branchHomeIds = await fetchBranchAndHomeIds();
+        populateFilters(branchHomeIds.branchIds, branchHomeIds.homeIds, branchHomeIds.reasons);
+        applyFilters();
+    }
+
+    // ================= LOAD INITIAL DATA =================
+    async function loadInitialData() {
+        showGlobalLoading("Loading filter options...");
+        try {
+            await fetchSchemaData();
+            
+            const branchHomeIds = await fetchBranchAndHomeIds();
+            populateFilters(branchHomeIds.branchIds, branchHomeIds.homeIds, branchHomeIds.reasons);
+            
+            $('#membersTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+                <i class="bi bi-funnel fs-1"></i>
+                <h6>Apply filters to load data</h6>
+                <p>Select filters and click "Apply Filters"</p>
+            </td></tr>`);
+            $('#recordCount').text('0 Records');
+            $('#totalCount').text('Total: 0');
+            
+        } catch(e) {
+            console.error("Error loading initial data:", e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load filter options. Please refresh the page.' });
+        }
+        hideGlobalLoading();
+    }
+
+    // ================= FILTER FUNCTIONS =================
+    async function applyFilters() {
+        const branch = $('#filterBranch').val();
+        const home = $('#filterHome').val();
+        const reason = $('#filterReason').val();
+        
+        showGlobalLoading("Loading data...");
+        
+        try {
+            await fetchAllDeactivatedMembers();
+            
+            let filtered = allDeactivatedMembers;
+            
+            if(branch) filtered = filtered.filter(r => r.branchId === branch);
+            if(home) filtered = filtered.filter(r => r.homeId === home);
+            if(reason) filtered = filtered.filter(r => r.deactivationReason === reason);
+            
+            renderTable(filtered);
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'Filters Applied',
+                text: `Showing ${filtered.length} deactivated records`,
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } catch(e) {
+            console.error("Error applying filters:", e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load data.' });
+        }
+        
+        hideGlobalLoading();
+    }
+
+    function resetFilters() {
+        $('#filterBranch').val('').trigger('change');
+        $('#filterHome').val('').trigger('change');
+        $('#filterReason').val('').trigger('change');
+        
+        if(dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+        }
+        $('#membersTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+            <i class="bi bi-funnel fs-1"></i>
+            <h6>Apply filters to load data</h6>
+            <p>Select filters and click "Apply Filters"</p>
+        </td></tr>`);
+        $('#recordCount').text('0 Records');
+        $('#totalCount').text('Total: 0');
+        allDeactivatedMembers = [];
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Reset Complete',
+            text: 'Filters cleared. Click "Apply Filters" to load data.',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    // ================= INIT =================
+    $(async function() {
+        setupImageLightbox();
+        
+        $('#applyFilter').on('click', applyFilters);
+        $('#resetFilter').on('click', resetFilters);
+        $('#confirmActivateBtn').on('click', activateMember);
+        
+        $('.filter-section').on('keypress', function(e) {
+            if(e.which === 13) {
+                applyFilters();
+            }
+        });
+        
+        await loadInitialData();
+    });
+</script>
+</body>
+</html>

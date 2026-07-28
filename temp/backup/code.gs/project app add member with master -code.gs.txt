@@ -1,0 +1,288 @@
+// ==================== USER MANAGEMENT API - ADD ====================
+// Deploy as Web App (Execute as: "Me", Access: "Anyone")
+// Spreadsheet ID: 1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs
+
+const SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+
+// Schema table configuration
+const SCHEMA_SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+const SCHEMA_TABLE_NAME = "Tables";
+const SCHEMA_API_KEY = "AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM";
+
+function doPost(e) {
+  // Set CORS headers for response
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  try {
+    let requestData;
+    if (e.postData.type === "application/json") {
+      requestData = JSON.parse(e.postData.contents);
+    } else {
+      requestData = JSON.parse(e.postData.getDataAsString());
+    }
+    
+    const action = requestData.action;
+    
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    let result;
+    switch(action) {
+      case "ADD_MASTER":
+        result = handleAddMaster(ss, requestData);
+        break;
+      case "UPDATE_MASTER":
+        result = handleUpdateMaster(ss, requestData);
+        break;
+      case "ADD_MEMBER":
+        result = handleAddMember(ss, requestData);
+        break;
+      default:
+        result = { status: "error", error: "Unknown action: " + action };
+    }
+    
+    return createResponse(result, corsHeaders);
+    
+  } catch(error) {
+    return createResponse({ status: "error", error: error.toString() }, corsHeaders);
+  }
+}
+
+// Handle GET requests and OPTIONS preflight
+function doGet(e) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  return createResponse({ 
+    status: "success", 
+    message: "Member Management API - Add is running",
+    operations: ["ADD_MASTER", "UPDATE_MASTER", "ADD_MEMBER"]
+  }, corsHeaders);
+}
+
+// ==================== HANDLE ADD MASTER ====================
+function handleAddMaster(ss, data) {
+  let sheet = ss.getSheetByName("Master");
+  
+  if (!sheet) {
+    sheet = ss.insertSheet("Master");
+    sheet.appendRow(["Branch ID", "Home ID", "Address Line 1", "Address Line 2", 
+                     "Area", "Location", "Post Office", "District"]);
+  }
+  
+  // Add new record
+  sheet.appendRow([
+    data.branchId || "",
+    data.homeId || "",
+    data.addressLine1 || "",
+    data.addressLine2 || "",
+    data.area || "",
+    data.location || "",
+    data.postOffice || "",
+    data.district || ""
+  ]);
+  
+  return { 
+    status: "success", 
+    message: "Master record added successfully",
+    branchId: data.branchId,
+    homeId: data.homeId
+  };
+}
+
+// ==================== HANDLE UPDATE MASTER ====================
+function handleUpdateMaster(ss, data) {
+  let sheet = ss.getSheetByName("Master");
+  
+  if (!sheet) {
+    sheet = ss.insertSheet("Master");
+    sheet.appendRow(["Branch ID", "Home ID", "Address Line 1", "Address Line 2", 
+                     "Area", "Location", "Post Office", "District"]);
+  }
+  
+  // Find and update existing record
+  const rangeData = sheet.getDataRange().getValues();
+  let found = false;
+  
+  for (let i = 1; i < rangeData.length; i++) {
+    const row = rangeData[i];
+    if (row[0] === data.branchId && row[1] === data.homeId) {
+      const rowNumber = i + 1;
+      // Update all columns
+      if (data.addressLine1 !== undefined) sheet.getRange(rowNumber, 3).setValue(data.addressLine1);
+      if (data.addressLine2 !== undefined) sheet.getRange(rowNumber, 4).setValue(data.addressLine2);
+      if (data.area !== undefined) sheet.getRange(rowNumber, 5).setValue(data.area);
+      if (data.location !== undefined) sheet.getRange(rowNumber, 6).setValue(data.location);
+      if (data.postOffice !== undefined) sheet.getRange(rowNumber, 7).setValue(data.postOffice);
+      if (data.district !== undefined) sheet.getRange(rowNumber, 8).setValue(data.district);
+      found = true;
+      break;
+    }
+  }
+  
+  if (!found) {
+    // If not found, add as new
+    sheet.appendRow([
+      data.branchId || "",
+      data.homeId || "",
+      data.addressLine1 || "",
+      data.addressLine2 || "",
+      data.area || "",
+      data.location || "",
+      data.postOffice || "",
+      data.district || ""
+    ]);
+  }
+  
+  return { 
+    status: "success", 
+    message: found ? "Master record updated successfully" : "Master record added successfully",
+    branchId: data.branchId,
+    homeId: data.homeId
+  };
+}
+
+// ==================== HANDLE ADD MEMBER ====================
+function handleAddMember(ss, data) {
+  let sheet = ss.getSheetByName("Members");
+  
+  if (!sheet) {
+    sheet = ss.insertSheet("Members");
+    // Added Job column (Column N)
+    sheet.appendRow(["'`'+Member ID", "Relation", "Name", "DoB", "Gender", 
+                     "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+                     "Branch ID", "Home ID", "Status", "Job"]);
+  }
+  
+  // Check if member already exists
+  const rangeData = sheet.getDataRange().getValues();
+  let exists = false;
+  let rowNumber = -1;
+  
+  for (let i = 1; i < rangeData.length; i++) {
+    const row = rangeData[i];
+    if (row[0] === data.memberId) {
+      exists = true;
+      rowNumber = i + 1;
+      break;
+    }
+  }
+  
+  if (exists) {
+    // Update existing record
+    if (data.relation !== undefined) sheet.getRange(rowNumber, 2).setValue(data.relation);
+    if (data.name !== undefined) sheet.getRange(rowNumber, 3).setValue(data.name);
+    if (data.dob !== undefined) sheet.getRange(rowNumber, 4).setValue(data.dob);
+    if (data.gender !== undefined) sheet.getRange(rowNumber, 5).setValue(data.gender);
+    if (data.contact !== undefined) sheet.getRange(rowNumber, 6).setValue(data.contact);
+    if (data.education !== undefined) sheet.getRange(rowNumber, 7).setValue(data.education);
+    if (data.maritalStatus !== undefined) sheet.getRange(rowNumber, 8).setValue(data.maritalStatus);
+    if (data.photo !== undefined) sheet.getRange(rowNumber, 9).setValue(data.photo);
+    if (data.remarks !== undefined) sheet.getRange(rowNumber, 10).setValue(data.remarks);
+    if (data.branchId !== undefined) sheet.getRange(rowNumber, 11).setValue(data.branchId);
+    if (data.homeId !== undefined) sheet.getRange(rowNumber, 12).setValue(data.homeId);
+    if (data.status !== undefined) sheet.getRange(rowNumber, 13).setValue(data.status);
+    if (data.job !== undefined) sheet.getRange(rowNumber, 14).setValue(data.job);
+  } else {
+    // Add new record with Job column
+    sheet.appendRow([
+      data.memberId || "",
+      data.relation || "",
+      data.name || "",
+      data.dob || "",
+      data.gender || "",
+      data.contact || "",
+      data.education || "",
+      data.maritalStatus || "",
+      data.photo || "",
+      data.remarks || "",
+      data.branchId || "",
+      data.homeId || "",
+      data.status || "Active",
+      data.job || ""
+    ]);
+  }
+  
+  return { 
+    status: "success", 
+    message: exists ? "Member record updated successfully" : "Member record added successfully",
+    memberId: data.memberId
+  };
+}
+
+// ==================== CREATE RESPONSE ====================
+function createResponse(data, corsHeaders) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  
+  if (corsHeaders) {
+    for (const key in corsHeaders) {
+      output.setHeader(key, corsHeaders[key]);
+    }
+  }
+  
+  return output;
+}
+
+// ==================== INITIALIZE SHEETS ====================
+function initializeSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // Initialize Master sheet
+  let masterSheet = ss.getSheetByName("Master");
+  if (!masterSheet) {
+    masterSheet = ss.insertSheet("Master");
+  }
+  if (masterSheet.getLastRow() === 0) {
+    masterSheet.getRange(1, 1, 1, 8).setValues([
+      ["Branch ID", "Home ID", "Address Line 1", "Address Line 2", 
+       "Area", "Location", "Post Office", "District"]
+    ]);
+  }
+  
+  // Initialize Members sheet with Job column
+  let membersSheet = ss.getSheetByName("Members");
+  if (!membersSheet) {
+    membersSheet = ss.insertSheet("Members");
+  }
+  if (membersSheet.getLastRow() === 0) {
+    membersSheet.getRange(1, 1, 1, 14).setValues([
+      ["Member ID", "Relation", "Name", "DoB", "Gender", 
+       "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+       "Branch ID", "Home ID", "Status", "Job"]
+    ]);
+  }
+  
+  // Initialize Tables sheet (Schema) with sample data
+  let tablesSheet = ss.getSheetByName("Tables");
+  if (!tablesSheet) {
+    tablesSheet = ss.insertSheet("Tables");
+    // Add headers for Tables sheet
+    tablesSheet.getRange(1, 1, 1, 11).setValues([
+      ["Branch", "Home ID", "Area", "Location", "Post Office", "District", 
+       "Relation", "Gender", "Education", "Jobs", "Marital status"]
+    ]);
+    // Add sample data
+    const sampleData = [
+      ["", "", "Vpl", "VPL1", "VPL", "TVM", "Father", "Male", "SSLC", "Self-employed", "Married"],
+      ["", "", "", "", "PYD", "", "Mother", "Female", "PlusTWO", "Private", "Non-Married"],
+      ["", "", "", "", "", "", "Son", "Trans-Gender", "Degree", "PSU", "Divorced"],
+      ["", "", "", "", "", "", "Daughter", "other", "PG", "Gov", ""],
+      ["", "", "", "", "", "", "", "", "Engineering", "", ""]
+    ];
+    sampleData.forEach(row => {
+      tablesSheet.appendRow(row);
+    });
+  }
+  
+  return "Sheets initialized successfully!";
+}

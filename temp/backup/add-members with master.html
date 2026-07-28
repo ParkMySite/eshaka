@@ -1,0 +1,1489 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Member Management - Add</title>
+    
+    <!-- Local CSS Resources -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    
+    <style>
+        * { box-sizing: border-box; }
+.modal-backdrop {background-color: #fff0;}
+        body {
+           background: #ffffff00;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px 16px;
+            margin: 0;
+        }
+        .app-card {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+  .page-header {
+    padding: 15px 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+ 
+}
+.page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-header-left i {
+    font-size: 1.8rem !important;
+    background: rgb(56 143 251 / 15%) !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
+    color: #184f83 !important;
+}
+
+
+.page-header-left h1 {
+    margin: 0 !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #184f83!important;
+}
+ .page-header-left p {
+            margin: 2px 0 0;
+            opacity: 0.7;
+            font-size: 0.75rem;
+ }
+        .content-pane {
+            padding: 30px 32px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .required:after {
+            content: "*";
+            color: #dc2626;
+            margin-left: 4px;
+        }
+        .btn-primary-custom {
+            background: #0f3b5f;
+            border: none;
+            padding: 10px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-primary-custom:hover:not(:disabled) {
+            background: #0a2c46;
+            transform: translateY(-1px);
+        }
+        .btn-secondary-custom {
+            background: #64748b;
+            border: none;
+            padding: 10px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-secondary-custom:hover {
+            background: #475569;
+        }
+        .btn-success-custom {
+            background: #16a34a;
+            border: none;
+            padding: 10px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-success-custom:hover {
+            background: #15803d;
+        }
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0f3b5f;
+            box-shadow: 0 0 0 3px rgba(15,59,95,0.1);
+        }
+        .info-banner {
+            background: #eef2ff;
+            border-radius: 16px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            border-left: 5px solid #1e4a76;
+            font-size: 0.85rem;
+        }
+        .info-banner-success {
+            background: #ecfdf5;
+            border-left-color: #16a34a;
+        }
+        #global-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+          /*  backdrop-filter: blur(3px);*/
+        }
+
+        .modal-content { border-radius: 24px; }
+        .photo-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+            margin-top: 10px;
+        }
+        .photo-upload-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .members-table-container {
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .members-table-container table {
+            margin-bottom: 0;
+        }
+        .members-table-container thead {
+            background: #f8fafc;
+        }
+        .action-icons i {
+            font-size: 1.2rem;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .action-icons i.bi-pencil-square { color: #3b82f6; }
+        .action-icons i.bi-trash3 { color: #dc2626; }
+        .action-icons i:hover { opacity: 0.7; transform: scale(1.05);}
+        .stats-badge {
+            background: #e6f0fa;
+            padding: 5px 12px;
+            border-radius: 40px;
+            color: #0f5b9c;
+            font-size: 0.85rem;
+        }
+        .member-id-display {
+            background: #e6f0fa;
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #0f3b5f;
+            display: inline-block;
+        }
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 12px !important;
+            border-color: #cbd5e1 !important;
+            min-height: 42px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            line-height: 40px !important;
+        }
+        .table-photo-thumb {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        @media (max-width: 700px) {
+            .content-pane { padding: 20px; }
+        }
+        .flatpickr-input {
+            background: white;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .section-divider {
+            border-top: 2px dashed #e2e8f0;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="page-header">
+                <div class="page-header-left">
+                <i class="bi bi-people-fill"></i>
+                    <div>
+                        <h1>Member Management - Add</h1>
+                        <p>Add new members with branch details</p>
+                    </div>
+                </div>
+            </div>
+<div class="app-card">
+   
+    
+    <div class="content-pane">
+        <h4 class="mb-3"><i class="bi bi-building"></i> Master Details</h4>
+        
+        <div class="info-banner" id="branchInfoBanner">
+            <i class="bi bi-info-circle-fill"></i> Enter or select Branch ID and Home ID. If existing, address details will be auto-filled.
+        </div>
+        
+        <form id="masterForm">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label required">Branch ID</label>
+                    <select id="branchId" class="form-select select2-dropdown-master"></select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label required">Home ID</label>
+                    <select id="homeId" class="form-select select2-dropdown-master"></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Address Line 1</label>
+                    <input type="text" id="addressLine1" class="form-control" placeholder="House/Flat No., Building" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Address Line 2</label>
+                    <input type="text" id="addressLine2" class="form-control" placeholder="Street, Locality">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Area</label>
+                    <select id="area" class="form-select select2-dropdown-master"></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Location</label>
+                    <select id="location" class="form-select select2-dropdown-master"></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Post Office</label>
+                    <select id="postOffice" class="form-select select2-dropdown-master"></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">District</label>
+                    <select id="district" class="form-select select2-dropdown-master"></select>
+                </div>
+            </div>
+        </form>
+
+        <div class="section-divider"></div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <h4 class="mb-0"><i class="bi bi-person-plus"></i> Member Details</h4>
+            <button id="addMemberBtn" class="btn btn-success-custom">
+                <i class="bi bi-plus-circle"></i> Add Member
+            </button>
+        </div>
+
+        <div class="members-table-container">
+            <table class="table table-striped table-hover" id="membersTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Member ID</th>
+                        <th>Relation</th>
+                        <th>Name</th>
+                        <th>DoB</th>
+                        <th>Gender</th>
+                        <th>Contact</th>
+                        <th>Education</th>
+                        <th>Job</th>
+                        <th>Marital Status</th>
+                        <th>Photo</th>
+                        <th>Remarks</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody">
+                    <tr class="placeholder-row">
+                        <td colspan="13" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-2"></i>
+                            <h6>No members added yet</h6>
+                            <p>Click "Add Member" to start</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4">
+            <div class="action-buttons">
+                <button type="button" id="submitBtn" class="btn btn-primary-custom px-5">
+                    <i class="bi bi-cloud-upload"></i> Submit All
+                </button>
+                <button type="button" id="resetBtn" class="btn btn-secondary-custom px-4">
+                    <i class="bi bi-eraser"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Add Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="memberForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label required">Member ID</label>
+                            <div class="member-id-display" id="modalMemberIdDisplay">—</div>
+                            <input type="hidden" id="modalMemberId" name="memberId">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Relation</label>
+                            <select id="modalRelation" class="form-select select2-dropdown-modal" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Name</label>
+                            <input type="text" id="modalName" class="form-control" placeholder="Full name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Date of Birth</label>
+                            <input type="text" id="modalDob" class="form-control flatpickr-date" placeholder="DD/MM/YYYY" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Gender</label>
+                            <select id="modalGender" class="form-select select2-dropdown-modal" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Contact No.</label>
+                            <input type="tel" id="modalContact" class="form-control" placeholder="10-digit mobile number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Education</label>
+                            <select id="modalEducation" class="form-select select2-dropdown-modal" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Job</label>
+                            <select id="modalJob" class="form-select select2-dropdown-modal" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label required">Marital Status</label>
+                            <select id="modalMaritalStatus" class="form-select select2-dropdown-modal" required></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Photo</label>
+                            <div class="photo-upload-container">
+                                <div style="flex: 1;">
+                                    <input type="file" id="modalPhotoUpload" class="form-control" accept="image/*">
+                                    <small class="text-muted">Supported formats: JPG, PNG, GIF (Max 5MB)</small>
+                                </div>
+                                <div id="modalPhotoPreviewContainer" style="display: none;">
+                                    <img id="modalPhotoPreview" class="photo-preview" src="#" alt="Photo preview">
+                                    <br>
+                                    <button type="button" id="modalRemovePhotoBtn" class="btn btn-sm btn-outline-danger mt-2">
+                                        <i class="bi bi-trash3"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Remarks</label>
+                            <textarea id="modalRemarks" class="form-control" rows="2" placeholder="Any additional remarks"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="modalAddMemberBtn" class="btn btn-primary">Add Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editMemberIndex">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Member ID</label>
+                        <input type="text" id="editMemberIdDisplay" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Relation</label>
+                        <select id="editRelation" class="form-select select2-dropdown-modal-edit" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Name</label>
+                        <input type="text" id="editName" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Date of Birth</label>
+                        <input type="text" id="editDob" class="form-control flatpickr-edit-date" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Gender</label>
+                        <select id="editGender" class="form-select select2-dropdown-modal-edit" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Contact No.</label>
+                        <input type="tel" id="editContact" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Education</label>
+                        <select id="editEducation" class="form-select select2-dropdown-modal-edit" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Job</label>
+                        <select id="editJob" class="form-select select2-dropdown-modal-edit" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Marital Status</label>
+                        <select id="editMaritalStatus" class="form-select select2-dropdown-modal-edit" required></select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Photo</label>
+                        <div class="photo-upload-container">
+                            <div style="flex: 1;">
+                                <input type="file" id="editPhotoUpload" class="form-control" accept="image/*">
+                                <small class="text-muted">Upload to replace existing photo</small>
+                            </div>
+                            <div id="editPhotoPreviewContainer">
+                                <img id="editPhotoPreview" class="photo-preview" src="#" alt="Photo preview">
+                                <br>
+                                <button type="button" id="editRemovePhotoBtn" class="btn btn-sm btn-outline-danger mt-2">
+                                    <i class="bi bi-trash3"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Remarks</label>
+                        <textarea id="editRemarks" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmEditBtn" class="btn btn-primary">Update Member</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src="config.js"></script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/flatpickr.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+
+<script>
+  
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9JKan_YjBVPSjtV9fsvuB7uN5rAfGb57JCXi6rz9ajTG9Bf0yb1NkZYk2UFtXuxN2/exec";
+    
+    let members = [];
+    let editIndex = -1;
+    let flatpickrDob, flatpickrEditDob;
+    let selectedPhotoFile = null;
+    let selectedEditPhotoFile = null;
+    let currentMemberId = "";
+    let isSubmitting = false;
+    let masterDataCache = [];
+    let existingMembersCache = [];
+    let isFetchingAddress = false;
+
+    // ================= HELPER FUNCTIONS =================
+    function showGlobalLoading(msg) {
+        if($('#global-loading-overlay').length) return;
+        $('body').append(`<div id="global-loading-overlay"><div style="background:white;padding:30px;border-radius:24px;text-align:center;"><i class="bi bi-arrow-repeat" style="font-size:48px;color:#0f3b5f;animation:spin 1s linear infinite;"></i><p>${msg}</p></div></div>`);
+        $('head').append('<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>');
+    }
+    function hideGlobalLoading() { $('#global-loading-overlay').remove(); }
+    
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    
+    function formatDateDMY(dateObj) {
+        if(!dateObj) return "";
+        let d = dateObj.getDate().toString().padStart(2,'0');
+        let m = (dateObj.getMonth()+1).toString().padStart(2,'0');
+        let y = dateObj.getFullYear();
+        return `${d}/${m}/${y}`;
+    }
+
+    function parseDateDMY(str) {
+        if(!str) return null;
+        const parts = str.split('/');
+        if(parts.length === 3) {
+            return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+        }
+        return null;
+    }
+
+    // ================= PHOTO HANDLING =================
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // ================= SELECT2 DROPDOWNS =================
+    function initSelect2WithNewOption(selector, placeholder, allowClear = true) {
+        $(selector).select2({
+            theme: 'bootstrap-5',
+            placeholder: placeholder,
+            allowClear: allowClear,
+            tags: true,
+            dropdownParent: $(selector).closest('.modal-content, .content-pane'),
+            width: '100%',
+            createTag: function(params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                };
+            }
+        });
+    }
+
+    // ================= FETCH SCHEMA DATA FROM TABLES SHEET =================
+    async function fetchSchemaData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SCHEMA_SPREADSHEET_ID}/values/${SCHEMA_TABLE_NAME}!A:K?key=${SCHEMA_API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const schemaData = {
+                branch: new Set(),
+                homeId: new Set(),
+                area: new Set(),
+                location: new Set(),
+                postOffice: new Set(),
+                district: new Set(),
+                relation: new Set(),
+                gender: new Set(),
+                education: new Set(),
+                jobs: new Set(),
+                maritalStatus: new Set()
+            };
+            
+            // Skip header row (index 0)
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0) {
+                    // Column A (index 0) = Branch
+                    if(row[0]) schemaData.branch.add(row[0]);
+                    // Column B (index 1) = Home ID
+                    if(row[1]) schemaData.homeId.add(row[1]);
+                    // Column C (index 2) = Area
+                    if(row[2]) schemaData.area.add(row[2]);
+                    // Column D (index 3) = Location
+                    if(row[3]) schemaData.location.add(row[3]);
+                    // Column E (index 4) = Post Office
+                    if(row[4]) schemaData.postOffice.add(row[4]);
+                    // Column F (index 5) = District
+                    if(row[5]) schemaData.district.add(row[5]);
+                    // Column G (index 6) = Relation
+                    if(row[6]) schemaData.relation.add(row[6]);
+                    // Column H (index 7) = Gender
+                    if(row[7]) schemaData.gender.add(row[7]);
+                    // Column I (index 8) = Education
+                    if(row[8]) schemaData.education.add(row[8]);
+                    // Column J (index 9) = Jobs
+                    if(row[9]) schemaData.jobs.add(row[9]);
+                    // Column K (index 10) = Marital Status
+                    if(row[10]) schemaData.maritalStatus.add(row[10]);
+                }
+            }
+            
+            // Convert Sets to sorted arrays
+            const result = {};
+            for (const key in schemaData) {
+                result[key] = Array.from(schemaData[key]).filter(Boolean).sort();
+            }
+            
+            return result;
+        } catch(e) {
+            console.error("Error fetching schema data:", e);
+            return {
+                branch: [], homeId: [], area: [], location: [], 
+                postOffice: [], district: [], relation: [], gender: [], 
+                education: [], jobs: [], maritalStatus: []
+            };
+        }
+    }
+
+    // ================= FETCH ALL EXISTING MEMBERS =================
+    async function fetchAllExistingMembers() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Members!A:N?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const membersList = [];
+            // Skip header row (index 0)
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    membersList.push({
+                        memberId: row[0] || '',
+                        relation: row[1] || '',
+                        name: row[2] || '',
+                        dob: row[3] || '',
+                        gender: row[4] || '',
+                        contact: row[5] || '',
+                        education: row[6] || '',
+                        maritalStatus: row[7] || '',
+                        photo: row[8] || '',
+                        remarks: row[9] || '',
+                        branchId: row[10] || '',
+                        homeId: row[11] || '',
+                        status: row[12] || 'Active',
+                        job: row[13] || ''
+                    });
+                }
+            }
+            
+            existingMembersCache = membersList;
+            return membersList;
+        } catch(e) {
+            console.error("Error fetching existing members:", e);
+            existingMembersCache = [];
+            return [];
+        }
+    }
+
+    // ================= FETCH MASTER DATA =================
+    async function fetchAllMasterData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Master!A:H?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const masterData = [];
+            
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    const record = {
+                        branchId: row[0] || '',
+                        homeId: row[1] || '',
+                        addressLine1: row[2] || '',
+                        addressLine2: row[3] || '',
+                        area: row[4] || '',
+                        location: row[5] || '',
+                        postOffice: row[6] || '',
+                        district: row[7] || ''
+                    };
+                    masterData.push(record);
+                }
+            }
+            
+            masterDataCache = masterData;
+            return masterData;
+        } catch(e) {
+            console.error("Error fetching master data:", e);
+            return [];
+        }
+    }
+
+    // ================= POPULATE DROPDOWNS =================
+    function populateSelect2Options(selector, options, placeholder) {
+        const $select = $(selector);
+        $select.empty();
+        $select.append(`<option value="">${placeholder}</option>`);
+        options.forEach(opt => {
+            $select.append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+        });
+    }
+
+    async function populateAllDropdowns() {
+        showGlobalLoading("Loading dropdown options...");
+        
+        try {
+            // Fetch schema data from Tables sheet
+            const schemaData = await fetchSchemaData();
+            
+            // Also fetch existing members for cache
+            await fetchAllExistingMembers();
+            
+            // Populate master dropdowns
+            populateSelect2Options('#branchId', schemaData.branch, 'Select or type Branch ID');
+            populateSelect2Options('#homeId', schemaData.homeId, 'Select or type Home ID');
+            populateSelect2Options('#area', schemaData.area, 'Select or type Area');
+            populateSelect2Options('#location', schemaData.location, 'Select or type Location');
+            populateSelect2Options('#postOffice', schemaData.postOffice, 'Select or type Post Office');
+            populateSelect2Options('#district', schemaData.district, 'Select or type District');
+            
+            // Populate member dropdowns
+            populateSelect2Options('#modalRelation', schemaData.relation, 'Select or type Relation');
+            populateSelect2Options('#modalGender', schemaData.gender, 'Select or type Gender');
+            populateSelect2Options('#modalEducation', schemaData.education, 'Select or type Education');
+            populateSelect2Options('#modalJob', schemaData.jobs, 'Select or type Job');
+            populateSelect2Options('#modalMaritalStatus', schemaData.maritalStatus, 'Select or type Marital Status');
+            
+            // Populate edit dropdowns
+            populateSelect2Options('#editRelation', schemaData.relation, 'Select or type Relation');
+            populateSelect2Options('#editGender', schemaData.gender, 'Select or type Gender');
+            populateSelect2Options('#editEducation', schemaData.education, 'Select or type Education');
+            populateSelect2Options('#editJob', schemaData.jobs, 'Select or type Job');
+            populateSelect2Options('#editMaritalStatus', schemaData.maritalStatus, 'Select or type Marital Status');
+            
+            // Initialize all select2 with tags
+            initSelect2WithNewOption('#branchId', 'Select or type Branch ID');
+            initSelect2WithNewOption('#homeId', 'Select or type Home ID');
+            initSelect2WithNewOption('#area', 'Select or type Area');
+            initSelect2WithNewOption('#location', 'Select or type Location');
+            initSelect2WithNewOption('#postOffice', 'Select or type Post Office');
+            initSelect2WithNewOption('#district', 'Select or type District');
+            
+            initSelect2WithNewOption('#modalRelation', 'Select or type Relation');
+            initSelect2WithNewOption('#modalGender', 'Select or type Gender');
+            initSelect2WithNewOption('#modalEducation', 'Select or type Education');
+            initSelect2WithNewOption('#modalJob', 'Select or type Job');
+            initSelect2WithNewOption('#modalMaritalStatus', 'Select or type Marital Status');
+            
+            initSelect2WithNewOption('#editRelation', 'Select or type Relation');
+            initSelect2WithNewOption('#editGender', 'Select or type Gender');
+            initSelect2WithNewOption('#editEducation', 'Select or type Education');
+            initSelect2WithNewOption('#editJob', 'Select or type Job');
+            initSelect2WithNewOption('#editMaritalStatus', 'Select or type Marital Status');
+            
+            // Setup address fetch on branch/home selection
+            setupAddressFetch();
+            
+        } catch(e) {
+            console.error("Error populating dropdowns:", e);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load dropdown options. Please refresh the page.'
+            });
+        }
+        
+        hideGlobalLoading();
+    }
+
+    // ================= FETCH ADDRESS DETAILS =================
+    function setupAddressFetch() {
+        // Remove existing listeners to prevent duplicates
+        $('#branchId, #homeId').off('select2:select change');
+        
+        // Listen for changes on Branch ID and Home ID
+        $('#branchId, #homeId').on('select2:select', function(e) {
+            fetchAndFillAddress();
+        });
+        
+        // Also listen for manual input
+        $('#branchId, #homeId').on('change', function() {
+            fetchAndFillAddress();
+        });
+    }
+
+    async function fetchAndFillAddress() {
+        if(isFetchingAddress) return;
+        
+        const branchId = $('#branchId').val();
+        const homeId = $('#homeId').val();
+        
+        if(!branchId || !homeId) {
+            clearAddressFields();
+            updateMemberIdDisplay();
+            return;
+        }
+        
+        isFetchingAddress = true;
+        
+        try {
+            // Find matching record in cache
+            const match = masterDataCache.find(record => 
+                record.branchId === branchId && record.homeId === homeId
+            );
+            
+            if(match) {
+                // Fill address fields
+                $('#addressLine1').val(match.addressLine1);
+                $('#addressLine2').val(match.addressLine2);
+                $('#area').val(match.area).trigger('change');
+                $('#location').val(match.location).trigger('change');
+                $('#postOffice').val(match.postOffice).trigger('change');
+                $('#district').val(match.district).trigger('change');
+                
+                // Show success message
+                $('#branchInfoBanner')
+                    .removeClass('info-banner')
+                    .addClass('info-banner-success')
+                    .html('<i class="bi bi-check-circle-fill"></i> Address details fetched successfully! Branch and Home ID already exist. Address will be updated if changed.');
+                
+                // Show that it's existing
+                $('#addressLine1, #addressLine2, #area, #location, #postOffice, #district').css('background-color', '#f0fdf4');
+                
+                // Show toast notification
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Address Found',
+                    text: 'Address details have been auto-filled. You can modify them if needed.',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                // Clear address fields for new entry
+                clearAddressFields();
+                $('#branchInfoBanner')
+                    .removeClass('info-banner-success')
+                    .addClass('info-banner')
+                    .html('<i class="bi bi-info-circle-fill"></i> New Branch/Home combination. Please fill in the address details.');
+                
+                // Reset background colors
+                $('#addressLine1, #addressLine2, #area, #location, #postOffice, #district').css('background-color', '');
+            }
+            
+            // Update Member ID
+            updateMemberIdDisplay();
+            
+        } catch(e) {
+            console.error("Error fetching address:", e);
+        } finally {
+            isFetchingAddress = false;
+        }
+    }
+
+    function clearAddressFields() {
+        $('#addressLine1').val('');
+        $('#addressLine2').val('');
+        $('#area').val('').trigger('change');
+        $('#location').val('').trigger('change');
+        $('#postOffice').val('').trigger('change');
+        $('#district').val('').trigger('change');
+        $('#addressLine1, #addressLine2, #area, #location, #postOffice, #district').css('background-color', '');
+    }
+
+    // ================= GENERATE MEMBER ID =================
+    function generateMemberId() {
+        const branchId = $('#branchId').val();
+        const homeId = $('#homeId').val();
+        
+        if(!branchId || !homeId) {
+            return "";
+        }
+        
+        // Get all members for this branch/home from both local and cache
+        const localMembers = members.filter(m => 
+            m.branchId === branchId && m.homeId === homeId
+        );
+        
+        const cachedMembers = existingMembersCache.filter(m => 
+            m.branchId === branchId && m.homeId === homeId
+        );
+        
+        // Combine all members
+        const allMembers = [...localMembers, ...cachedMembers];
+        
+        // Find the maximum number
+        let maxNum = 0;
+        allMembers.forEach(m => {
+            if (m.memberId) {
+                const parts = m.memberId.split('-');
+                const num = parseInt(parts[parts.length - 1]);
+                if(!isNaN(num) && num > maxNum) maxNum = num;
+            }
+        });
+        
+        const nextNum = maxNum + 1;
+        return `${branchId}-${homeId}-${nextNum}`;
+    }
+
+    // ================= UPDATE MEMBER ID DISPLAY =================
+    function updateMemberIdDisplay() {
+        const newId = generateMemberId();
+        currentMemberId = newId;
+        $('#modalMemberIdDisplay').text(newId || '—');
+        $('#modalMemberId').val(newId);
+    }
+
+    // ================= RENDER MEMBERS TABLE =================
+    function renderMembersTable() {
+        const $tbody = $('#membersTableBody');
+        
+        if(members.length === 0) {
+            $tbody.html(`<tr><td colspan="13" class="text-center py-4 text-muted">
+                <i class="bi bi-inbox fs-2"></i>
+                <h6>No members added yet</h6>
+                <p>Click "Add Member" to start</p>
+            </td></tr>`);
+            return;
+        }
+        
+        let html = '';
+        members.forEach((member, index) => {
+            const photoHtml = member.photo ? 
+                `<img src="${member.photo}" class="table-photo-thumb" alt="Photo">` : 
+                '<span class="text-muted">—</span>';
+            
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(member.memberId)}</td>
+                <td>${escapeHtml(member.relation)}</td>
+                <td>${escapeHtml(member.name)}</td>
+                <td>${escapeHtml(member.dob)}</td>
+                <td>${escapeHtml(member.gender)}</td>
+                <td>${escapeHtml(member.contact)}</td>
+                <td>${escapeHtml(member.education)}</td>
+                <td>${escapeHtml(member.job || '')}</td>
+                <td>${escapeHtml(member.maritalStatus)}</td>
+                <td>${photoHtml}</td>
+                <td>${escapeHtml(member.remarks || '')}</td>
+                <td>
+                    <div class="action-icons">
+                        <i class="bi bi-pencil-square edit-member" data-index="${index}" style="cursor:pointer;" title="Edit"></i>
+                        <i class="bi bi-trash3 delete-member" data-index="${index}" style="cursor:pointer;" title="Delete"></i>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        
+        $tbody.html(html);
+        
+        // Attach events
+        $('.edit-member').off('click').on('click', function() {
+            const index = parseInt($(this).data('index'));
+            openEditModal(index);
+        });
+        
+        $('.delete-member').off('click').on('click', function() {
+            const index = parseInt($(this).data('index'));
+            const name = members[index].name;
+            Swal.fire({
+                title: 'Remove Member?',
+                text: `Remove "${name}" from the list?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Yes, remove!'
+            }).then(res => {
+                if(res.isConfirmed) {
+                    members.splice(index, 1);
+                    renderMembersTable();
+                    updateMemberIdDisplay();
+                }
+            });
+        });
+    }
+
+    // ================= OPEN ADD MEMBER MODAL =================
+    function openAddMemberModal() {
+        // Check if branch and home are selected
+        const branchId = $('#branchId').val();
+        const homeId = $('#homeId').val();
+        
+        if(!branchId || !homeId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Branch/Home Required',
+                text: 'Please select or enter Branch ID and Home ID first before adding members.'
+            });
+            return;
+        }
+        
+        // Reset form
+        $('#memberForm')[0].reset();
+        $('#modalRelation').val('').trigger('change');
+        $('#modalGender').val('').trigger('change');
+        $('#modalEducation').val('').trigger('change');
+        $('#modalJob').val('').trigger('change');
+        $('#modalMaritalStatus').val('').trigger('change');
+        $('#modalPhotoPreviewContainer').hide();
+        $('#modalPhotoPreview').attr('src', '#');
+        selectedPhotoFile = null;
+        $('#modalRemarks').val('');
+        
+        // Set default date
+        if(flatpickrDob) flatpickrDob.setDate(new Date());
+        
+        // Update member ID
+        updateMemberIdDisplay();
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('addMemberModal'));
+        modal.show();
+    }
+
+    // ================= ADD MEMBER FROM MODAL =================
+    function addMemberFromModal() {
+        const memberId = $('#modalMemberId').val();
+        const relation = $('#modalRelation').val();
+        const name = $('#modalName').val().trim();
+        const dob = $('#modalDob').val();
+        const gender = $('#modalGender').val();
+        const contact = $('#modalContact').val().trim();
+        const education = $('#modalEducation').val();
+        const job = $('#modalJob').val();
+        const maritalStatus = $('#modalMaritalStatus').val();
+        const remarks = $('#modalRemarks').val().trim();
+        const photoFile = document.getElementById('modalPhotoUpload').files[0];
+        
+        // Validate
+        if(!memberId || !relation || !name || !dob || !gender || !contact || !education || !job || !maritalStatus) {
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all required fields.' });
+            return;
+        }
+        
+        if(contact.length !== 10 || !/^[0-9]+$/.test(contact)) {
+            Swal.fire({ icon: 'warning', title: 'Invalid Contact', text: 'Please enter a valid 10-digit mobile number.' });
+            return;
+        }
+        
+        // Check if member ID already exists in local list
+        if(members.some(m => m.memberId === memberId)) {
+            Swal.fire({ icon: 'warning', title: 'Duplicate Member ID', text: 'This Member ID already exists in the list.' });
+            return;
+        }
+        
+        // Check if member ID already exists in cache (from sheet)
+        if(existingMembersCache.some(m => m.memberId === memberId)) {
+            Swal.fire({ icon: 'warning', title: 'Duplicate Member ID', text: 'This Member ID already exists in the sheet.' });
+            return;
+        }
+        
+        // Process photo
+        if(photoFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoData = e.target.result;
+                addMemberToList(memberId, relation, name, dob, gender, contact, education, job, maritalStatus, photoData, remarks);
+            };
+            reader.readAsDataURL(photoFile);
+        } else {
+            addMemberToList(memberId, relation, name, dob, gender, contact, education, job, maritalStatus, '', remarks);
+        }
+    }
+
+    function addMemberToList(memberId, relation, name, dob, gender, contact, education, job, maritalStatus, photo, remarks) {
+        const branchId = $('#branchId').val();
+        const homeId = $('#homeId').val();
+        
+        members.push({
+            branchId: branchId,
+            homeId: homeId,
+            memberId: memberId,
+            relation: relation,
+            name: name,
+            dob: dob,
+            gender: gender,
+            contact: contact,
+            education: education,
+            job: job,
+            maritalStatus: maritalStatus,
+            photo: photo,
+            remarks: remarks
+        });
+        
+        renderMembersTable();
+        bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide();
+        updateMemberIdDisplay();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Member Added!',
+            text: `${name} has been added to the list.`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    // ================= EDIT MEMBER =================
+    function openEditModal(index) {
+        editIndex = index;
+        const member = members[index];
+        
+        $('#editMemberIndex').val(index);
+        $('#editMemberIdDisplay').val(member.memberId);
+        $('#editRelation').val(member.relation).trigger('change');
+        $('#editName').val(member.name);
+        if(flatpickrEditDob) flatpickrEditDob.setDate(parseDateDMY(member.dob) || new Date());
+        $('#editGender').val(member.gender).trigger('change');
+        $('#editContact').val(member.contact);
+        $('#editEducation').val(member.education).trigger('change');
+        $('#editJob').val(member.job || '').trigger('change');
+        $('#editMaritalStatus').val(member.maritalStatus).trigger('change');
+        $('#editRemarks').val(member.remarks || '');
+        
+        if(member.photo) {
+            $('#editPhotoPreview').attr('src', member.photo);
+            $('#editPhotoPreviewContainer').show();
+        } else {
+            $('#editPhotoPreview').attr('src', '#');
+            $('#editPhotoPreviewContainer').hide();
+        }
+        
+        $('#editPhotoUpload').val('');
+        selectedEditPhotoFile = null;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editMemberModal'));
+        modal.show();
+    }
+
+    function updateMemberFromModal() {
+        const index = parseInt($('#editMemberIndex').val());
+        const relation = $('#editRelation').val();
+        const name = $('#editName').val().trim();
+        const dob = $('#editDob').val();
+        const gender = $('#editGender').val();
+        const contact = $('#editContact').val().trim();
+        const education = $('#editEducation').val();
+        const job = $('#editJob').val();
+        const maritalStatus = $('#editMaritalStatus').val();
+        const remarks = $('#editRemarks').val().trim();
+        const photoFile = document.getElementById('editPhotoUpload').files[0];
+        
+        if(!relation || !name || !dob || !gender || !contact || !education || !job || !maritalStatus) {
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all required fields.' });
+            return;
+        }
+        
+        if(contact.length !== 10 || !/^[0-9]+$/.test(contact)) {
+            Swal.fire({ icon: 'warning', title: 'Invalid Contact', text: 'Please enter a valid 10-digit mobile number.' });
+            return;
+        }
+        
+        const member = members[index];
+        member.relation = relation;
+        member.name = name;
+        member.dob = dob;
+        member.gender = gender;
+        member.contact = contact;
+        member.education = education;
+        member.job = job;
+        member.maritalStatus = maritalStatus;
+        member.remarks = remarks;
+        
+        if(photoFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                member.photo = e.target.result;
+                renderMembersTable();
+                bootstrap.Modal.getInstance(document.getElementById('editMemberModal')).hide();
+                Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+            };
+            reader.readAsDataURL(photoFile);
+        } else {
+            renderMembersTable();
+            bootstrap.Modal.getInstance(document.getElementById('editMemberModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+        }
+    }
+
+    // ================= SUBMIT ALL DATA =================
+    async function submitAllData() {
+        if(isSubmitting) return;
+        
+        const branchId = $('#branchId').val();
+        const homeId = $('#homeId').val();
+        const addressLine1 = $('#addressLine1').val().trim();
+        const addressLine2 = $('#addressLine2').val().trim();
+        const area = $('#area').val();
+        const location = $('#location').val();
+        const postOffice = $('#postOffice').val();
+        const district = $('#district').val();
+        
+        // Validate master data
+        if(!branchId || !homeId || !addressLine1 || !area || !location || !postOffice || !district) {
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all branch details.' });
+            return;
+        }
+        
+        if(members.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'No Members', text: 'Please add at least one member.' });
+            return;
+        }
+        
+        // Check if branch/home exists in master
+        const existsInMaster = masterDataCache.some(record => 
+            record.branchId === branchId && record.homeId === homeId
+        );
+        
+        isSubmitting = true;
+        const $btn = $("#submitBtn");
+        const originalHtml = $btn.html();
+        $btn.html('<i class="bi bi-arrow-repeat"></i> Submitting...').prop('disabled', true);
+        showGlobalLoading("Submitting data...");
+        
+        try {
+            // Prepare master data
+            const masterPayload = {
+                action: existsInMaster ? "UPDATE_MASTER" : "ADD_MASTER",
+                branchId: branchId,
+                homeId: homeId,
+                addressLine1: addressLine1,
+                addressLine2: addressLine2,
+                area: area,
+                location: location,
+                postOffice: postOffice,
+                district: district
+            };
+            
+            // Send master data
+            await fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(masterPayload)
+            });
+            
+            // Prepare members data with branch, home, and job
+            for(const member of members) {
+                const memberPayload = {
+                    action: "ADD_MEMBER",
+                    branchId: member.branchId,
+                    homeId: member.homeId,
+                    memberId: member.memberId,
+                    relation: member.relation,
+                    name: member.name,
+                    dob: member.dob,
+                    gender: member.gender,
+                    contact: member.contact,
+                    education: member.education,
+                    maritalStatus: member.maritalStatus,
+                    job: member.job || '',
+                    photo: member.photo || '',
+                    remarks: member.remarks || '',
+                    status: 'Active'
+                };
+                
+                await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(memberPayload)
+                });
+            }
+            
+            hideGlobalLoading();
+            
+            // Show success message
+            await Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: `${members.length} members submitted successfully!${existsInMaster ? ' (Branch details updated)' : ''}`,
+                timer: 3000,
+                showConfirmButton: false
+            });
+            
+            // Reset the form
+            resetForm();
+            
+            // Reload data to refresh dropdowns and cache
+            await populateAllDropdowns();
+            
+            // Reset member ID display
+            updateMemberIdDisplay();
+            
+        } catch(err) {
+            hideGlobalLoading();
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to submit data. Please try again.'
+            });
+        } finally {
+            isSubmitting = false;
+            $btn.html(originalHtml).prop('disabled', false);
+        }
+    }
+
+    // ================= RESET FORM =================
+    function resetForm() {
+        // Clear master form
+        $('#branchId').val('').trigger('change');
+        $('#homeId').val('').trigger('change');
+        $('#addressLine1').val('');
+        $('#addressLine2').val('');
+        $('#area').val('').trigger('change');
+        $('#location').val('').trigger('change');
+        $('#postOffice').val('').trigger('change');
+        $('#district').val('').trigger('change');
+        
+        // Reset background colors
+        $('#addressLine1, #addressLine2, #area, #location, #postOffice, #district').css('background-color', '');
+        
+        // Reset banner
+        $('#branchInfoBanner')
+            .removeClass('info-banner-success')
+            .addClass('info-banner')
+            .html('<i class="bi bi-info-circle-fill"></i> Enter or select Branch ID and Home ID. If existing, address details will be auto-filled.');
+        
+        // Clear members
+        members = [];
+        renderMembersTable();
+        updateMemberIdDisplay();
+    }
+
+    // ================= PHOTO PREVIEW SETUP =================
+    function setupPhotoPreview() {
+        // Modal photo preview
+        document.getElementById('modalPhotoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                selectedPhotoFile = file;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    $('#modalPhotoPreview').attr('src', ev.target.result);
+                    $('#modalPhotoPreviewContainer').show();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedPhotoFile = null;
+                $('#modalPhotoPreviewContainer').hide();
+            }
+        });
+        
+        $('#modalRemovePhotoBtn').on('click', function() {
+            $('#modalPhotoUpload').val('');
+            selectedPhotoFile = null;
+            $('#modalPhotoPreviewContainer').hide();
+        });
+        
+        // Edit photo preview
+        document.getElementById('editPhotoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                selectedEditPhotoFile = file;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    $('#editPhotoPreview').attr('src', ev.target.result);
+                    $('#editPhotoPreviewContainer').show();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        $('#editRemovePhotoBtn').on('click', function() {
+            $('#editPhotoUpload').val('');
+            selectedEditPhotoFile = null;
+            const idx = parseInt($('#editMemberIndex').val());
+            if(!isNaN(idx) && members[idx]) {
+                members[idx].photo = '';
+                $('#editPhotoPreviewContainer').hide();
+                renderMembersTable();
+            }
+        });
+    }
+
+    // ================= INIT FLATPICKR =================
+    function initFlatpickr() {
+        const today = new Date();
+        flatpickrDob = flatpickr("#modalDob", { 
+            dateFormat: "d/m/Y",
+            maxDate: today,
+            defaultDate: today,
+            allowInput: true,
+            clickOpens: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.input.removeAttribute("readonly");
+                instance.input.type = "text";
+            }
+        });
+        
+        flatpickrEditDob = flatpickr("#editDob", { 
+            dateFormat: "d/m/Y",
+            maxDate: today,
+            defaultDate: today,
+            allowInput: true,
+            clickOpens: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.input.removeAttribute("readonly");
+                instance.input.type = "text";
+            }
+        });
+    }
+
+    // ================= INIT =================
+    $(async function() {
+        initFlatpickr();
+        setupPhotoPreview();
+        
+        // Set default date
+        $('#modalDob').val(formatDateDMY(new Date()));
+        $('#editDob').val(formatDateDMY(new Date()));
+        
+        // Fetch master data for address lookup
+        await fetchAllMasterData();
+        
+        // Populate dropdowns from schema table
+        await populateAllDropdowns();
+        
+        // Event listeners
+        $('#addMemberBtn').on('click', openAddMemberModal);
+        $('#modalAddMemberBtn').on('click', addMemberFromModal);
+        $('#confirmEditBtn').on('click', updateMemberFromModal);
+        $('#submitBtn').on('click', submitAllData);
+        $('#resetBtn').on('click', function() {
+            resetForm();
+            Swal.fire({
+                icon: 'info',
+                title: 'Reset Complete',
+                text: 'All fields and member list have been cleared.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        });
+        
+        // Close modals on backdrop click
+        $('#addMemberModal').on('hidden.bs.modal', function() {
+            $('#modalPhotoUpload').val('');
+            selectedPhotoFile = null;
+            $('#modalPhotoPreviewContainer').hide();
+        });
+        
+        $('#editMemberModal').on('hidden.bs.modal', function() {
+            $('#editPhotoUpload').val('');
+            selectedEditPhotoFile = null;
+        });
+        
+        // Initial update
+        updateMemberIdDisplay();
+    });
+</script>
+</body>
+</html>

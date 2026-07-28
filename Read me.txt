@@ -1,0 +1,12 @@
+******************************************
+               ADMIN
+******************************************
+How to Install/Run - NOC ADMIN?
+
+1. In this folder, Open "Admin_Installer" and Run.
+2. After installation , Go to Desktop and click the shortcut " ADMIN"
+
+
+Configuration
+
+1. first go to JS folder and edit main script.js file with id, api and all required details

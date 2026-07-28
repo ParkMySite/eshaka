@@ -1,0 +1,334 @@
+// ==================== USER MANAGEMENT API - EDIT ====================
+// Deploy as Web App (Execute as: "Me", Access: "Anyone" - including anonymous)
+// Spreadsheet ID: 1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs
+
+const SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+
+// Schema table configuration
+const SCHEMA_SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+const SCHEMA_TABLE_NAME = "Tables";
+const SCHEMA_API_KEY = "AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM";
+
+function doPost(e) {
+  // Set CORS headers for response
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  try {
+    let requestData;
+    if (e.postData.type === "application/json") {
+      requestData = JSON.parse(e.postData.contents);
+    } else {
+      requestData = JSON.parse(e.postData.getDataAsString());
+    }
+    
+    const action = requestData.action;
+    
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    let result;
+    switch(action) {
+      case "UPDATE_MEMBER":
+        result = handleUpdateMember(ss, requestData);
+        break;
+      case "DEACTIVATE_MEMBER":
+        result = handleDeactivateMember(ss, requestData);
+        break;
+      case "DELETE_MEMBER":
+        result = handleDeleteMember(ss, requestData);
+        break;
+      default:
+        result = { status: "error", error: "Unknown action: " + action };
+    }
+    
+    return createResponse(result, corsHeaders);
+    
+  } catch(error) {
+    return createResponse({ 
+      status: "error", 
+      error: error.toString(),
+      stack: error.stack 
+    }, corsHeaders);
+  }
+}
+
+// Handle GET requests and OPTIONS preflight
+function doGet(e) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  return createResponse({ 
+    status: "success", 
+    message: "Member Management API - Edit is running",
+    operations: ["UPDATE_MEMBER", "DEACTIVATE_MEMBER", "DELETE_MEMBER"]
+  }, corsHeaders);
+}
+
+// ==================== HANDLE UPDATE MEMBER ====================
+function handleUpdateMember(ss, data) {
+  let sheet = ss.getSheetByName("Members");
+  
+  if (!sheet) {
+    throw new Error("Members sheet not found");
+  }
+  
+  // Support both rowNumber (new) and rowIndex (old) for backward compatibility
+  let rowNumber;
+  if (data.rowNumber !== undefined && data.rowNumber !== null) {
+    // New: rowNumber is the actual sheet row number
+    rowNumber = data.rowNumber;
+  } else if (data.rowIndex !== undefined && data.rowIndex !== null) {
+    // Old: rowIndex is zero-based, add 1 to get sheet row number
+    rowNumber = data.rowIndex + 1;
+  } else {
+    throw new Error("Row number missing for update");
+  }
+  
+  // Validate the row exists
+  const lastRow = sheet.getLastRow();
+  if (rowNumber > lastRow) {
+    throw new Error("Row does not exist. Row number: " + rowNumber + ", Last row: " + lastRow);
+  }
+  
+  // Update the record
+  // Column A (1) = Member ID
+  // Column B (2) = Relation
+  // Column C (3) = Name
+  // Column D (4) = DoB
+  // Column E (5) = Gender
+  // Column F (6) = Contact No.
+  // Column G (7) = Education
+  // Column H (8) = Marital Status
+  // Column I (9) = Photo
+  // Column J (10) = Remarks
+  // Column K (11) = Branch ID
+  // Column L (12) = Home ID
+  // Column M (13) = Status
+  // Column N (14) = Job
+  
+  if (data.relation !== undefined) sheet.getRange(rowNumber, 2).setValue(data.relation);
+  if (data.name !== undefined) sheet.getRange(rowNumber, 3).setValue(data.name);
+  if (data.dob !== undefined) sheet.getRange(rowNumber, 4).setValue(data.dob);
+  if (data.gender !== undefined) sheet.getRange(rowNumber, 5).setValue(data.gender);
+  if (data.contact !== undefined) sheet.getRange(rowNumber, 6).setValue(data.contact);
+  if (data.education !== undefined) sheet.getRange(rowNumber, 7).setValue(data.education);
+  if (data.maritalStatus !== undefined) sheet.getRange(rowNumber, 8).setValue(data.maritalStatus);
+  if (data.remarks !== undefined) sheet.getRange(rowNumber, 10).setValue(data.remarks);
+  if (data.job !== undefined) sheet.getRange(rowNumber, 14).setValue(data.job);
+  
+  // Handle photo
+  if (data.photo !== undefined) {
+    sheet.getRange(rowNumber, 9).setValue(data.photo);
+  }
+  
+  return { 
+    status: "success", 
+    message: "Member updated successfully",
+    memberId: data.memberId,
+    rowNumber: rowNumber
+  };
+}
+// ==================== HANDLE DEACTIVATE MEMBER ====================
+function handleDeactivateMember(ss, data) {
+  try {
+    const membersSheet = ss.getSheetByName("Members");
+    
+    if (!membersSheet) {
+      throw new Error("Members sheet not found");
+    }
+    
+    const rowIndex = data.rowIndex;
+    if (!rowIndex) {
+      throw new Error("Row index missing for deactivation");
+    }
+    
+    const rowNumber = rowIndex + 1;
+    
+    // Check if the row exists
+    const lastRow = membersSheet.getLastRow();
+    if (rowNumber > lastRow) {
+      throw new Error("Row does not exist. Row number: " + rowNumber + ", Last row: " + lastRow);
+    }
+    
+    // Get the member data before deleting (14 columns now including Job)
+    const memberData = membersSheet.getRange(rowNumber, 1, 1, 14).getValues()[0];
+    
+    if (!memberData || !memberData[0]) {
+      throw new Error("Member data not found at row: " + rowNumber);
+    }
+    
+    const memberId = memberData[0] || data.memberId;
+    
+    // Get or create Deactive_Members sheet
+    let deactiveSheet = ss.getSheetByName("Deactive_Members");
+    if (!deactiveSheet) {
+      deactiveSheet = ss.insertSheet("Deactive_Members");
+      // Added Job column (Column N) and Reason (Column O), Date (Column P)
+      deactiveSheet.appendRow([
+        "Member ID", "Relation", "Name", "DoB", "Gender", 
+        "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+        "Branch ID", "Home ID", "Status", "Job", "Deactivation Reason", "Deactivated Date"
+      ]);
+    }
+    
+    // Copy member data to Deactive_Members sheet with status and reason
+    const rowToCopy = [
+      memberData[0] || "", // Member ID
+      memberData[1] || "", // Relation
+      memberData[2] || "", // Name
+      memberData[3] || "", // DoB
+      memberData[4] || "", // Gender
+      memberData[5] || "", // Contact No.
+      memberData[6] || "", // Education
+      memberData[7] || "", // Marital Status
+      memberData[8] || "", // Photo
+      memberData[9] || "", // Remarks
+      memberData[10] || "", // Branch ID
+      memberData[11] || "", // Home ID
+      "Deactivated", // Status (Column M)
+      memberData[13] || "", // Job (Column N)
+      data.reason || "No reason provided", // Deactivation Reason (Column O)
+      new Date().toLocaleDateString('en-IN') // Deactivated Date (Column P)
+    ];
+    
+    deactiveSheet.appendRow(rowToCopy);
+    
+    // Delete the row from Members sheet
+    membersSheet.deleteRow(rowNumber);
+    
+    // Verify deletion
+    const verifySheet = ss.getSheetByName("Members");
+    const verifyData = verifySheet.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < verifyData.length; i++) {
+      if (verifyData[i][0] === memberId) {
+        found = true;
+        break;
+      }
+    }
+    
+    if (found) {
+      // If still found, try to find and delete by member ID
+      for (let i = 1; i < verifyData.length; i++) {
+        if (verifyData[i][0] === memberId) {
+          verifySheet.deleteRow(i + 1);
+          break;
+        }
+      }
+    }
+    
+    return { 
+      status: "success", 
+      message: "Member deactivated and moved to Deactive_Members sheet",
+      memberId: memberId,
+      rowIndex: rowIndex,
+      deactivated: true,
+      deleted: true
+    };
+    
+  } catch(error) {
+    Logger.log("Deactivation error: " + error.toString());
+    throw error;
+  }
+}
+
+// ==================== HANDLE DELETE MEMBER (Direct Delete) ====================
+function handleDeleteMember(ss, data) {
+  try {
+    const membersSheet = ss.getSheetByName("Members");
+    
+    if (!membersSheet) {
+      throw new Error("Members sheet not found");
+    }
+    
+    const memberId = data.memberId;
+    if (!memberId) {
+      throw new Error("Member ID missing for deletion");
+    }
+    
+    // Find the row by Member ID
+    const rangeData = membersSheet.getDataRange().getValues();
+    let rowNumber = -1;
+    
+    for (let i = 1; i < rangeData.length; i++) {
+      if (rangeData[i][0] === memberId) {
+        rowNumber = i + 1;
+        break;
+      }
+    }
+    
+    if (rowNumber === -1) {
+      throw new Error("Member not found with ID: " + memberId);
+    }
+    
+    // Delete the row
+    membersSheet.deleteRow(rowNumber);
+    
+    return { 
+      status: "success", 
+      message: "Member deleted successfully",
+      memberId: memberId,
+      deleted: true
+    };
+    
+  } catch(error) {
+    Logger.log("Delete error: " + error.toString());
+    throw error;
+  }
+}
+
+// ==================== CREATE RESPONSE ====================
+function createResponse(data, corsHeaders) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  
+  if (corsHeaders) {
+    for (const key in corsHeaders) {
+      output.setHeader(key, corsHeaders[key]);
+    }
+  }
+  
+  return output;
+}
+
+// ==================== INITIALIZE SHEETS ====================
+function initializeSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // Initialize Members sheet with Job column
+  let membersSheet = ss.getSheetByName("Members");
+  if (!membersSheet) {
+    membersSheet = ss.insertSheet("Members");
+  }
+  if (membersSheet.getLastRow() === 0) {
+    membersSheet.getRange(1, 1, 1, 14).setValues([
+      ["Member ID", "Relation", "Name", "DoB", "Gender", 
+       "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+       "Branch ID", "Home ID", "Status", "Job"]
+    ]);
+  }
+  
+  // Initialize Deactive_Members sheet with Job, Reason and Date columns
+  let deactiveSheet = ss.getSheetByName("Deactive_Members");
+  if (!deactiveSheet) {
+    deactiveSheet = ss.insertSheet("Deactive_Members");
+  }
+  if (deactiveSheet.getLastRow() === 0) {
+    deactiveSheet.getRange(1, 1, 1, 16).setValues([
+      ["Member ID", "Relation", "Name", "DoB", "Gender", 
+       "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+       "Branch ID", "Home ID", "Status", "Job", "Deactivation Reason", "Deactivated Date"]
+    ]);
+  }
+  
+  return "Sheets initialized successfully!";
+}

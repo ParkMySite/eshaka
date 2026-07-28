@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Master Manager - Branch & Home Details</title>
+    
+    <!-- Local CSS Resources -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+</head>
+<body>
+<div class="page-header">
+                <div class="page-header-left">
+                 <i class="bi bi-house"></i>
+                    <div>
+                        <h1>Master Manager - Branch & Home Details</h1>
+                        <p>Add, edit, and manage branch with Home/Location information</p>
+                    </div>
+                </div>
+            </div>
+<div class="app-card">
+ 
+    <div class="tab-header">
+        <button class="tab-btn active" id="tabAddBtn"><i class="bi bi-plus-circle"></i> Add Home/Location Details </button>
+        <button class="tab-btn" id="tabEditBtn"><i class="bi bi-table"></i> Manage Home/Locations</button>
+    </div>
+    
+    <!-- Tab 1: Add Branch -->
+    <div id="addPane" class="tab-pane active-pane">
+        <h4 class="mb-3"><i class="bi bi-building-add"></i> Add New Home/Location</h4>
+        
+        <div class="info-banner">
+            <i class="bi bi-info-circle-fill"></i> Fill the details below to add a new Home/Location. Branch ID and Home ID must be unique.
+        </div>
+        
+        <form id="masterForm">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="form-label required">Branch ID</label>
+                    <input type="text" id="branchId" class="form-control" placeholder="Enter Branch ID" list="branchIdList" required autocomplete="off" value ="1003">
+                    <datalist id="branchIdList"></datalist>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Home ID</label>
+                    <input type="text" id="homeId" class="form-control" placeholder="Enter Home ID" list="homeIdList" required autocomplete="off">
+                    <datalist id="homeIdList"></datalist>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Status</label>
+                    <select id="status" class="form-select select2-dropdown-master" required></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Address Line 1</label>
+                    <input type="text" id="addressLine1" class="form-control" placeholder="House/Flat No., Building" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Address Line 2</label>
+                    <input type="text" id="addressLine2" class="form-control" placeholder="Street, Locality">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Area</label>
+                    <select id="area" class="form-select select2-dropdown-master" required></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Location</label>
+                    <select id="location" class="form-select select2-dropdown-master" required></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">Post Office</label>
+                    <select id="postOffice" class="form-select select2-dropdown-master" required></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label required">District</label>
+                    <select id="district" class="form-select select2-dropdown-master" required></select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Remarks</label>
+                    <textarea id="remarks" class="form-control" rows="2" placeholder="Any additional remarks about this branch"></textarea>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <div class="action-buttons">
+                    <button type="submit" id="submitBtn" class="btn btn-primary-custom px-5">
+                        <i class="bi bi-save"></i> Add Branch
+                    </button>
+                    <button type="button" id="resetBtn" class="btn btn-secondary-custom px-4">
+                        <i class="bi bi-eraser"></i> Clear Form
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tab 2: Manage Branches -->
+    <div id="editPane" class="tab-pane">
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Branch ID</label>
+                    <select id="filterBranch" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Home ID</label>
+                    <select id="filterHome" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select id="filterStatus" class="form-select select2-filter-master">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Archived">Archived</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="report-actions">
+                        <button id="applyFilter" class="btn btn-primary-custom">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                        <button id="resetFilter" class="btn btn-secondary-custom">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                        <button id="exportCSV" class="btn btn-success-custom">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <h5 class="fs-6 mb-0"><i class="bi bi-list-ul"></i> Branch Records</h5>
+            </div>
+            <div>
+                <span class="stats-badge" id="recordCount">0 Records</span>
+                <span class="stats-badge ms-2" id="totalCount">Total: 0</span>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table id="masterTable" class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Branch ID</th>
+                        <th>Home ID</th>
+                        <th>Status</th>
+                        <th>Address Line 1</th>
+                        <th>Address Line 2</th>
+                        <th>Area</th>
+                        <th>Location</th>
+                        <th>Post Office</th>
+                        <th>District</th>
+                        <th>Remarks</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="11" class="text-center py-5 text-muted">
+                            <i class="bi bi-funnel fs-1"></i>
+                            <h6>Apply filters to load data</h6>
+                            <p>Select filters and click "Apply Filters"</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editMasterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editRowIndex">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Branch ID</label>
+                        <input type="text" id="editBranchId" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Home ID</label>
+                        <input type="text" id="editHomeId" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required">Status</label>
+                        <select id="editStatus" class="form-select select2-edit-master" required></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required">Address Line 1</label>
+                        <input type="text" id="editAddressLine1" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Address Line 2</label>
+                        <input type="text" id="editAddressLine2" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required">Area</label>
+                        <select id="editArea" class="form-select select2-edit-master" required></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required">Location</label>
+                        <select id="editLocation" class="form-select select2-edit-master" required></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required">Post Office</label>
+                        <select id="editPostOffice" class="form-select select2-edit-master" required></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label required">District</label>
+                        <select id="editDistrict" class="form-select select2-edit-master" required></select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Remarks</label>
+                        <textarea id="editRemarks" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmUpdateBtn" class="btn btn-primary">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+    <script src="config.js"></script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../js/dataTables.bootstrap5.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/flatpickr.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+
+<script>
+
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzL2LtnKfouPdFIj3p-H2da4D6C4bgaVeLweTSoBS0Y4qBDbR_ziJf1J2Ba54Cq8ShTg/exec";
+    
+    let allRecords = [];
+    let filteredRecords = [];
+    let dataTable = null;
+    let isSubmitting = false;
+
+    // ================= HELPER FUNCTIONS =================
+    function showGlobalLoading(msg) {
+        if($('#global-loading-overlay').length) return;
+        $('body').append(`<div id="global-loading-overlay"><div style="background:white;padding:30px;border-radius:24px;text-align:center;"><i class="bi bi-arrow-repeat" style="font-size:48px;color:#0f3b5f;animation:spin 1s linear infinite;"></i><p>${msg}</p></div></div>`);
+        $('head').append('<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>');
+    }
+    function hideGlobalLoading() { $('#global-loading-overlay').remove(); }
+    
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+    // ================= SELECT2 INIT - FIXED =================
+    function initSelect2(selector, placeholder, allowClear = true) {
+        $(selector).select2({
+            theme: 'bootstrap-5',
+            placeholder: placeholder,
+            allowClear: allowClear,
+            width: '100%',
+            dropdownParent: $(selector).closest('.modal-content, .content-pane, .tab-pane')
+        });
+    }
+
+    function initSelect2WithTags(selector, placeholder, allowClear = true) {
+        $(selector).select2({
+            theme: 'bootstrap-5',
+            placeholder: placeholder,
+            allowClear: allowClear,
+            tags: true,
+            width: '100%',
+            dropdownParent: $(selector).closest('.modal-content, .content-pane, .tab-pane'),
+            createTag: function(params) {
+                return {
+                    id: params.term,
+                    text: params.term,
+                    newOption: true
+                };
+            }
+        });
+    }
+
+    // ================= FETCH SCHEMA DATA =================
+    async function fetchSchemaData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SCHEMA_SPREADSHEET_ID}/values/${SCHEMA_TABLE_NAME}!A:M?key=${SCHEMA_API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const schemaData = {
+                branch: new Set(),
+                homeId: new Set(),
+                area: new Set(),
+                location: new Set(),
+                postOffice: new Set(),
+                district: new Set(),
+                status: new Set()
+            };
+            
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0) {
+                    if(row[0]) schemaData.branch.add(row[0]);
+                    if(row[1]) schemaData.homeId.add(row[1]);
+                    if(row[2]) schemaData.area.add(row[2]);
+                    if(row[3]) schemaData.location.add(row[3]);
+                    if(row[4]) schemaData.postOffice.add(row[4]);
+                    if(row[5]) schemaData.district.add(row[5]);
+                    if(row[12]) schemaData.status.add(row[12]);
+                }
+            }
+            
+            const result = {};
+            for (const key in schemaData) {
+                result[key] = Array.from(schemaData[key]).filter(Boolean).sort();
+            }
+            
+            return result;
+        } catch(e) {
+            console.error("Error fetching schema data:", e);
+            return {
+                branch: [], homeId: [], area: [], location: [], 
+                postOffice: [], district: [], status: []
+            };
+        }
+    }
+
+    // ================= FETCH MASTER DATA =================
+    async function fetchMasterData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Master!A:J?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const records = [];
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    records.push({
+                        index: i,
+                        branchId: row[0] || '',
+                        homeId: row[1] || '',
+                        addressLine1: row[2] || '',
+                        addressLine2: row[3] || '',
+                        area: row[4] || '',
+                        location: row[5] || '',
+                        postOffice: row[6] || '',
+                        district: row[7] || '',
+                        status: row[8] || 'Active',
+                        remarks: row[9] || ''
+                    });
+                }
+            }
+            allRecords = records;
+            return records;
+        } catch(e) {
+            console.error("Error fetching master data:", e);
+            return [];
+        }
+    }
+
+    // ================= FETCH BRANCH/HOME IDS FOR FILTERS =================
+    async function fetchBranchAndHomeIds() {
+        try {
+            const records = await fetchMasterData();
+            const branchIds = [...new Set(records.map(r => r.branchId).filter(Boolean))].sort();
+            const homeIds = [...new Set(records.map(r => r.homeId).filter(Boolean))].sort();
+            const statuses = [...new Set(records.map(r => r.status).filter(Boolean))].sort();
+            return { branchIds, homeIds, statuses };
+        } catch(e) {
+            console.error("Error fetching branch/home IDs:", e);
+            return { branchIds: [], homeIds: [], statuses: [] };
+        }
+    }
+
+    // ================= UPDATE DATALIST =================
+    function updateDatalists(branchIds, homeIds) {
+        const branchList = document.getElementById('branchIdList');
+        const homeList = document.getElementById('homeIdList');
+        
+        branchList.innerHTML = '';
+        homeList.innerHTML = '';
+        
+        branchIds.forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            branchList.appendChild(option);
+        });
+        
+        homeIds.forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            homeList.appendChild(option);
+        });
+    }
+
+    // ================= POPULATE DROPDOWNS =================
+    function populateSelect2Options(selector, options, placeholder) {
+        const $select = $(selector);
+        $select.empty();
+        $select.append(`<option value="">${placeholder}</option>`);
+        options.forEach(opt => {
+            $select.append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+        });
+    }
+
+    async function populateAllDropdowns() {
+        showGlobalLoading("Loading dropdown options...");
+        
+        try {
+            const schemaData = await fetchSchemaData();
+            
+            // Populate select2 dropdowns
+            populateSelect2Options('#status', schemaData.status, 'Select or type Status');
+            populateSelect2Options('#area', schemaData.area, 'Select or type Area');
+            populateSelect2Options('#location', schemaData.location, 'Select or type Location');
+            populateSelect2Options('#postOffice', schemaData.postOffice, 'Select or type Post Office');
+            populateSelect2Options('#district', schemaData.district, 'Select or type District');
+            
+            populateSelect2Options('#editStatus', schemaData.status, 'Select or type Status');
+            populateSelect2Options('#editArea', schemaData.area, 'Select or type Area');
+            populateSelect2Options('#editLocation', schemaData.location, 'Select or type Location');
+            populateSelect2Options('#editPostOffice', schemaData.postOffice, 'Select or type Post Office');
+            populateSelect2Options('#editDistrict', schemaData.district, 'Select or type District');
+            
+            // Initialize select2 with tags
+            initSelect2WithTags('#status', 'Select or type Status');
+            initSelect2WithTags('#area', 'Select or type Area');
+            initSelect2WithTags('#location', 'Select or type Location');
+            initSelect2WithTags('#postOffice', 'Select or type Post Office');
+            initSelect2WithTags('#district', 'Select or type District');
+            
+            initSelect2WithTags('#editStatus', 'Select or type Status');
+            initSelect2WithTags('#editArea', 'Select or type Area');
+            initSelect2WithTags('#editLocation', 'Select or type Location');
+            initSelect2WithTags('#editPostOffice', 'Select or type Post Office');
+            initSelect2WithTags('#editDistrict', 'Select or type District');
+            
+        } catch(e) {
+            console.error("Error populating dropdowns:", e);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load dropdown options. Please refresh the page.'
+            });
+        }
+        
+        hideGlobalLoading();
+    }
+
+    // ================= POPULATE FILTERS =================
+    function populateFilters(branchIds, homeIds, statuses) {
+        populateSelect2Options('#filterBranch', branchIds, 'All Branches');
+        populateSelect2Options('#filterHome', homeIds, 'All Homes');
+        $('#filterStatus').find('option:not([value=""])').remove();
+        statuses.forEach(opt => {
+            $('#filterStatus').append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+        });
+        
+        // Initialize filter selects
+        initSelect2('#filterBranch', 'All Branches');
+        initSelect2('#filterHome', 'All Homes');
+        initSelect2('#filterStatus', 'All Status');
+    }
+
+    // ================= RENDER TABLE =================
+    function renderTable(data) {
+        if(dataTable) {
+            dataTable.destroy();
+            dataTable = null;
+            $('#masterTable tbody').empty();
+        }
+        
+        if(!data || data.length === 0) {
+            $('#masterTable tbody').html(`<tr><td colspan="11" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <h6>No records found</h6>
+                <p>Try adjusting your filters</p>
+            </td></tr>`);
+            $('#recordCount').text('0 Records');
+            $('#totalCount').text('Total: 0');
+            return;
+        }
+        
+        $('#recordCount').text(`${data.length} Records`);
+        $('#totalCount').text(`Total: ${data.length}`);
+        
+        dataTable = $('#masterTable').DataTable({
+            data: data,
+            columns: [
+                { data: "branchId" },
+                { data: "homeId" },
+                { 
+                    data: null,
+                    render: function(row) {
+                        const status = row.status || 'Active';
+                        const statusClass = status.toLowerCase();
+                        return `<span class="status-badge ${statusClass}">${escapeHtml(status)}</span>`;
+                    }
+                },
+                { data: "addressLine1" },
+                { data: "addressLine2" },
+                { data: "area" },
+                { data: "location" },
+                { data: "postOffice" },
+                { data: "district" },
+                { data: "remarks" },
+                { 
+                    data: null,
+                    render: function(row) {
+                        return `<div class="action-icons">
+                            <i class="bi bi-pencil-square edit-record" data-index="${row.index}" style="cursor:pointer;" title="Edit"></i>
+                            <i class="bi bi-trash3 delete-record" data-index="${row.index}" style="cursor:pointer;" title="Delete"></i>
+                        </div>`;
+                    }
+                }
+            ],
+            order: [[0, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+            language: { 
+                search: "Filter:",
+                searchPlaceholder: "Search records...",
+                emptyTable: "No records found"
+            },
+            scrollX: true,
+            autoWidth: true,
+            columnDefs: [
+                { targets: '_all', className: 'text-truncate' }
+            ],
+            dom: '<"d-flex justify-content-between align-items-center flex-wrap"lf>tip',
+            drawCallback: function() {
+                attachTableEvents();
+            }
+        });
+        attachTableEvents();
+    }
+
+    // ================= ATTACH TABLE EVENTS =================
+    function attachTableEvents() {
+        $('.edit-record').off('click').on('click', function() {
+            const index = $(this).data('index');
+            const record = allRecords.find(r => r.index === index);
+            if(record) openEditModal(record);
+        });
+        
+        $('.delete-record').off('click').on('click', function() {
+            const index = $(this).data('index');
+            const record = allRecords.find(r => r.index === index);
+            if(record) deleteRecord(record);
+        });
+    }
+
+    // ================= DELETE RECORD =================
+    function deleteRecord(record) {
+        Swal.fire({
+            title: 'Delete Branch?',
+            text: `Remove "${record.branchId} - ${record.homeId}"? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Yes, delete!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                showGlobalLoading("Deleting branch...");
+                try {
+                    const payload = {
+                        action: "DELETE_MASTER",
+                        rowIndex: record.index,
+                        branchId: record.branchId,
+                        homeId: record.homeId
+                    };
+                    
+                    await fetch(APPS_SCRIPT_URL, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await loadData();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: `Master "${record.branchId} - ${record.homeId}" has been removed.`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } catch(e) {
+                    console.error("Error deleting branch:", e);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete branch.' });
+                }
+                hideGlobalLoading();
+            }
+        });
+    }
+
+    // ================= OPEN EDIT MODAL =================
+    function openEditModal(record) {
+        $('#editRowIndex').val(record.index);
+        $('#editBranchId').val(record.branchId);
+        $('#editHomeId').val(record.homeId);
+        $('#editStatus').val(record.status).trigger('change');
+        $('#editAddressLine1').val(record.addressLine1);
+        $('#editAddressLine2').val(record.addressLine2);
+        $('#editArea').val(record.area).trigger('change');
+        $('#editLocation').val(record.location).trigger('change');
+        $('#editPostOffice').val(record.postOffice).trigger('change');
+        $('#editDistrict').val(record.district).trigger('change');
+        $('#editRemarks').val(record.remarks || '');
+        
+        const modal = new bootstrap.Modal(document.getElementById('editMasterModal'));
+        modal.show();
+    }
+
+    // ================= UPDATE RECORD =================
+    async function updateRecord() {
+        const index = parseInt($('#editRowIndex').val());
+        const status = $('#editStatus').val();
+        const addressLine1 = $('#editAddressLine1').val().trim();
+        const addressLine2 = $('#editAddressLine2').val().trim();
+        const area = $('#editArea').val();
+        const location = $('#editLocation').val();
+        const postOffice = $('#editPostOffice').val();
+        const district = $('#editDistrict').val();
+        const remarks = $('#editRemarks').val().trim();
+        
+        if(!status || !addressLine1 || !area || !location || !postOffice || !district) {
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all required fields.' });
+            return;
+        }
+        
+        const $btn = $("#confirmUpdateBtn");
+        const originalHtml = $btn.html();
+        $btn.html('<i class="bi bi-arrow-repeat"></i> Updating...').prop('disabled', true);
+        showGlobalLoading("Updating...");
+        
+        try {
+            const payload = {
+                action: "UPDATE_MASTER",
+                rowIndex: index,
+                status: status,
+                addressLine1: addressLine1,
+                addressLine2: addressLine2,
+                area: area,
+                location: location,
+                postOffice: postOffice,
+                district: district,
+                remarks: remarks
+            };
+            
+            await fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await loadData();
+            
+            hideGlobalLoading();
+            Swal.fire({ icon: 'success', title: 'Updated!', timer: 1500, showConfirmButton: false });
+            bootstrap.Modal.getInstance(document.getElementById('editMasterModal')).hide();
+            
+        } catch(e) {
+            hideGlobalLoading();
+            console.error(e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update branch.' });
+        } finally {
+            $btn.html(originalHtml).prop('disabled', false);
+        }
+    }
+
+    // ================= ADD NEW RECORD =================
+    async function addNewRecord(e) {
+        e.preventDefault();
+        
+        if(isSubmitting) return;
+        
+        const branchId = $('#branchId').val().trim();
+        const homeId = $('#homeId').val().trim();
+        const status = $('#status').val();
+        const addressLine1 = $('#addressLine1').val().trim();
+        const addressLine2 = $('#addressLine2').val().trim();
+        const area = $('#area').val();
+        const location = $('#location').val();
+        const postOffice = $('#postOffice').val();
+        const district = $('#district').val();
+        const remarks = $('#remarks').val().trim();
+        
+        if(!branchId || !homeId || !status || !addressLine1 || !area || !location || !postOffice || !district) {
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all required fields.' });
+            return;
+        }
+        
+        // Check if branch/home already exists
+        if(allRecords.some(r => r.branchId === branchId && r.homeId === homeId)) {
+            Swal.fire({ 
+                icon: 'warning', 
+                title: 'Duplicate Entry', 
+                text: `Branch "${branchId} - ${homeId}" already exists. Please use a unique combination.` 
+            });
+            return;
+        }
+        
+        isSubmitting = true;
+        const $btn = $("#submitBtn");
+        const originalHtml = $btn.html();
+        $btn.html('<i class="bi bi-arrow-repeat"></i> Adding...').prop('disabled', true);
+        showGlobalLoading("Adding branch...");
+        
+        try {
+            const payload = {
+                action: "ADD_MASTER",
+                branchId: branchId,
+                homeId: homeId,
+                status: status,
+                addressLine1: addressLine1,
+                addressLine2: addressLine2,
+                area: area,
+                location: location,
+                postOffice: postOffice,
+                district: district,
+                remarks: remarks
+            };
+            
+            await fetch(APPS_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await loadData();
+            
+            hideGlobalLoading();
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Added!', 
+                text: `Master "${branchId} - ${homeId}" has been added successfully.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+            resetForm();
+            
+        } catch(e) {
+            hideGlobalLoading();
+            console.error(e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to add branch.' });
+        } finally {
+            isSubmitting = false;
+            $btn.html(originalHtml).prop('disabled', false);
+        }
+    }
+
+    // ================= RESET FORM =================
+    function resetForm() {
+        $('#branchId').val('');
+        $('#homeId').val('');
+        $('#status').val('').trigger('change');
+        $('#addressLine1').val('');
+        $('#addressLine2').val('');
+        $('#area').val('').trigger('change');
+        $('#location').val('').trigger('change');
+        $('#postOffice').val('').trigger('change');
+        $('#district').val('').trigger('change');
+        $('#remarks').val('');
+    }
+
+    // ================= LOAD DATA =================
+    async function loadData() {
+        showGlobalLoading("Loading data...");
+        try {
+            const records = await fetchMasterData();
+            const { branchIds, homeIds, statuses } = await fetchBranchAndHomeIds();
+            
+            // Update datalists for suggestions
+            updateDatalists(branchIds, homeIds);
+            
+            populateFilters(branchIds, homeIds, statuses);
+            
+            applyFilters();
+            
+        } catch(e) {
+            console.error("Error loading data:", e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load data.' });
+        }
+        hideGlobalLoading();
+    }
+
+    // ================= FILTER FUNCTIONS =================
+    function applyFilters() {
+        const branch = $('#filterBranch').val();
+        const home = $('#filterHome').val();
+        const status = $('#filterStatus').val();
+        
+        let filtered = allRecords;
+        
+        if(branch) filtered = filtered.filter(r => r.branchId === branch);
+        if(home) filtered = filtered.filter(r => r.homeId === home);
+        if(status) filtered = filtered.filter(r => r.status === status);
+        
+        filteredRecords = filtered;
+        renderTable(filtered);
+    }
+
+    function resetFilters() {
+        $('#filterBranch').val('').trigger('change');
+        $('#filterHome').val('').trigger('change');
+        $('#filterStatus').val('').trigger('change');
+        applyFilters();
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Reset Complete',
+            text: 'Filters cleared. Showing all records.',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    // ================= EXPORT CSV =================
+    function exportCSV() {
+        const data = dataTable ? dataTable.data().toArray() : filteredRecords;
+        if(!data || data.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'No Data', text: 'No records to export.', timer: 2000, showConfirmButton: false });
+            return;
+        }
+        
+        const headers = ['Branch ID', 'Home ID', 'Status', 'Address Line 1', 'Address Line 2', 
+                         'Area', 'Location', 'Post Office', 'District', 'Remarks'];
+        
+        let csv = headers.join(',') + '\n';
+        
+        data.forEach(row => {
+            const values = [
+                row.branchId || '',
+                row.homeId || '',
+                row.status || '',
+                row.addressLine1 || '',
+                row.addressLine2 || '',
+                row.area || '',
+                row.location || '',
+                row.postOffice || '',
+                row.district || '',
+                row.remarks || ''
+            ];
+            csv += values.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',') + '\n';
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'Master_Branches_Report.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        Swal.fire({ icon: 'success', title: 'Exported!', text: `${data.length} records exported.`, timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+    }
+
+    // ================= SWITCH TAB =================
+    function switchTab(tab) {
+        if(tab === 'add') {
+            $("#addPane").addClass("active-pane");
+            $("#editPane").removeClass("active-pane");
+            $("#tabAddBtn").addClass("active");
+            $("#tabEditBtn").removeClass("active");
+        } else {
+            $("#editPane").addClass("active-pane");
+            $("#addPane").removeClass("active-pane");
+            $("#tabEditBtn").addClass("active");
+            $("#tabAddBtn").removeClass("active");
+            loadData();
+        }
+    }
+
+    // ================= INIT =================
+    $(async function() {
+        await populateAllDropdowns();
+        
+        // Event listeners for Add tab
+        $('#masterForm').on('submit', addNewRecord);
+        $('#resetBtn').on('click', function() {
+            resetForm();
+            Swal.fire({
+                icon: 'info',
+                title: 'Cleared',
+                text: 'Form has been cleared.',
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        });
+        
+        // Event listeners for Edit tab
+        $('#applyFilter').on('click', applyFilters);
+        $('#resetFilter').on('click', resetFilters);
+        $('#exportCSV').on('click', exportCSV);
+        $('#confirmUpdateBtn').on('click', updateRecord);
+        
+        // Tab switching
+        $('#tabAddBtn').on('click', () => switchTab('add'));
+        $('#tabEditBtn').on('click', () => switchTab('edit'));
+        
+        // Enter key support for filters
+        $('.filter-section').on('keypress', function(e) {
+            if(e.which === 13) {
+                applyFilters();
+            }
+        });
+        
+        // Initial load for edit tab
+        await loadData();
+    });
+</script>
+</body>
+</html>

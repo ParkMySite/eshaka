@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Data</title>
+    
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .secure-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #0f5b9c 0%, #1a4b7a 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 16px 16px 0 0;
+        }
+        .page-header h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .page-header i {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        .content-card {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            min-height: 400px;
+        }
+        .member-info-banner {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px 30px;
+            border-left: 4px solid #0f5b9c;
+        }
+        .member-info-banner .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #1e293b;
+        }
+        .member-info-banner .info-item i {
+            color: #0f5b9c;
+        }
+        .member-info-banner .info-item strong {
+            font-weight: 600;
+        }
+        
+        .access-denied {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .access-denied.active {
+            display: block;
+        }
+        .access-denied i {
+            font-size: 4rem;
+            color: #dc2626;
+            display: block;
+            margin-bottom: 15px;
+        }
+        .access-denied h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .access-denied p {
+            color: #64748b;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .loading-overlay.hidden {
+            display: none;
+        }
+        .loading-box {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .loading-box p {
+            margin-top: 12px;
+            color: #64748b;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-badge.active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .data-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .data-card .label {
+            font-weight: 500;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+        .data-card .value {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 0.95rem;
+        }
+        
+        @media (max-width: 768px) {
+            .member-info-banner {
+                flex-direction: column;
+                gap: 6px;
+            }
+            .data-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p>Verifying access...</p>
+    </div>
+</div>
+
+<div class="secure-container">
+    <!-- Access Denied -->
+    <div class="access-denied" id="accessDenied">
+        <i class="bi bi-lock-fill"></i>
+        <h3>Access Denied</h3>
+        <p>You are not authorized to view this page.</p>
+        <p style="font-size: 0.85rem; color: #94a3b8;">Please login to the member portal first.</p>
+    </div>
+    
+    <!-- Page Content -->
+    <div class="content-section" id="contentSection">
+        <div class="page-header">
+            <h4><i class="bi bi-person-badge-fill"></i> My Member Data</h4>
+        </div>
+        
+        <div class="content-card">
+            <div class="member-info-banner" id="memberInfoBanner">
+                <div class="info-item">
+                    <i class="bi bi-building"></i>
+                    <span>Branch: <strong id="displayBranchId">—</strong></span>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-house"></i>
+                    <span>Home: <strong id="displayHomeId">—</strong></span>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-person"></i>
+                    <span>Member: <strong id="displayMemberName">—</strong></span>
+                </div>
+                <div class="info-item">
+                    <i class="bi bi-envelope"></i>
+                    <span id="displayMemberEmail">—</span>
+                </div>
+                <div class="info-item">
+                    <span class="status-badge active">Active</span>
+                </div>
+            </div>
+            
+            <h5 class="mb-3"><i class="bi bi-list-ul"></i> Member Information</h5>
+            
+            <div id="memberDataContainer">
+                <div class="data-card">
+                    <span class="label"><i class="bi bi-person"></i> Full Name</span>
+                    <span class="value" id="dataName">—</span>
+                </div>
+                <div class="data-card">
+                    <span class="label"><i class="bi bi-envelope"></i> Email Address</span>
+                    <span class="value" id="dataEmail">—</span>
+                </div>
+                <div class="data-card">
+                    <span class="label"><i class="bi bi-building"></i> Branch ID</span>
+                    <span class="value" id="dataBranch">—</span>
+                </div>
+                <div class="data-card">
+                    <span class="label"><i class="bi bi-house"></i> Home ID</span>
+                    <span class="value" id="dataHome">—</span>
+                </div>
+                <div class="data-card">
+                    <span class="label"><i class="bi bi-check-circle"></i> Status</span>
+                    <span class="value"><span class="status-badge active">Active</span></span>
+                </div>
+                <div class="data-card">
+                    <span class="label"><i class="bi bi-clock"></i> Session</span>
+                    <span class="value" style="font-size:0.8rem; color: #64748b;" id="dataSession">Active</span>
+                </div>
+            </div>
+            
+            <div class="alert alert-success mt-3">
+                <i class="bi bi-shield-check"></i>
+                <strong>Secure Access:</strong> Your session is verified and active.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================= PAGE CONFIGURATION =================
+    const PAGE_CONFIG = {
+        title: 'My Member Data',
+        requireAuth: true
+    };
+
+    // ================= SECURE ACCESS CHECK =================
+    function getMemberSession() {
+        let session = localStorage.getItem('memberSession');
+        if (session) {
+            try { return JSON.parse(session); } catch(e) {}
+        }
+        session = sessionStorage.getItem('memberSession');
+        if (session) {
+            try { return JSON.parse(session); } catch(e) {}
+        }
+        try {
+            if (window.parent && window.parent !== window) {
+                const parentSession = window.parent.localStorage.getItem('memberSession');
+                if (parentSession) {
+                    try {
+                        const data = JSON.parse(parentSession);
+                        localStorage.setItem('memberSession', JSON.stringify(data));
+                        return data;
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function checkAccess() {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const accessDenied = document.getElementById('accessDenied');
+        const contentSection = document.getElementById('contentSection');
+        const session = getMemberSession();
+        
+        if (session && session.branchId && session.homeId) {
+            // Update display
+            document.getElementById('displayBranchId').textContent = session.branchId;
+            document.getElementById('displayHomeId').textContent = session.homeId;
+            document.getElementById('displayMemberName').textContent = session.name || 'Member';
+            document.getElementById('displayMemberEmail').textContent = session.email || '—';
+            
+            // Update data cards
+            document.getElementById('dataName').textContent = session.name || '—';
+            document.getElementById('dataEmail').textContent = session.email || '—';
+            document.getElementById('dataBranch').textContent = session.branchId;
+            document.getElementById('dataHome').textContent = session.homeId;
+            document.getElementById('dataSession').textContent = 'Active ✓';
+            
+            // Show content
+            contentSection.classList.add('active');
+            accessDenied.classList.remove('active');
+            
+            document.dispatchEvent(new CustomEvent('memberSessionReady', { detail: session }));
+        } else {
+            accessDenied.classList.add('active');
+            contentSection.classList.remove('active');
+        }
+        
+        loadingOverlay.classList.add('hidden');
+        return session;
+    }
+
+    // ================= EXPOSE FUNCTIONS =================
+    window.getSessionData = getMemberSession;
+    window.getBranchId = function() {
+        const s = getMemberSession();
+        return s ? s.branchId : null;
+    };
+    window.getHomeId = function() {
+        const s = getMemberSession();
+        return s ? s.homeId : null;
+    };
+
+    // ================= INIT =================
+    document.addEventListener('DOMContentLoaded', function() {
+        document.title = PAGE_CONFIG.title || 'Member Data';
+        checkAccess();
+    });
+</script>
+
+</body>
+</html>

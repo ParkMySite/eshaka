@@ -1,0 +1,246 @@
+// ==================== MASTER MANAGER API ====================
+// Deploy as Web App (Execute as: "Me", Access: "Anyone")
+// Spreadsheet ID: 1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs
+
+const SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+
+// Schema table configuration
+const SCHEMA_SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+const SCHEMA_TABLE_NAME = "Tables";
+const SCHEMA_API_KEY = "AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM";
+
+function doPost(e) {
+  // Set CORS headers for response
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  try {
+    let requestData;
+    if (e.postData.type === "application/json") {
+      requestData = JSON.parse(e.postData.contents);
+    } else {
+      requestData = JSON.parse(e.postData.getDataAsString());
+    }
+    
+    const action = requestData.action;
+    
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    let result;
+    switch(action) {
+      case "ADD_MASTER":
+        result = handleAddMaster(ss, requestData);
+        break;
+      case "UPDATE_MASTER":
+        result = handleUpdateMaster(ss, requestData);
+        break;
+      case "DELETE_MASTER":
+        result = handleDeleteMaster(ss, requestData);
+        break;
+      default:
+        result = { status: "error", error: "Unknown action: " + action };
+    }
+    
+    return createResponse(result, corsHeaders);
+    
+  } catch(error) {
+    return createResponse({ 
+      status: "error", 
+      error: error.toString(),
+      stack: error.stack 
+    }, corsHeaders);
+  }
+}
+
+// Handle GET requests and OPTIONS preflight
+function doGet(e) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  return createResponse({ 
+    status: "success", 
+    message: "Master Manager API is running",
+    operations: ["ADD_MASTER", "UPDATE_MASTER", "DELETE_MASTER"]
+  }, corsHeaders);
+}
+
+// ==================== HANDLE ADD MASTER ====================
+function handleAddMaster(ss, data) {
+  let sheet = ss.getSheetByName("Master");
+  
+  if (!sheet) {
+    sheet = ss.insertSheet("Master");
+    // Added Status and Remarks columns (I and J)
+    sheet.appendRow(["Branch ID", "Home ID", "Address Line 1", "Address Line 2", 
+                     "Area", "Location", "Post Office", "District", "Status", "Remarks"]);
+  }
+  
+  // Check if branch/home already exists
+  const rangeData = sheet.getDataRange().getValues();
+  for (let i = 1; i < rangeData.length; i++) {
+    const row = rangeData[i];
+    if (row[0] === data.branchId && row[1] === data.homeId) {
+      throw new Error("Branch ID and Home ID combination already exists");
+    }
+  }
+  
+  // Add new record
+  sheet.appendRow([
+    data.branchId || "",
+    data.homeId || "",
+    data.addressLine1 || "",
+    data.addressLine2 || "",
+    data.area || "",
+    data.location || "",
+    data.postOffice || "",
+    data.district || "",
+    data.status || "Active",
+    data.remarks || ""
+  ]);
+  
+  return { 
+    status: "success", 
+    message: "Branch added successfully",
+    branchId: data.branchId,
+    homeId: data.homeId
+  };
+}
+
+// ==================== HANDLE UPDATE MASTER ====================
+function handleUpdateMaster(ss, data) {
+  let sheet = ss.getSheetByName("Master");
+  
+  if (!sheet) {
+    throw new Error("Master sheet not found");
+  }
+  
+  const rowIndex = data.rowIndex;
+  if (!rowIndex) {
+    throw new Error("Row index missing for update");
+  }
+  
+  const rowNumber = rowIndex + 1;
+  
+  // Update the record
+  // Column A (1) = Branch ID
+  // Column B (2) = Home ID
+  // Column C (3) = Address Line 1
+  // Column D (4) = Address Line 2
+  // Column E (5) = Area
+  // Column F (6) = Location
+  // Column G (7) = Post Office
+  // Column H (8) = District
+  // Column I (9) = Status
+  // Column J (10) = Remarks
+  
+  if (data.addressLine1 !== undefined) sheet.getRange(rowNumber, 3).setValue(data.addressLine1);
+  if (data.addressLine2 !== undefined) sheet.getRange(rowNumber, 4).setValue(data.addressLine2);
+  if (data.area !== undefined) sheet.getRange(rowNumber, 5).setValue(data.area);
+  if (data.location !== undefined) sheet.getRange(rowNumber, 6).setValue(data.location);
+  if (data.postOffice !== undefined) sheet.getRange(rowNumber, 7).setValue(data.postOffice);
+  if (data.district !== undefined) sheet.getRange(rowNumber, 8).setValue(data.district);
+  if (data.status !== undefined) sheet.getRange(rowNumber, 9).setValue(data.status);
+  if (data.remarks !== undefined) sheet.getRange(rowNumber, 10).setValue(data.remarks);
+  
+  return { 
+    status: "success", 
+    message: "Branch updated successfully",
+    rowIndex: rowIndex
+  };
+}
+
+// ==================== HANDLE DELETE MASTER ====================
+function handleDeleteMaster(ss, data) {
+  try {
+    const sheet = ss.getSheetByName("Master");
+    
+    if (!sheet) {
+      throw new Error("Master sheet not found");
+    }
+    
+    const rowIndex = data.rowIndex;
+    if (!rowIndex) {
+      throw new Error("Row index missing for deletion");
+    }
+    
+    const rowNumber = rowIndex + 1;
+    
+    // Check if the row exists
+    const lastRow = sheet.getLastRow();
+    if (rowNumber > lastRow) {
+      throw new Error("Row does not exist. Row number: " + rowNumber + ", Last row: " + lastRow);
+    }
+    
+    // Delete the row
+    sheet.deleteRow(rowNumber);
+    
+    return { 
+      status: "success", 
+      message: "Branch deleted successfully",
+      rowIndex: rowIndex,
+      deleted: true
+    };
+    
+  } catch(error) {
+    Logger.log("Delete error: " + error.toString());
+    throw error;
+  }
+}
+
+// ==================== CREATE RESPONSE ====================
+function createResponse(data, corsHeaders) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  
+  if (corsHeaders) {
+    for (const key in corsHeaders) {
+      output.setHeader(key, corsHeaders[key]);
+    }
+  }
+  
+  return output;
+}
+
+// ==================== INITIALIZE SHEETS ====================
+function initializeSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // Initialize Master sheet with Status and Remarks columns
+  let masterSheet = ss.getSheetByName("Master");
+  if (!masterSheet) {
+    masterSheet = ss.insertSheet("Master");
+  }
+  if (masterSheet.getLastRow() === 0) {
+    masterSheet.getRange(1, 1, 1, 10).setValues([
+      ["Branch ID", "Home ID", "Address Line 1", "Address Line 2", 
+       "Area", "Location", "Post Office", "District", "Status", "Remarks"]
+    ]);
+  }
+  
+  // Initialize Tables sheet (Schema) with Status in column M
+  let tablesSheet = ss.getSheetByName("Tables");
+  if (!tablesSheet) {
+    tablesSheet = ss.insertSheet("Tables");
+    tablesSheet.getRange(1, 1, 1, 13).setValues([
+      ["Branch", "Home ID", "Area", "Location", "Post Office", "District", 
+       "Relation", "Gender", "Education", "Jobs", "Marital status", "Deactivation Reasons", "Status"]
+    ]);
+    // Add sample statuses
+    const statuses = ["Active", "Inactive", "Pending", "Suspended", "Archived"];
+    statuses.forEach(status => {
+      const row = ["", "", "", "", "", "", "", "", "", "", "", "", status];
+      tablesSheet.appendRow(row);
+    });
+  }
+  
+  return "Sheets initialized successfully!";
+}

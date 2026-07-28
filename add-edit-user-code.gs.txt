@@ -1,0 +1,512 @@
+// ==================== code.gs ====================
+// Complete Apps Script for  User Management
+// With OTP verification for edit operations
+
+const Data_ID = '1jd1xZe9x2mrZm5KAwGT12vMNYjbrnynsmelNKeK95jc';
+const Table_ID = 'Login';
+const OTP_Table_ID = 'OTP_Store';  //  for storing OTPs (auto-created)
+
+// ==================== MAIN DO POST HANDLER ====================
+function doPost(e) {
+  try {
+    let action;
+    let params = {};
+    
+    // Handle both JSON and FormData requests
+    if (e.postData && e.postData.type === 'application/json') {
+      const request = JSON.parse(e.postData.contents);
+      action = request.action;
+      params = request.data || {};
+    } 
+    else if (e.parameter) {
+      action = e.parameter.action;
+      params = e.parameter;
+    }
+    
+    if (action === 'add') {
+      return handleAddUser(params);
+    } else if (action === 'edit') {
+      return handleEditUser(params);
+    } else if (action === 'sendEditOtp') {
+      return handleSendEditOtp(params);
+    } else if (action === 'verifyEditOtp') {
+      return handleVerifyEditOtp(params);
+    } else if (action === 'requestPasswordReset') {
+      return handleRequestPasswordReset(params);
+    } else if (action === 'verifyResetOtp') {
+      return handleVerifyResetOtp(params);
+    } else if (action === 'resetPassword') {
+      return handleResetPassword(params);
+    }
+    
+    return createJsonOutput({ success: false, error: 'Invalid action: ' + action });
+    
+  } catch(error) {
+    return createJsonOutput({ success: false, error: error.toString() });
+  }
+}
+
+function doGet(e) {
+  return createJsonOutput({ 
+    success: true, 
+    message: 'Apps Script is running. Use POST method with appropriate actions.' 
+  });
+}
+
+function createJsonOutput(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ==================== ADD USER ====================
+// Updated to accept individual fields from FormData
+function handleAddUser(params) {
+  try {
+    const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+    if (!sheet) {
+      return createJsonOutput({ success: false, message: 'Sheet not found' });
+    }
+    
+    // Get values from individual parameters (sent as FormData fields)
+    const branchUser = params.branchUser || '';
+    const userId = params.userId || '';
+    const password = params.password || '';
+    const menu = params.menu || 'user-menu';
+    const email = params.email || '';
+    const otp = params.otp || '';
+    const loginTime = params.loginTime || '';
+    
+    if (!branchUser || !userId || !email) {
+      return createJsonOutput({ success: false, message: 'Missing required fields' });
+    }
+    
+    // Check if User ID already exists
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      const existingIds = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+      for (let i = 0; i < existingIds.length; i++) {
+        if (existingIds[i][0] && existingIds[i][0].toString().toLowerCase() === userId.toLowerCase()) {
+          return createJsonOutput({ success: false, message: 'User ID already exists: ' + userId });
+        }
+      }
+      
+      // Also check email uniqueness
+      const existingEmails = sheet.getRange(2, 5, lastRow - 1, 1).getValues();
+      for (let i = 0; i < existingEmails.length; i++) {
+        if (existingEmails[i][0] && existingEmails[i][0].toString().toLowerCase() === email.toLowerCase()) {
+          return createJsonOutput({ success: false, message: 'Email already registered: ' + email });
+        }
+      }
+    }
+    
+    // Create row array
+    const row = [branchUser, userId, password, menu, email, otp, loginTime];
+    sheet.appendRow(row);
+    
+    return createJsonOutput({ success: true, message: 'User added successfully' });
+    
+  } catch (error) {
+    return createJsonOutput({ success: false, message: 'Error: ' + error.toString() });
+  }
+}
+
+// ==================== EDIT USER ====================
+function handleEditUser(params) {
+  try {
+    const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+    if (!sheet) {
+      return createJsonOutput({ success: false, message: 'Sheet not found' });
+    }
+    
+    const rowIndex = parseInt(params.row);
+    const newName = params.name || '';
+    const newEmail = params.email || '';
+    const newMenu = params.menu || '';
+    
+    if (!rowIndex || rowIndex < 2) {
+      return createJsonOutput({ success: false, message: 'Invalid row index' });
+    }
+    
+    const existingRow = sheet.getRange(rowIndex, 1, 1, 7).getValues()[0];
+    
+    if (!existingRow || existingRow.length === 0) {
+      return createJsonOutput({ success: false, message: 'Row not found' });
+    }
+    
+    // Check if new email already exists for another user
+    const lastRow = sheet.getLastRow();
+    const existingEmails = sheet.getRange(2, 5, lastRow - 1, 1).getValues();
+    for (let i = 0; i < existingEmails.length; i++) {
+      const emailRowIndex = i + 2;
+      if (emailRowIndex !== rowIndex && existingEmails[i][0] && existingEmails[i][0].toString().toLowerCase() === newEmail.toLowerCase()) {
+        return createJsonOutput({ success: false, message: 'Email already used by another user' });
+      }
+    }
+    
+    // Determine if branch or user (starts with BR)
+    const isBranch = (existingRow[0] && existingRow[0].toString().toUpperCase().startsWith('BR')) || 
+                     (existingRow[1] && existingRow[1].toString().toUpperCase().startsWith('BR'));
+    
+    let updatedBranchUser = existingRow[0];
+    if (isBranch) {
+      updatedBranchUser = newName;
+    } else {
+      updatedBranchUser = newName;
+    }
+    
+    const updatedRow = [
+      updatedBranchUser,  // Column A: Branch/User
+      existingRow[1],     // Column B: User ID (unchanged)
+      existingRow[2],     // Column C: Password (unchanged)
+      newMenu,            // Column D: Menu Access
+      newEmail,           // Column E: Email ID
+      existingRow[5],     // Column F: OTP (unchanged)
+      existingRow[6]      // Column G: Login Timestamp (unchanged)
+    ];
+    
+    sheet.getRange(rowIndex, 1, 1, 7).setValues([updatedRow]);
+    
+    return createJsonOutput({ success: true, message: 'User details updated successfully' });
+    
+  } catch (error) {
+    return createJsonOutput({ success: false, message: 'Error: ' + error.toString() });
+  }
+}
+
+// ==================== OTP FUNCTIONS FOR EDIT VERIFICATION ====================
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function storeEditOTP(email, otp, userId) {
+  let sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(OTP_Table_ID);
+  if (!sheet) {
+    sheet = SpreadsheetApp.openById(Data_ID).insertSheet(OTP_Table_ID);
+    sheet.appendRow(['Email', 'OTP', 'Expiry', 'UserId', 'Timestamp']);
+  }
+  
+  const expiry = new Date().getTime() + (10 * 60 * 1000);
+  const timestamp = new Date().toLocaleString();
+  sheet.appendRow([email.toLowerCase(), otp, expiry, userId, timestamp]);
+  return true;
+}
+
+function verifyEditOTP(email, otp) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(OTP_Table_ID);
+  if (!sheet) return false;
+  
+  const data = sheet.getDataRange().getValues();
+  const currentTime = new Date().getTime();
+  const emailLower = email.toLowerCase();
+  
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (data[i][0] && data[i][0].toString().toLowerCase() === emailLower) {
+      const storedOTP = data[i][1];
+      const expiry = data[i][2];
+      
+      if (storedOTP && storedOTP.toString() === otp.toString() && expiry && currentTime < parseInt(expiry)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function clearEditOTP(email) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(OTP_Table_ID);
+  if (!sheet) return;
+  
+  const data = sheet.getDataRange().getValues();
+  const emailLower = email.toLowerCase();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (data[i][0] && data[i][0].toString().toLowerCase() === emailLower) {
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+
+function handleSendEditOtp(params) {
+  const email = params.email;
+  const userId = params.userId || '';
+  
+  if (!email) {
+    return createJsonOutput({ success: false, error: 'Email is required' });
+  }
+  
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+  const data = sheet.getDataRange().getValues();
+  let userExists = false;
+  let userName = '';
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][4] && data[i][4].toString().toLowerCase() === email.toLowerCase()) {
+      userExists = true;
+      userName = data[i][0] || data[i][1];
+      break;
+    }
+  }
+  
+  if (!userExists) {
+    return createJsonOutput({ success: false, error: 'Email not found in system' });
+  }
+  
+  const otp = generateOTP();
+  storeEditOTP(email, otp, userId);
+  
+  try {
+    const subject = 'NOC Admin - OTP for User Edit Verification';
+    const body = `Dear ${userName},\n\nYou requested to edit user details for: ${userId}\n\nYour OTP for verification is: ${otp}\n\nThis OTP is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nRegards,\nNOC Admin Team`;
+    
+    MailApp.sendEmail({
+      to: email,
+      subject: subject,
+      body: body
+    });
+    
+    return createJsonOutput({ success: true, message: 'OTP sent to your email' });
+    
+  } catch(error) {
+    console.error('Email send error:', error);
+    return createJsonOutput({ success: true, message: 'OTP generated', otp: otp });
+  }
+}
+
+function handleVerifyEditOtp(params) {
+  const email = params.email;
+  const otp = params.otp;
+  
+  if (!email || !otp) {
+    return createJsonOutput({ success: false, error: 'Email and OTP are required' });
+  }
+  
+  if (verifyEditOTP(email, otp)) {
+    clearEditOTP(email);
+    return createJsonOutput({ success: true, message: 'OTP verified' });
+  } else {
+    return createJsonOutput({ success: false, error: 'Invalid or expired OTP' });
+  }
+}
+
+// ==================== PASSWORD RESET FUNCTIONS ====================
+
+const PROFILES_SHEET = 'Profiles';
+
+function storeResetOTP(email, otp) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(PROFILES_SHEET);
+  if (!sheet) return false;
+  
+  const data = sheet.getDataRange().getValues();
+  const emailLower = email.toLowerCase();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][6] && data[i][6].toString().toLowerCase() === emailLower) {
+      const expiry = new Date().getTime() + (10 * 60 * 1000);
+      sheet.getRange(i + 1, 8).setValue(otp);
+      sheet.getRange(i + 1, 9).setValue(expiry);
+      return true;
+    }
+  }
+  return false;
+}
+
+function verifyResetOTP(email, otp) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(PROFILES_SHEET);
+  if (!sheet) return false;
+  
+  const data = sheet.getDataRange().getValues();
+  const currentTime = new Date().getTime();
+  const emailLower = email.toLowerCase();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][6] && data[i][6].toString().toLowerCase() === emailLower) {
+      const storedOTP = data[i][7];
+      const expiry = data[i][8];
+      
+      if (storedOTP && storedOTP.toString() === otp.toString() && expiry && currentTime < parseInt(expiry)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function clearResetOTP(email) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(PROFILES_SHEET);
+  if (!sheet) return;
+  
+  const data = sheet.getDataRange().getValues();
+  const emailLower = email.toLowerCase();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][6] && data[i][6].toString().toLowerCase() === emailLower) {
+      sheet.getRange(i + 1, 8).setValue('');
+      sheet.getRange(i + 1, 9).setValue('');
+    }
+  }
+}
+
+function handleRequestPasswordReset(params) {
+  const email = params.email;
+  
+  if (!email) {
+    return createJsonOutput({ success: false, error: 'Email is required' });
+  }
+  
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(PROFILES_SHEET);
+  if (!sheet) {
+    return createJsonOutput({ success: false, error: 'Profiles sheet not found' });
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  let userExists = false;
+  let userName = '';
+  const emailLower = email.toLowerCase();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][6] && data[i][6].toString().toLowerCase() === emailLower) {
+      userExists = true;
+      userName = data[i][0];
+      break;
+    }
+  }
+  
+  if (!userExists) {
+    return createJsonOutput({ success: false, error: 'Email not found' });
+  }
+  
+  const otp = generateOTP();
+  storeResetOTP(email, otp);
+  
+  try {
+    const subject = 'NOC Admin - Password Reset Request';
+    const body = `Dear ${userName},\n\nYou requested to reset your password.\n\nYour OTP for password reset is: ${otp}\n\nThis OTP is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nRegards,\nNOC Admin Team`;
+    
+    MailApp.sendEmail({
+      to: email,
+      subject: subject,
+      body: body
+    });
+    
+    return createJsonOutput({ success: true, message: 'OTP sent to your email' });
+    
+  } catch(error) {
+    return createJsonOutput({ success: true, message: 'OTP generated', otp: otp });
+  }
+}
+
+function handleVerifyResetOtp(params) {
+  const email = params.email;
+  const otp = params.otp;
+  
+  if (!email || !otp) {
+    return createJsonOutput({ success: false, error: 'Email and OTP are required' });
+  }
+  
+  if (verifyResetOTP(email, otp)) {
+    return createJsonOutput({ success: true, message: 'OTP verified' });
+  } else {
+    return createJsonOutput({ success: false, error: 'Invalid or expired OTP' });
+  }
+}
+
+function handleResetPassword(params) {
+  const email = params.email;
+  const newPassword = params.newPassword;
+  
+  if (!email || !newPassword) {
+    return createJsonOutput({ success: false, error: 'Email and password are required' });
+  }
+  
+  if (newPassword.length < 6) {
+    return createJsonOutput({ success: false, error: 'Password must be at least 6 characters' });
+  }
+  
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(PROFILES_SHEET);
+  if (!sheet) {
+    return createJsonOutput({ success: false, error: 'Profiles sheet not found' });
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  const emailLower = email.toLowerCase();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][6] && data[i][6].toString().toLowerCase() === emailLower) {
+      sheet.getRange(i + 1, 5).setValue(newPassword);
+      clearResetOTP(email);
+      return createJsonOutput({ success: true, message: 'Password reset successful' });
+    }
+  }
+  
+  return createJsonOutput({ success: false, error: 'User not found' });
+}
+
+// ==================== HELPER: UPDATE LOGIN TIMESTAMP ====================
+function updateLoginTimestamp(userId) {
+  try {
+    const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+    if (!sheet) {
+      return { success: false, message: 'Sheet not found' };
+    }
+    
+    const now = new Date();
+    const timestamp = Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm:ss');
+    
+    const lastRow = sheet.getLastRow();
+    const userIds = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+    
+    for (let i = 0; i < userIds.length; i++) {
+      if (userIds[i][0] && userIds[i][0].toString().toLowerCase() === userId.toLowerCase()) {
+        const rowIndex = i + 2;
+        sheet.getRange(rowIndex, 7).setValue(timestamp);
+        return { success: true, message: 'Login timestamp updated', timestamp: timestamp };
+      }
+    }
+    return { success: false, message: 'User ID not found' };
+  } catch (error) {
+    return { success: false, message: error.toString() };
+  }
+}
+
+// ==================== TEST CONNECTION ====================
+function testConnection() {
+  try {
+    const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+    const lastRow = sheet.getLastRow();
+    return {
+      success: true,
+      message: 'Connection successful',
+      sheetName: Table_ID,
+      rowCount: lastRow - 1
+    };
+  } catch (error) {
+    return { success: false, message: 'Connection failed: ' + error.toString() };
+  }
+}
+
+// ==================== GET ALL USERS (for debugging) ====================
+function getAllUsers() {
+  try {
+    const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+    if (!sheet) return { success: false, message: 'Sheet not found' };
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: true, users: [] };
+    
+    const data = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
+    const users = [];
+    
+    for (let i = 0; i < data.length; i++) {
+      users.push({
+        rowIndex: i + 2,
+        branchUser: data[i][0],
+        userId: data[i][1],
+        menu: data[i][3],
+        email: data[i][4],
+        loginTime: data[i][6]
+      });
+    }
+    return { success: true, users: users };
+  } catch (error) {
+    return { success: false, message: error.toString() };
+  }
+}

@@ -1,0 +1,46 @@
+used command prompt: cd C:\Users\NMS-PC\Documents\network-main\css
+dir > filelist.txt
+
+-----------------------------------------------
+Folder name: css 
+files:
+bootstrap-icons.min.css
+bootstrap.min.css
+buttons.bootstrap5.min.css
+dataTables.bootstrap5.min.css
+flatpickr.min.css
+font-awesome.min.css
+main-style.css
+select2-bootstrap-5-theme.min.css
+select2.min.css
+sweetalert2.min.css
+-----------------------------------------------
+Folder name: js
+files:
+
+bootstrap.bundle.min.js
+buttons.bootstrap5.min.js
+buttons.html5.min.js
+buttons.print.min.js
+chart.min.js
+dataTables.bootstrap5.min.js
+dataTables.buttons.min.js
+filelist.txt
+flatpickr.min.js
+html2canvas.min.js
+html2pdf.bundle.min.js
+jquery.dataTables.min.js
+jquery.min.js
+jspdf.plugin.autotable.min.js
+jspdf.umd.min.js
+jszip.min.js
+main-script.js
+pdf-lib.min.js
+pdf.min.js
+pdf.worker.min.js
+pdfmake.min.js
+select2.min.js
+sweetalert2.all.min.js
+sweetalert2.min.js
+vfs_fonts.js
+xlsx.full.min.js

@@ -1,0 +1,249 @@
+// ==================== USER MANAGEMENT API - ACTIVATE ====================
+// Deploy as Web App (Execute as: "Me", Access: "Anyone" - including anonymous)
+// Spreadsheet ID: 1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs
+
+const SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+
+// Schema table configuration
+const SCHEMA_SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+const SCHEMA_TABLE_NAME = "Tables";
+const SCHEMA_API_KEY = "AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM";
+
+function doPost(e) {
+  // Set CORS headers for response
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  try {
+    let requestData;
+    if (e.postData.type === "application/json") {
+      requestData = JSON.parse(e.postData.contents);
+    } else {
+      requestData = JSON.parse(e.postData.getDataAsString());
+    }
+    
+    const action = requestData.action;
+    
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    let result;
+    switch(action) {
+      case "ACTIVATE_MEMBER":
+        result = handleActivateMember(ss, requestData);
+        break;
+      default:
+        result = { status: "error", error: "Unknown action: " + action };
+    }
+    
+    return createResponse(result, corsHeaders);
+    
+  } catch(error) {
+    return createResponse({ 
+      status: "error", 
+      error: error.toString(),
+      stack: error.stack 
+    }, corsHeaders);
+  }
+}
+
+// Handle GET requests and OPTIONS preflight
+function doGet(e) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  return createResponse({ 
+    status: "success", 
+    message: "Member Management API - Activate is running",
+    operations: ["ACTIVATE_MEMBER"]
+  }, corsHeaders);
+}
+
+// ==================== HANDLE ACTIVATE MEMBER ====================
+function handleActivateMember(ss, data) {
+  try {
+    const deactiveSheet = ss.getSheetByName("Deactive_Members");
+    
+    if (!deactiveSheet) {
+      throw new Error("Deactive_Members sheet not found");
+    }
+    
+    const rowIndex = data.rowIndex;
+    if (!rowIndex) {
+      throw new Error("Row index missing for activation");
+    }
+    
+    const rowNumber = rowIndex + 1;
+    
+    // Check if the row exists
+    const lastRow = deactiveSheet.getLastRow();
+    if (rowNumber > lastRow) {
+      throw new Error("Row does not exist. Row number: " + rowNumber + ", Last row: " + lastRow);
+    }
+    
+    // Get the member data before deleting (16 columns including Job, Reason, Date)
+    const memberData = deactiveSheet.getRange(rowNumber, 1, 1, 16).getValues()[0];
+    
+    if (!memberData || !memberData[0]) {
+      throw new Error("Member data not found at row: " + rowNumber);
+    }
+    
+    const memberId = memberData[0] || data.memberId;
+    
+    // Get or create Members sheet
+    let membersSheet = ss.getSheetByName("Members");
+    if (!membersSheet) {
+      membersSheet = ss.insertSheet("Members");
+      membersSheet.appendRow([
+        "Member ID", "Relation", "Name", "DoB", "Gender", 
+        "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+        "Branch ID", "Home ID", "Status", "Job"
+      ]);
+    }
+    
+    // Check if member already exists in Members sheet
+    const rangeData = membersSheet.getDataRange().getValues();
+    let exists = false;
+    for (let i = 1; i < rangeData.length; i++) {
+      if (rangeData[i][0] === memberId) {
+        exists = true;
+        break;
+      }
+    }
+    
+    if (exists) {
+      throw new Error("Member already exists in Members sheet. Cannot activate duplicate.");
+    }
+    
+    // Copy member data to Members sheet with status "Active"
+    // Column mapping from Deactive_Members to Members:
+    // Deactive_Members: A(1)=Member ID, B(2)=Relation, C(3)=Name, D(4)=DoB, E(5)=Gender,
+    // F(6)=Contact, G(7)=Education, H(8)=Marital Status, I(9)=Photo, J(10)=Remarks,
+    // K(11)=Branch ID, L(12)=Home ID, M(13)=Status, N(14)=Job, O(15)=Reason, P(16)=Date
+    
+    // Members: A(1)=Member ID, B(2)=Relation, C(3)=Name, D(4)=DoB, E(5)=Gender,
+    // F(6)=Contact, G(7)=Education, H(8)=Marital Status, I(9)=Photo, J(10)=Remarks,
+    // K(11)=Branch ID, L(12)=Home ID, M(13)=Status, N(14)=Job
+    
+    const rowToCopy = [
+      memberData[0] || "", // Member ID
+      memberData[1] || "", // Relation
+      memberData[2] || "", // Name
+      memberData[3] || "", // DoB
+      memberData[4] || "", // Gender
+      memberData[5] || "", // Contact No.
+      memberData[6] || "", // Education
+      memberData[7] || "", // Marital Status
+      memberData[8] || "", // Photo
+      memberData[9] || "", // Remarks
+      memberData[10] || "", // Branch ID
+      memberData[11] || "", // Home ID
+      "Active", // Status (Column M)
+      memberData[13] || "" // Job (Column N)
+    ];
+    
+    membersSheet.appendRow(rowToCopy);
+    
+    // Delete the row from Deactive_Members sheet
+    deactiveSheet.deleteRow(rowNumber);
+    
+    // Verify deletion
+    const verifySheet = ss.getSheetByName("Deactive_Members");
+    const verifyData = verifySheet.getDataRange().getValues();
+    let found = false;
+    for (let i = 1; i < verifyData.length; i++) {
+      if (verifyData[i][0] === memberId) {
+        found = true;
+        break;
+      }
+    }
+    
+    if (found) {
+      // If still found, try to find and delete by member ID
+      for (let i = 1; i < verifyData.length; i++) {
+        if (verifyData[i][0] === memberId) {
+          verifySheet.deleteRow(i + 1);
+          break;
+        }
+      }
+    }
+    
+    return { 
+      status: "success", 
+      message: "Member activated and moved to Members sheet",
+      memberId: memberId,
+      rowIndex: rowIndex,
+      activated: true,
+      deleted: true
+    };
+    
+  } catch(error) {
+    Logger.log("Activation error: " + error.toString());
+    throw error;
+  }
+}
+
+// ==================== CREATE RESPONSE ====================
+function createResponse(data, corsHeaders) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  
+  if (corsHeaders) {
+    for (const key in corsHeaders) {
+      output.setHeader(key, corsHeaders[key]);
+    }
+  }
+  
+  return output;
+}
+
+// ==================== INITIALIZE SHEETS ====================
+function initializeSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // Initialize Members sheet with Job column
+  let membersSheet = ss.getSheetByName("Members");
+  if (!membersSheet) {
+    membersSheet = ss.insertSheet("Members");
+  }
+  if (membersSheet.getLastRow() === 0) {
+    membersSheet.getRange(1, 1, 1, 14).setValues([
+      ["Member ID", "Relation", "Name", "DoB", "Gender", 
+       "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+       "Branch ID", "Home ID", "Status", "Job"]
+    ]);
+  }
+  
+  // Initialize Deactive_Members sheet with Job, Reason and Date columns
+  let deactiveSheet = ss.getSheetByName("Deactive_Members");
+  if (!deactiveSheet) {
+    deactiveSheet = ss.insertSheet("Deactive_Members");
+  }
+  if (deactiveSheet.getLastRow() === 0) {
+    deactiveSheet.getRange(1, 1, 1, 16).setValues([
+      ["Member ID", "Relation", "Name", "DoB", "Gender", 
+       "Contact No.", "Education", "Marital Status", "Photo", "Remarks",
+       "Branch ID", "Home ID", "Status", "Job", "Deactivation Reason", "Deactivated Date"]
+    ]);
+  }
+  
+  // Initialize Tables sheet (Schema) with deactivation reasons in column L
+  let tablesSheet = ss.getSheetByName("Tables");
+  if (!tablesSheet) {
+    tablesSheet = ss.insertSheet("Tables");
+    tablesSheet.getRange(1, 1, 1, 12).setValues([
+      ["Branch", "Home ID", "Area", "Location", "Post Office", "District", 
+       "Relation", "Gender", "Education", "Jobs", "Marital status", "Deactivation Reasons"]
+    ]);
+  }
+  
+  return "Sheets initialized successfully!";
+}

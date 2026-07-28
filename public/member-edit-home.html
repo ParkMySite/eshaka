@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Edit Home Details</title>
+    
+    <!-- Bootstrap 5.3 + icons -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Flatpickr for date picker -->
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 16px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container-fluid {
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Access Denied Overlay */
+        .access-denied-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.95);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            backdrop-filter: blur(8px);
+            padding: 20px;
+        }
+        .access-denied-overlay.active {
+            display: flex;
+        }
+        .access-denied-overlay i {
+            font-size: 4rem;
+            color: #dc2626;
+            margin-bottom: 15px;
+        }
+        .access-denied-overlay h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .access-denied-overlay p {
+            color: #64748b;
+            text-align: center;
+            max-width: 320px;
+        }
+        .access-denied-overlay .btn-login {
+            margin-top: 20px;
+            padding: 12px 32px;
+            border-radius: 40px;
+            background: #0f3b6a;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .access-denied-overlay .btn-login:hover {
+            background: #0a2c4a;
+        }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .loading-box {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .loading-box p {
+            margin-top: 12px;
+            color: #64748b;
+        }
+        
+        /* Header */
+        .page-header {
+            background: linear-gradient(135deg, #0f5b9c 0%, #1a4b7a 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .page-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-header .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .page-header .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Content Card */
+        .content-card {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            min-height: 400px;
+        }
+        
+        /* Member Info Banner */
+        .member-info-banner {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            border-left: 4px solid #0f5b9c;
+            font-size: 0.8rem;
+        }
+        .member-info-banner .info-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #1e293b;
+        }
+        .member-info-banner .info-item i {
+            color: #0f5b9c;
+            font-size: 0.9rem;
+        }
+        .member-info-banner .info-item strong {
+            font-weight: 600;
+        }
+        
+        /* Address Card (Read-only) */
+        .address-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+        .address-card .address-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .address-card .address-text {
+            font-size: 0.9rem;
+            color: #0f172a;
+            line-height: 1.5;
+        }
+        .address-card .address-badge {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: #e6f0fa;
+            color: #0f5b9c;
+            font-size: 0.6rem;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .address-card .report-btn {
+            margin-top: 8px;
+            background: none;
+            border: 1px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            color: #64748b;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .address-card .report-btn:hover {
+            border-color: #0f5b9c;
+            color: #0f5b9c;
+            background: #f1f5f9;
+        }
+        
+        /* Form Styles */
+        .form-label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            transition: 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0f3b6a;
+            box-shadow: 0 0 0 3px rgba(15, 59, 106, 0.1);
+        }
+        .form-control:disabled {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        
+        /* Photo Upload */
+        .photo-upload-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        .photo-preview-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 10px;
+            background: #f8fafc;
+        }
+        
+        /* Member Table */
+        .members-table-container {
+            margin-top: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .members-table-container table {
+            margin-bottom: 0;
+            font-size: 0.8rem;
+        }
+        .members-table-container thead {
+            background: #f8fafc;
+        }
+        .members-table-container thead th {
+            font-weight: 600;
+            color: #475569;
+            padding: 8px 10px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .members-table-container tbody td {
+            padding: 6px 10px;
+            vertical-align: middle;
+        }
+        .table-photo-thumb {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Action Icons */
+        .action-icons i {
+            font-size: 1.1rem;
+            margin: 0 4px;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .action-icons i.bi-pencil-square { color: #3b82f6; }
+        .action-icons i:hover { opacity: 0.7; transform: scale(1.05); }
+        
+        /* Buttons */
+        .btn-primary-custom {
+            background: #0f3b6a;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-primary-custom:hover:not(:disabled) {
+            background: #0a2c46;
+            transform: translateY(-1px);
+        }
+        .btn-primary-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary-custom {
+            background: #64748b;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-secondary-custom:hover {
+            background: #475569;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        
+        /* Section Divider */
+        .section-divider {
+            border-top: 2px dashed #e2e8f0;
+            margin: 20px 0;
+        }
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title .count-badge {
+            background: #e6f0fa;
+            color: #0f5b9c;
+            font-size: 0.7rem;
+            padding: 0 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        /* Toast */
+        .toast-custom {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 400px;
+            width: calc(100% - 32px);
+            background: #1f1f1f;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 48px;
+            z-index: 1090;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .toast-custom.show { opacity: 1; }
+        .toast-custom.error { background: #dc2626; }
+        .toast-custom.success { background: #16a34a; }
+        
+        /* Modal Styles */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+        }
+        .modal-header {
+            background: #0f3b6a;
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 14px 20px;
+        }
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 10px !important;
+            border-color: #cbd5e1 !important;
+            min-height: 42px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            line-height: 40px !important;
+        }
+        .member-id-display {
+            background: #e6f0fa;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #0f3b5f;
+            display: inline-block;
+        }
+        
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .content-card { padding: 14px; }
+            .photo-upload-container { flex-direction: column; align-items: center; }
+            .member-info-banner { flex-direction: column; gap: 4px; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Access Denied Overlay -->
+<div class="access-denied-overlay" id="accessDeniedOverlay">
+    <i class="bi bi-lock-fill"></i>
+    <h3>Access Denied</h3>
+    <p>You are not authorized to view this page. Please login to the member portal first.</p>
+    <a href="member-login.html" class="btn-login"><i class="bi bi-box-arrow-right"></i> Go to Login</a>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p id="loadingText">Loading...</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid" id="mainContent" style="display: none;">
+    <!-- Header -->
+    <div class="page-header">
+        <h4><i class="bi bi-house-gear"></i> Edit Home Details</h4>
+        <button class="back-btn" onclick="goBackToDashboard()">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+    </div>
+    
+    <div class="content-card">
+        <!-- Member Info Banner -->
+        <div class="member-info-banner" id="memberInfoBanner">
+            <div class="info-item">
+                <i class="bi bi-building"></i>
+                <span>Branch: <strong id="displayBranchId">—</strong></span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-house"></i>
+                <span>Home: <strong id="displayHomeId">—</strong></span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-person"></i>
+                <span>Member: <strong id="displayMemberName">—</strong></span>
+            </div>
+        </div>
+        
+        <!-- Address Card (Read-only) -->
+        <div class="address-card" id="addressCard">
+            <div class="address-label"><i class="bi bi-geo-alt"></i> Registered Address</div>
+            <div class="address-text" id="addressText">Loading address...</div>
+            <div style="margin-top: 6px;">
+                <span class="address-badge" id="addressStatus">Active</span>
+                <button class="report-btn" onclick="reportAddressIssue()">
+                    <i class="bi bi-flag"></i> Report Address Issue
+                </button>
+            </div>
+        </div>
+        
+        <!-- Members List -->
+        <div class="section-title">
+            <i class="bi bi-people"></i> Family Members
+            <span class="count-badge" id="memberCount">0</span>
+        </div>
+        
+        <div class="members-table-container">
+            <table class="table table-striped table-hover" id="membersTable">
+                <thead>
+                    <tr>
+                        <th>Sl.No</th>
+                        <th>Member ID</th>
+                        <th>Name</th>
+                        <th>Relation</th>
+                        <th>Photo</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-3 text-muted">
+                            <i class="bi bi-inbox"></i> No family members found
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Submit Button -->
+        <div class="action-buttons">
+            <button type="button" id="submitBtn" class="btn btn-primary-custom w-100">
+                <i class="bi bi-cloud-upload"></i> Save Changes
+            </button>
+            <button type="button" id="refreshBtn" class="btn btn-secondary-custom w-100">
+                <i class="bi bi-arrow-repeat"></i> Refresh            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Member Modal -->
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit Member</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editMemberIndex">
+                <input type="hidden" id="editExistingPhoto">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Member ID</label>
+                        <input type="text" id="editMemberIdDisplay" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Relation</label>
+                        <select id="editRelation" class="form-select select2-edit-modal" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Name</label>
+                        <input type="text" id="editName" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Date of Birth</label>
+                        <input type="text" id="editDob" class="form-control flatpickr-edit-date" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Gender</label>
+                        <select id="editGender" class="form-select select2-edit-modal" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Contact No.</label>
+                        <input type="tel" id="editContact" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Education</label>
+                        <select id="editEducation" class="form-select select2-edit-modal" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Job</label>
+                        <select id="editJob" class="form-select select2-edit-modal" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Marital Status</label>
+                        <select id="editMaritalStatus" class="form-select select2-edit-modal" required></select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Photo</label>
+                        <div class="photo-upload-container">
+                            <div style="flex: 1;">
+                                <input type="file" id="editPhotoUpload" class="form-control" accept="image/*">
+                                <small class="text-muted">Upload to replace existing photo</small>
+                            </div>
+                            <div id="editPhotoPreviewContainer">
+                                <img id="editPhotoPreview" class="photo-preview" src="#" alt="Photo preview">
+                                <br>
+                                <button type="button" id="editRemovePhotoBtn" class="btn btn-sm btn-outline-danger mt-2">
+                                    <i class="bi bi-trash3"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">email ID</label>
+                        <textarea id="editRemarks" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="confirmEditBtn" class="btn btn-primary">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Message -->
+<div id="liveToast" class="toast-custom"><i class="bi me-2" id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/flatpickr.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+
+<script>
+    // ================= CONFIGURATION =================
+    const CONFIG = {
+        SPREADSHEET_ID: '1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs',
+        API_KEY: 'AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM',
+        APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyZQpbMlXwTiXfgBe07HPvSiMMoZ16BBjFBClOBGdmeD1eb6r1r9eULxQdcH5pbowNd/exec',
+        SCHEMA_SPREADSHEET_ID: '1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs',
+        SCHEMA_TABLE_NAME: 'Tables',
+        SCHEMA_API_KEY: 'AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM'
+    };
+
+    let branchId = '';
+    let homeId = '';
+    let memberName = '';
+    let memberEmail = '';
+    let members = [];
+    let originalMembers = [];
+    let editIndex = -1;
+    let flatpickrEditDob;
+    let selectedEditPhotoFile = null;
+    let isSubmitting = false;
+    let addressData = null;
+
+    // ================= SECURITY: GET SESSION =================
+    function getSessionFromStorage() {
+        let session = localStorage.getItem('memberSession');
+        if (session) {
+            try { return JSON.parse(session); } catch(e) {}
+        }
+        session = sessionStorage.getItem('memberSession');
+        if (session) {
+            try { return JSON.parse(session); } catch(e) {}
+        }
+        return null;
+    }
+
+    function isValidSession(session) {
+        if (!session) return false;
+        if (!session.branchId || !session.homeId) return false;
+        if (!session.isMember) return false;
+        return true;
+    }
+
+    function logout() {
+        localStorage.removeItem('memberSession');
+        sessionStorage.removeItem('memberSession');
+        window.location.href = 'member-login.html';
+    }
+
+    // ================= HELPER FUNCTIONS =================
+    function showToast(msg, type = 'info') {
+        const toast = document.getElementById('liveToast');
+        const msgSpan = document.getElementById('toastMsg');
+        const icon = document.getElementById('toastIcon');
+        
+        msgSpan.innerText = msg;
+        toast.className = 'toast-custom';
+        
+        if (type === 'error') {
+            toast.classList.add('error');
+            icon.className = 'bi bi-exclamation-circle-fill me-2';
+        } else if (type === 'success') {
+            toast.classList.add('success');
+            icon.className = 'bi bi-check-circle-fill me-2';
+        } else {
+            icon.className = 'bi bi-info-circle-fill me-2';
+        }
+        
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 4000);
+    }
+
+    function showLoading(show, text = 'Loading...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const textEl = document.getElementById('loadingText');
+        if (show) {
+            textEl.textContent = text;
+            overlay.classList.add('active');
+        } else {
+            overlay.classList.remove('active');
+        }
+    }
+
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;':m); }
+
+    function formatDateDMY(dateObj) {
+        if (!dateObj) return '';
+        let d = dateObj.getDate().toString().padStart(2,'0');
+        let m = (dateObj.getMonth()+1).toString().padStart(2,'0');
+        let y = dateObj.getFullYear();
+        return `${d}/${m}/${y}`;
+    }
+
+    function parseDateDMY(str) {
+        if (!str) return null;
+        const parts = str.split('/');
+        if (parts.length === 3) {
+            return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+        }
+        return null;
+    }
+
+    function goBackToDashboard() {
+        window.location.href = 'member-dashboard.html';
+    }
+
+    // ================= FETCH ADDRESS FROM MASTER SHEET =================
+    async function fetchAddress(branch, home) {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/Master!A:H?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length >= 8) {
+                    const rowBranch = row[0] ? row[0].toString().trim() : '';
+                    const rowHome = row[1] ? row[1].toString().trim() : '';
+                    
+                    if (rowBranch === branch && rowHome === home) {
+                        return {
+                            addressLine1: row[2] || '',
+                            addressLine2: row[3] || '',
+                            area: row[4] || '',
+                            location: row[5] || '',
+                            postOffice: row[6] || '',
+                            district: row[7] || ''
+                        };
+                    }
+                }
+            }
+            return null;
+        } catch (e) {
+            console.error('Error fetching address:', e);
+            return null;
+        }
+    }
+
+    // ================= FETCH MEMBERS FROM SHEET =================
+    async function fetchMembers(branch, home) {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/Members!A:N?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            const membersList = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length >= 12) {
+                    const memberBranch = row[10] ? row[10].toString().trim() : '';
+                    const memberHome = row[11] ? row[11].toString().trim() : '';
+                    
+                    if (memberBranch === branch && memberHome === home) {
+                        membersList.push({
+                            index: i,
+                            memberId: row[0] || '',
+                            relation: row[1] || '',
+                            name: row[2] || '',
+                            dob: row[3] || '',
+                            gender: row[4] || '',
+                            contact: row[5] || '',
+                            education: row[6] || '',
+                            maritalStatus: row[7] || '',
+                            photo: row[8] || '',
+                            remarks: row[9] || '',
+                            branchId: row[10] || '',
+                            homeId: row[11] || '',
+                            status: row[12] || 'Active',
+                            job: row[13] || ''
+                        });
+                    }
+                }
+            }
+            return membersList;
+        } catch (e) {
+            console.error('Error fetching members:', e);
+            return [];
+        }
+    }
+
+    // ================= FETCH SCHEMA DATA =================
+    async function fetchSchemaData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SCHEMA_SPREADSHEET_ID}/values/${CONFIG.SCHEMA_TABLE_NAME}!A:M?key=${CONFIG.SCHEMA_API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            const schemaData = {
+                relation: new Set(),
+                gender: new Set(),
+                education: new Set(),
+                jobs: new Set(),
+                maritalStatus: new Set()
+            };
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length > 0) {
+                    if (row[6]) schemaData.relation.add(row[6]);     // Column G
+                    if (row[7]) schemaData.gender.add(row[7]);       // Column H
+                    if (row[8]) schemaData.education.add(row[8]);    // Column I
+                    if (row[9]) schemaData.jobs.add(row[9]);         // Column J
+                    if (row[10]) schemaData.maritalStatus.add(row[10]); // Column K
+                }
+            }
+            
+            const result = {};
+            for (const key in schemaData) {
+                result[key] = Array.from(schemaData[key]).filter(Boolean).sort();
+            }
+            return result;
+        } catch (e) {
+            console.error('Error fetching schema:', e);
+            return { relation: [], gender: [], education: [], jobs: [], maritalStatus: [] };
+        }
+    }
+
+    // ================= POPULATE DROPDOWNS =================
+    function populateSelect2Options(selector, options, placeholder) {
+        const $select = $(selector);
+        $select.empty();
+        $select.append(`<option value="">${placeholder}</option>`);
+        options.forEach(opt => {
+            $select.append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+        });
+    }
+
+    function initSelect2WithTags(selector, placeholder) {
+        $(selector).select2({
+            theme: 'bootstrap-5',
+            placeholder: placeholder,
+            allowClear: true,
+            tags: true,
+            width: '100%',
+            dropdownParent: $(selector).closest('.modal-content'),
+            createTag: function(params) {
+                return { id: params.term, text: params.term, newOption: true };
+            }
+        });
+    }
+
+    async function populateAllDropdowns(schemaData) {
+        populateSelect2Options('#editRelation', schemaData.relation, 'Select or type Relation');
+        populateSelect2Options('#editGender', schemaData.gender, 'Select or type Gender');
+        populateSelect2Options('#editEducation', schemaData.education, 'Select or type Education');
+        populateSelect2Options('#editJob', schemaData.jobs, 'Select or type Job');
+        populateSelect2Options('#editMaritalStatus', schemaData.maritalStatus, 'Select or type Marital Status');
+        
+        initSelect2WithTags('#editRelation', 'Select or type Relation');
+        initSelect2WithTags('#editGender', 'Select or type Gender');
+        initSelect2WithTags('#editEducation', 'Select or type Education');
+        initSelect2WithTags('#editJob', 'Select or type Job');
+        initSelect2WithTags('#editMaritalStatus', 'Select or type Marital Status');
+    }
+
+    // ================= RENDER MEMBERS TABLE =================
+    function renderMembersTable() {
+        const $tbody = $('#membersTableBody');
+        
+        if (members.length === 0) {
+            $tbody.html(`<tr><td colspan="6" class="text-center py-3 text-muted">
+                <i class="bi bi-inbox"></i> No family members found
+            </td></tr>`);
+            $('#memberCount').text('0');
+            return;
+        }
+        
+        $('#memberCount').text(members.length);
+        
+        let html = '';
+        members.forEach((member, index) => {
+            const photoHtml = member.photo ? 
+                `<img src="${member.photo}" class="table-photo-thumb" alt="Photo">` : 
+                '<span class="text-muted">—</span>';
+            
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(member.memberId)}</td>
+                <td>${escapeHtml(member.name)}</td>
+                <td>${escapeHtml(member.relation)}</td>
+                <td>${photoHtml}</td>
+                <td>
+                    <div class="action-icons">
+                        <i class="bi bi-pencil-square edit-member" data-index="${index}" style="cursor:pointer;" title="Edit"></i>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        
+        $tbody.html(html);
+        
+        $('.edit-member').off('click').on('click', function() {
+            const index = parseInt($(this).data('index'));
+            openEditModal(index);
+        });
+    }
+
+    // ================= OPEN EDIT MODAL =================
+    function openEditModal(index) {
+        editIndex = index;
+        const member = members[index];
+        
+        $('#editMemberIndex').val(index);
+        $('#editMemberIdDisplay').val(member.memberId);
+        $('#editRelation').val(member.relation).trigger('change');
+        $('#editName').val(member.name);
+        if (flatpickrEditDob) flatpickrEditDob.setDate(parseDateDMY(member.dob) || new Date());
+        $('#editGender').val(member.gender).trigger('change');
+        $('#editContact').val(member.contact);
+        $('#editEducation').val(member.education).trigger('change');
+        $('#editJob').val(member.job || '').trigger('change');
+        $('#editMaritalStatus').val(member.maritalStatus).trigger('change');
+        $('#editRemarks').val(member.remarks || '');
+        
+        // Store existing photo
+        $('#editExistingPhoto').val(member.photo || '');
+        
+        if (member.photo) {
+            $('#editPhotoPreview').attr('src', member.photo);
+            $('#editPhotoPreviewContainer').show();
+        } else {
+            $('#editPhotoPreview').attr('src', '#');
+            $('#editPhotoPreviewContainer').hide();
+        }
+        
+        $('#editPhotoUpload').val('');
+        selectedEditPhotoFile = null;
+        
+        const modal = new bootstrap.Modal(document.getElementById('editMemberModal'));
+        modal.show();
+    }
+
+    // ================= UPDATE MEMBER FROM MODAL =================
+    function updateMemberFromModal() {
+        const index = parseInt($('#editMemberIndex').val());
+        const relation = $('#editRelation').val();
+        const name = $('#editName').val().trim();
+        const dob = $('#editDob').val();
+        const gender = $('#editGender').val();
+        const contact = $('#editContact').val().trim();
+        const education = $('#editEducation').val();
+        const job = $('#editJob').val();
+        const maritalStatus = $('#editMaritalStatus').val();
+        const remarks = $('#editRemarks').val().trim();
+        const photoFile = document.getElementById('editPhotoUpload').files[0];
+        const existingPhoto = $('#editExistingPhoto').val();
+        
+        if (!relation || !name || !dob || !gender || !contact || !education || !job || !maritalStatus) {
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please fill all required fields.' });
+            return;
+        }
+        
+        if (contact.length !== 10 || !/^[0-9]+$/.test(contact)) {
+            Swal.fire({ icon: 'warning', title: 'Invalid Contact', text: 'Please enter a valid 10-digit mobile number.' });
+            return;
+        }
+        
+        const member = members[index];
+        
+        // Store changes
+        member.relation = relation;
+        member.name = name;
+        member.dob = dob;
+        member.gender = gender;
+        member.contact = contact;
+        member.education = education;
+        member.job = job;
+        member.maritalStatus = maritalStatus;
+        member.remarks = remarks;
+        
+        // Handle photo
+        if (photoFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                member.photo = e.target.result;
+                renderMembersTable();
+                bootstrap.Modal.getInstance(document.getElementById('editMemberModal')).hide();
+               Swal.fire({ 
+    icon: 'success', 
+    title: 'Updated !', 
+    text: 'Please Click Save Changes too..',
+    timer: 2500, 
+    showConfirmButton: false 
+});
+                // Track that changes were made
+                $('#submitBtn').removeClass('btn-secondary-custom').addClass('btn-primary-custom');
+            };
+            reader.readAsDataURL(photoFile);
+        } else {
+            // Keep existing photo
+            member.photo = existingPhoto;
+            renderMembersTable();
+            bootstrap.Modal.getInstance(document.getElementById('editMemberModal')).hide();
+      Swal.fire({ 
+    icon: 'success', 
+    title: 'Updated Locally!', 
+    text: 'Please Click Save Changes too..',
+    timer: 2500, 
+    showConfirmButton: false 
+});
+            // Track that changes were made
+            $('#submitBtn').removeClass('btn-secondary-custom').addClass('btn-primary-custom');
+        }
+    }
+
+    // ================= SUBMIT CHANGES =================
+    async function submitAllData() {
+        if (isSubmitting) return;
+        
+        // Check if any changes were made
+        const hasChanges = members.some((member, index) => {
+            const original = originalMembers[index];
+            if (!original) return true;
+            return JSON.stringify(member) !== JSON.stringify(original);
+        });
+        
+        if (!hasChanges) {
+            Swal.fire({ 
+                icon: 'info', 
+                title: 'No Changes', 
+                text: 'No changes were made to any member details.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+        
+        // Confirm before saving
+        const confirmResult = await Swal.fire({
+            title: 'Save Changes?',
+            text: 'This will update the member details in the system.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0f3b6a',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, Save Changes',
+            cancelButtonText: 'Cancel'
+        });
+        
+        if (!confirmResult.isConfirmed) return;
+        
+        isSubmitting = true;
+        const $btn = $("#submitBtn");
+        const originalHtml = $btn.html();
+        $btn.html('<i class="bi bi-arrow-repeat"></i> Saving...').prop('disabled', true);
+        showLoading(true, 'Saving changes...');
+        
+        try {
+            // Only update members that have changes
+            const changedMembers = members.filter((member, index) => {
+                const original = originalMembers[index];
+                if (!original) return false;
+                return JSON.stringify(member) !== JSON.stringify(original);
+            });
+            
+            if (changedMembers.length === 0) {
+                showLoading(false);
+                Swal.fire({ icon: 'info', title: 'No Changes', text: 'No changes detected.', timer: 1500, showConfirmButton: false });
+                $btn.html(originalHtml).prop('disabled', false);
+                isSubmitting = false;
+                return;
+            }
+            
+            // Submit only changed members
+            for (const member of changedMembers) {
+                const memberPayload = {
+                    action: "UPDATE_MEMBER",
+                    rowIndex: member.index,
+                    memberId: member.memberId,
+                    relation: member.relation,
+                    name: member.name,
+                    dob: member.dob,
+                    gender: member.gender,
+                    contact: member.contact,
+                    education: member.education,
+                    maritalStatus: member.maritalStatus,
+                    job: member.job || '',
+                    photo: member.photo || '',
+                    remarks: member.remarks || ''
+                };
+                
+                await fetch(CONFIG.APPS_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(memberPayload)
+                });
+            }
+            
+            showLoading(false);
+            
+            // Update original members to match current state
+            originalMembers = members.map(m => JSON.parse(JSON.stringify(m)));
+            
+            // Reset button style
+            $btn.removeClass('btn-primary-custom').addClass('btn-secondary-custom');
+            
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'Saved!', 
+                text: `${changedMembers.length} member(s) updated successfully.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+        } catch (err) {
+            showLoading(false);
+            console.error(err);
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Error', 
+                text: 'Failed to save changes. Please try again.' 
+            });
+        } finally {
+            isSubmitting = false;
+            $btn.html(originalHtml).prop('disabled', false);
+        }
+    }
+
+    // ================= REFRESH DATA =================
+    async function refreshData() {
+        const result = await Swal.fire({
+            title: 'Refresh Data?',
+            text: 'This will reload all member data from the sheet. Any unsaved changes will be lost.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#64748b',
+            cancelButtonColor: '#dc2626',
+            confirmButtonText: 'Refresh',
+            cancelButtonText: 'Cancel'
+        });
+        
+        if (!result.isConfirmed) return;
+        
+        showLoading(true, 'Refreshing data...');
+        
+        try {
+            const freshMembers = await fetchMembers(branchId, homeId);
+            members = freshMembers;
+            originalMembers = freshMembers.map(m => JSON.parse(JSON.stringify(m)));
+            renderMembersTable();
+            
+            // Reset button style
+            $('#submitBtn').removeClass('btn-primary-custom').addClass('btn-secondary-custom');
+            
+            showLoading(false);
+            Swal.fire({ icon: 'success', title: 'Refreshed!', text: 'Data has been reloaded.', timer: 1500, showConfirmButton: false });
+        } catch (e) {
+            showLoading(false);
+            showToast('Failed to refresh data.', 'error');
+        }
+    }
+
+    // ================= REPORT ADDRESS ISSUE =================
+    function reportAddressIssue() {
+        Swal.fire({
+            icon: 'info',
+            title: 'Report Address Issue',
+            html: `
+                <p style="text-align:left;">If you find any mistake in the address shown above, please contact the admin with the correct details.</p>
+                <hr>
+                <p style="text-align:left;font-size:0.85rem;color:#64748b;">
+                    <strong>Current Address:</strong><br>
+                    ${escapeHtml(addressData ? addressData.addressLine1 : '')}<br>
+                    ${escapeHtml(addressData ? addressData.addressLine2 : '')}<br>
+                    ${escapeHtml(addressData ? addressData.area : '')}, ${escapeHtml(addressData ? addressData.location : '')}<br>
+                    ${escapeHtml(addressData ? addressData.postOffice : '')}, ${escapeHtml(addressData ? addressData.district : '')}
+                </p>
+                <p style="text-align:left;font-size:0.85rem;">
+                    <strong>Branch ID:</strong> ${escapeHtml(branchId)}<br>
+                    <strong>Home ID:</strong> ${escapeHtml(homeId)}
+                </p>
+            `,
+            confirmButtonText: 'OK, I understand',
+            confirmButtonColor: '#0f3b6a'
+        });
+    }
+
+    // ================= PHOTO PREVIEW =================
+    function setupPhotoPreview() {
+        document.getElementById('editPhotoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedEditPhotoFile = file;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    $('#editPhotoPreview').attr('src', ev.target.result);
+                    $('#editPhotoPreviewContainer').show();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        $('#editRemovePhotoBtn').on('click', function() {
+            $('#editPhotoUpload').val('');
+            selectedEditPhotoFile = null;
+            const idx = parseInt($('#editMemberIndex').val());
+            if (!isNaN(idx) && members[idx]) {
+                members[idx].photo = '';
+                $('#editPhotoPreviewContainer').hide();
+                renderMembersTable();
+                // Mark as changed
+                $('#submitBtn').removeClass('btn-secondary-custom').addClass('btn-primary-custom');
+            }
+        });
+    }
+
+    // ================= INIT FLATPICKR =================
+    function initFlatpickr() {
+        const today = new Date();
+        flatpickrEditDob = flatpickr("#editDob", { 
+            dateFormat: "d/m/Y",
+            maxDate: today,
+            defaultDate: today,
+            allowInput: true,
+            clickOpens: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.input.removeAttribute("readonly");
+                instance.input.type = "text";
+            }
+        });
+    }
+
+    // ================= INIT =================
+    async function init() {
+        // Check session
+        const session = getSessionFromStorage();
+        if (!isValidSession(session)) {
+            document.getElementById('accessDeniedOverlay').classList.add('active');
+            return;
+        }
+        
+        branchId = session.branchId;
+        homeId = session.homeId;
+        memberName = session.name || 'Member';
+        memberEmail = session.email || '';
+        
+        // Show main content
+        document.getElementById('mainContent').style.display = 'block';
+        document.getElementById('accessDeniedOverlay').classList.remove('active');
+        
+        // Display member info
+        document.getElementById('displayBranchId').textContent = branchId;
+        document.getElementById('displayHomeId').textContent = homeId;
+        document.getElementById('displayMemberName').textContent = memberName;
+        
+        showLoading(true, 'Loading data...');
+        
+        try {
+            // Fetch schema data
+            const schemaData = await fetchSchemaData();
+            await populateAllDropdowns(schemaData);
+            
+            // Fetch address
+            addressData = await fetchAddress(branchId, homeId);
+            if (addressData) {
+                const parts = [addressData.addressLine1, addressData.addressLine2, addressData.area, addressData.location, addressData.postOffice, addressData.district]
+                    .filter(p => p && p.trim() !== '');
+                $('#addressText').text(parts.join(', ') || 'No address found');
+            } else {
+                $('#addressText').text('Address not found. Please contact admin.');
+            }
+            
+            // Fetch members
+            members = await fetchMembers(branchId, homeId);
+            originalMembers = members.map(m => JSON.parse(JSON.stringify(m)));
+            renderMembersTable();
+            
+            // Check if there are any changes initially
+            $('#submitBtn').removeClass('btn-primary-custom').addClass('btn-secondary-custom');
+            
+        } catch (e) {
+            console.error('Error initializing:', e);
+            showToast('Failed to load data. Please refresh.', 'error');
+        }
+        
+        showLoading(false);
+        
+        // Event listeners
+        $('#confirmEditBtn').on('click', updateMemberFromModal);
+        $('#submitBtn').on('click', submitAllData);
+        $('#refreshBtn').on('click', refreshData);
+        
+        // Close modal
+        $('#editMemberModal').on('hidden.bs.modal', function() {
+            $('#editPhotoUpload').val('');
+            selectedEditPhotoFile = null;
+        });
+    }
+
+    // ================= START =================
+    document.addEventListener('DOMContentLoaded', function() {
+        initFlatpickr();
+        setupPhotoPreview();
+        init();
+    });
+</script>
+</body>
+</html>

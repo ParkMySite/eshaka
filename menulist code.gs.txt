@@ -1,0 +1,240 @@
+// ==================== CONFIGURATION ====================
+const Data_ID = ""; //Sheet ID
+const Table_ID = "All Menu";
+
+// ==================== WEB APP ENTRY POINT ====================
+function doPost(e) {
+  try {
+    const requestData = JSON.parse(e.postData.contents);
+    const action = requestData.action;
+    
+    let result;
+    switch(action) {
+      case "ADD":
+        result = addMenuItem(requestData);
+        break;
+      case "UPDATE":
+        result = updateMenuItem(requestData);
+        break;
+      case "DELETE":
+        result = deleteMenuItem(requestData);
+        break;
+      default:
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: "Invalid action"
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Handle GET requests for testing
+function doGet() {
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: "Menu Management API is running. Use POST method for operations.",
+    operations: ["ADD", "UPDATE", "DELETE"]
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ==================== ADD NEW MENU ITEM ====================
+function addMenuItem(data) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+  if (!sheet) {
+    throw new Error(`Sheet "${Table_ID}" not found`);
+  }
+  
+  const { mainMenu, subMenu, linkItem, url, adminMenu, brMenu, userMenu } = data;
+  
+  // Validate required fields
+  if (!mainMenu || !subMenu || !linkItem || !url) {
+    throw new Error("Missing required fields: mainMenu, subMenu, linkItem, url");
+  }
+  
+  // Check for duplicate entry
+  const existingData = sheet.getDataRange().getValues();
+  for (let i = 1; i < existingData.length; i++) {
+    const row = existingData[i];
+    if (row[0] === mainMenu && row[1] === subMenu && row[2] === linkItem) {
+      throw new Error("Duplicate menu item already exists");
+    }
+  }
+  
+  // Append new row (NOW WITH 7 COLUMNS: A to G)
+  const lastRow = sheet.getLastRow();
+  const newRow = [
+    mainMenu,
+    subMenu,
+    linkItem,
+    url,
+    adminMenu || "No",
+    brMenu || "No",
+    userMenu || "No"      // NEW: User-Menu column G
+  ];
+  
+  sheet.getRange(lastRow + 1, 1, 1, newRow.length).setValues([newRow]);
+  
+  return {
+    success: true,
+    message: "Menu item added successfully",
+    data: { mainMenu, subMenu, linkItem, url, adminMenu, brMenu, userMenu }
+  };
+}
+
+// ==================== UPDATE MENU ITEM ====================
+function updateMenuItem(data) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+  if (!sheet) {
+    throw new Error(`Sheet "${Table_ID}" not found`);
+  }
+  
+  const { 
+    originalMain, originalSub, originalLink,
+    mainMenu, subMenu, linkItem, url, adminMenu, brMenu, userMenu 
+  } = data;
+  
+  // Validate required fields
+  if (!originalMain || !originalSub || !originalLink) {
+    throw new Error("Original menu identification missing");
+  }
+  
+  if (!mainMenu || !subMenu || !linkItem || !url) {
+    throw new Error("Missing required fields for update");
+  }
+  
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+  let rowIndex = -1;
+  
+  // Find the row to update
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    if (row[0] === originalMain && row[1] === originalSub && row[2] === originalLink) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+  
+  if (rowIndex === -1) {
+    throw new Error("Original menu item not found");
+  }
+  
+  // Check for duplicate if the key fields are changing
+  if (originalMain !== mainMenu || originalSub !== subMenu || originalLink !== linkItem) {
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      if (i + 1 !== rowIndex && row[0] === mainMenu && row[1] === subMenu && row[2] === linkItem) {
+        throw new Error("Duplicate menu item already exists with these values");
+      }
+    }
+  }
+  
+  // Update the row (NOW WITH 7 COLUMNS)
+  const updatedRow = [
+    mainMenu,
+    subMenu,
+    linkItem,
+    url,
+    adminMenu || "No",
+    brMenu || "No",
+    userMenu || "No"      // NEW: User-Menu column G
+  ];
+  
+  sheet.getRange(rowIndex, 1, 1, updatedRow.length).setValues([updatedRow]);
+  
+  return {
+    success: true,
+    message: "Menu item updated successfully",
+    data: { mainMenu, subMenu, linkItem, url, adminMenu, brMenu, userMenu }
+  };
+}
+
+// ==================== DELETE MENU ITEM ====================
+function deleteMenuItem(data) {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+  if (!sheet) {
+    throw new Error(`Sheet "${Table_ID}" not found`);
+  }
+  
+  const { mainMenu, subMenu, linkItem } = data;
+  
+  if (!mainMenu || !subMenu || !linkItem) {
+    throw new Error("Missing required fields for deletion");
+  }
+  
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+  let rowIndex = -1;
+  
+  // Find the row to delete
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+    if (row[0] === mainMenu && row[1] === subMenu && row[2] === linkItem) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+  
+  if (rowIndex === -1) {
+    throw new Error("Menu item not found");
+  }
+  
+  // Delete the row
+  sheet.deleteRow(rowIndex);
+  
+  return {
+    success: true,
+    message: "Menu item deleted successfully"
+  };
+}
+
+// ==================== HELPER FUNCTION: TEST API ====================
+function testAPI() {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+  if (sheet) {
+    Logger.log("Sheet found! Last row: " + sheet.getLastRow());
+    const data = sheet.getDataRange().getValues();
+    Logger.log("Total rows including header: " + data.length);
+    Logger.log("Number of columns: " + (data[0] ? data[0].length : 0));
+    return "Sheet is accessible. Total rows: " + data.length + ", Columns: " + (data[0] ? data[0].length : 0);
+  } else {
+    Logger.log("Sheet not found!");
+    return "Sheet not found! Please check the sheet name and ID.";
+  }
+}
+
+// ==================== FUNCTION TO GET ALL MENU DATA ====================
+function getAllMenuData() {
+  const sheet = SpreadsheetApp.openById(Data_ID).getSheetByName(Table_ID);
+  if (!sheet) {
+    return { success: false, error: "Sheet not found" };
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const results = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    results.push({
+      mainMenu: row[0],
+      subMenu: row[1],
+      linkItem: row[2],
+      url: row[3],
+      adminMenu: row[4] || "No",
+      brMenu: row[5] || "No",
+      userMenu: row[6] || "No"    // NEW: User-Menu column G
+    });
+  }
+  
+  return { success: true, data: results };
+}

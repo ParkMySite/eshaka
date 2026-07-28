@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Master Report - Member Management</title>
+    
+    <!-- Local CSS Resources -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    
+    <style>
+        * { box-sizing: border-box; }
+.modal-backdrop {background-color: #fff0;}
+        body {
+            background: #ffffff00;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 20px 16px;
+            margin: 0;
+        }
+        .app-card {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+       .page-header {
+    padding: 15px 2px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+ 
+}
+.page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-header-left i {
+    font-size: 1.8rem !important;
+    background: rgb(56 143 251 / 15%) !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
+    color: #184f83 !important;
+}
+
+
+.page-header-left h1 {
+    margin: 0 !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+    color: #184f83!important;
+}
+ .page-header-left p {
+            margin: 2px 0 0;
+            opacity: 0.7;
+            font-size: 0.75rem;
+ }
+        .tab-header {
+            display: flex;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 24px;
+        }
+        .tab-btn {
+            padding: 16px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            color: #475569;
+            transition: 0.2s;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+        }
+        .tab-btn i { margin-right: 8px; font-size: 1.1rem; }
+        .tab-btn.active {
+            color: #1e4a76;
+            border-bottom-color: #1e4a76;
+            background: white;
+        }
+        .tab-pane {
+            display: none;
+            padding: 30px 32px;
+            background: white;
+        }
+        .tab-pane.active-pane {
+            display: block;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        .filter-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+        .filter-section .row {
+            align-items: end;
+        }
+        .btn-primary-custom {
+            background: #0f3b5f;
+            border: none;
+            padding: 8px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-primary-custom:hover:not(:disabled) {
+            background: #0a2c46;
+            transform: translateY(-1px);
+        }
+        .btn-secondary-custom {
+            background: #64748b;
+            border: none;
+            padding: 8px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-secondary-custom:hover {
+            background: #475569;
+        }
+        .btn-success-custom {
+            background: #16a34a;
+            border: none;
+            padding: 8px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-success-custom:hover {
+            background: #15803d;
+        }
+        .btn-danger-custom {
+            background: #dc2626;
+            border: none;
+            padding: 8px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+        }
+        .btn-danger-custom:hover {
+            background: #b91c1c;
+        }
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0f3b5f;
+            box-shadow: 0 0 0 3px rgba(15,59,95,0.1);
+        }
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 12px !important;
+            border-color: #cbd5e1 !important;
+            min-height: 42px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            line-height: 40px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+            padding: 5px 10px !important;
+        }
+        #global-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+          /*  backdrop-filter: blur(3px);*/
+        }
+
+        .stats-badge {
+            background: #e6f0fa;
+            padding: 5px 12px;
+            border-radius: 40px;
+            color: #0f5b9c;
+            font-size: 0.85rem;
+        }
+        .table-responsive {
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .table-responsive table {
+            width: 100% !important;
+        }
+        .table-responsive table thead th {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 12px !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 12px !important;
+        }
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: 12px !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 6px 12px !important;
+        }
+        .photo-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .photo-thumb:hover {
+            transform: scale(1.05);
+        }
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .age-range-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .age-range-inputs input {
+            width: 120px;
+        }
+        @media (max-width: 700px) {
+            .tab-pane { padding: 20px; }
+            .tab-btn { padding: 12px 16px; font-size: 0.9rem; }
+            .age-range-inputs {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .age-range-inputs input {
+                width: 100%;
+            }
+        }
+        .flatpickr-input {
+            background: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+        .action-buttons-top {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+            background-color: #e6f0fa !important;
+            border: 1px solid #b3d4f0 !important;
+            border-radius: 20px !important;
+            padding: 2px 10px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+            color: #dc2626 !important;
+        }
+
+        /* Image Lightbox */
+        .image-lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .image-lightbox.active {
+            display: flex;
+        }
+        .image-lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .image-lightbox .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            font-size: 3rem;
+            color: white;
+            cursor: pointer;
+            z-index: 100000;
+            background: rgba(0,0,0,0.5);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .image-lightbox .close-btn:hover {
+            background: rgba(255,0,0,0.3);
+            transform: rotate(90deg);
+        }
+        .image-lightbox .zoom-info {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 20px;
+            border-radius: 20px;
+        }
+
+        /* Table column width fixes - allow full address display */
+        #memberTable td:first-child, #memberTable th:first-child {
+            min-width: 50px;
+            max-width: 60px;
+            white-space: nowrap !important;
+            text-align: center;
+        }
+        #memberTable td:nth-child(2), #memberTable th:nth-child(2) {
+            min-width: 250px;
+            max-width: 350px;
+            white-space: normal !important;
+            word-wrap: break-word;
+        }
+        #memberTable td, #memberTable th {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #memberTable td:nth-child(2) {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
+        .dataTables_wrapper {
+            overflow-x: auto;
+        }
+        
+        /* Rowspan styling for merged cells */
+        .merged-address {
+            vertical-align: middle !important;
+            background-color: #f8fafc !important;
+           /* font-weight: 400;*/
+            white-space: normal !important;
+            word-wrap: break-word;
+            min-width: 250px;
+        }
+        .merged-serial {
+            vertical-align: middle !important;
+            background-color: #f8fafc !important;
+            font-weight: 600;
+            text-align: center;
+            color: #0f172a;
+        }
+        .serial-number {
+            font-weight: 600;
+            color: #0f172a;
+            text-align: center;
+        }
+
+        /* Summary Details Section */
+        .summary-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        .summary-section.active {
+            display: block;
+        }
+        .summary-section .summary-title {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+        }
+        .summary-section .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        .summary-section .summary-item {
+            display: flex;
+            align-items: baseline;
+            padding: 5px 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .summary-section .summary-item .label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+        .summary-section .summary-item .value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+        .summary-section .summary-item .value.highlight {
+            color: #0f5b9c;
+        }
+        .summary-section .summary-item .value.branch-count {
+            color: #16a34a;
+        }
+        .summary-section .summary-item .value.member-count {
+            color: #0f5b9c;
+        }
+        .summary-section .summary-divider {
+            width: 1px;
+            background: #e2e8f0;
+            margin: 0 5px;
+        }
+        @media (max-width: 700px) {
+            .summary-section .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .summary-section .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page-header">
+                <div class="page-header-left">
+                     <i class="bi bi-file-earmark-text-fill"></i>
+                    <div>
+                        <h1>Master Reports</h1>
+                        <p>View and filter branch and member data</p>
+                    </div>
+                </div>
+            </div>
+<div class="app-card">
+       <div class="tab-header">
+        <button class="tab-btn active" id="tabMasterBtn"><i class="bi bi-building"></i> Master Report</button>
+        <button class="tab-btn" id="tabMemberBtn"><i class="bi bi-people"></i> Member Report</button>
+    </div>
+    
+    <!-- Tab 1: Master Report -->
+    <div id="masterPane" class="tab-pane active-pane">
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Branch ID</label>
+                    <select id="masterFilterBranch" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Home ID</label>
+                    <select id="masterFilterHome" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Area</label>
+                    <select id="masterFilterArea" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Location</label>
+                    <select id="masterFilterLocation" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Post Office</label>
+                    <select id="masterFilterPostOffice" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">District</label>
+                    <select id="masterFilterDistrict" class="form-select select2-filter-master"></select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="report-actions">
+                        <button id="masterApplyFilter" class="btn btn-primary-custom">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                        <button id="masterResetFilter" class="btn btn-secondary-custom">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                        <button id="masterExportCSV" class="btn btn-success-custom">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                        <button id="masterExportPDF" class="btn btn-danger-custom">
+                            <i class="bi bi-filetype-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <h5 class="fs-6 mb-0"><i class="bi bi-list-ul"></i> Branch Records</h5>
+            </div>
+            <div>
+                <span class="stats-badge" id="masterRecordCount">0 Records</span>
+                <span class="stats-badge ms-2" id="masterTotalCount">Total: 0</span>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table id="masterTable" class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Branch ID</th>
+                        <th>Home ID</th>
+                        <th>Address Line 1</th>
+                        <th>Address Line 2</th>
+                        <th>Area</th>
+                        <th>Location</th>
+                        <th>Post Office</th>
+                        <th>District</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-funnel fs-1"></i>
+                            <h6>Apply filters to load data</h6>
+                            <p>Select filters and click "Apply Filters"</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 2: Member Report -->
+    <div id="memberPane" class="tab-pane">
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Branch ID</label>
+                    <select id="memberFilterBranch" class="form-select select2-filter-member"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Home ID</label>
+                    <select id="memberFilterHome" class="form-select select2-filter-member"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Age Range</label>
+                    <div class="age-range-inputs">
+                        <input type="text" id="memberFilterAgeFrom" class="form-control flatpickr-date" placeholder="From Date">
+                        <span style="font-weight: 500; color: #64748b;">to</span>
+                        <input type="text" id="memberFilterAgeTo" class="form-control flatpickr-date" placeholder="To Date">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Education</label>
+                    <select id="memberFilterEducation" class="form-select select2-filter-member"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Job</label>
+                    <select id="memberFilterJob" class="form-select select2-filter-member"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Marital Status</label>
+                    <select id="memberFilterMarital" class="form-select select2-filter-member"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Gender</label>
+                    <select id="memberFilterGender" class="form-select select2-filter-member"></select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="report-actions">
+                        <button id="memberApplyFilter" class="btn btn-primary-custom">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                        <button id="memberResetFilter" class="btn btn-secondary-custom">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                        <button id="memberExportCSV" class="btn btn-success-custom">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                        <button id="memberExportPDF" class="btn btn-danger-custom">
+                            <i class="bi bi-filetype-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Section -->
+        <div id="memberSummary" class="summary-section">
+            <div class="summary-title"><i class="bi bi-info-circle"></i> Report Summary</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="label">Total Members:</span>
+                    <span class="value member-count" id="summaryTotalMembers">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Total Branches:</span>
+                    <span class="value branch-count" id="summaryTotalBranches">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Total Homes:</span>
+                    <span class="value" id="summaryTotalHomes">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Gender - Male:</span>
+                    <span class="value highlight" id="summaryMaleCount">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Gender - Female:</span>
+                    <span class="value highlight" id="summaryFemaleCount">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Gender - Other:</span>
+                    <span class="value highlight" id="summaryOtherCount">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Age Group - Min:</span>
+                    <span class="value" id="summaryMinAge">—</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Age Group - Max:</span>
+                    <span class="value" id="summaryMaxAge">—</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Filter Status:</span>
+                    <span class="value" id="summaryFilterStatus" style="font-size:0.8rem; color:#64748b;">All Records</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <h5 class="fs-6 mb-0"><i class="bi bi-list-ul"></i> Member Records</h5>
+            </div>
+            <div>
+                <span class="stats-badge" id="memberRecordCount">0 Records</span>
+                <span class="stats-badge ms-2" id="memberTotalCount">Total: 0</span>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table id="memberTable" class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Address</th>
+                        <th>Member ID</th>
+                        <th>Relation</th>
+                        <th>Name</th>
+                        <th>DoB</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Contact</th>
+                        <th>Education</th>
+                        <th>Job</th>
+                        <th>Marital Status</th>
+                        <th>Photo</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="14" class="text-center py-5 text-muted">
+                            <i class="bi bi-funnel fs-1"></i>
+                            <h6>Apply filters to load data</h6>
+                            <p>Select filters and click "Apply Filters"</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="image-lightbox" id="imageLightbox">
+    <div class="close-btn" id="lightboxCloseBtn">
+        <i class="bi bi-x-lg"></i>
+    </div>
+    <img id="lightboxImage" src="" alt="Enlarged Image">
+    <div class="zoom-info">Click anywhere to close</div>
+</div>
+ <script src="config.js"></script>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../js/dataTables.bootstrap5.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/flatpickr.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+<!-- jsPDF Library -->
+<script src="../js/jspdf.umd.min.js"></script>
+<script src="../js/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+
+    
+    let masterData = [];
+    let memberData = [];
+    let masterDataTable = null;
+    let memberDataTable = null;
+    let flatpickrFrom, flatpickrTo;
+    let isMasterLoaded = false;
+    let isMemberLoaded = false;
+    let currentMemberFilteredData = [];
+
+    // ================= HELPER FUNCTIONS =================
+    function showGlobalLoading(msg) {
+        if($('#global-loading-overlay').length) return;
+        $('body').append(`<div id="global-loading-overlay"><div style="background:white;padding:30px;border-radius:24px;text-align:center;"><i class="bi bi-arrow-repeat" style="font-size:48px;color:#0f3b5f;animation:spin 1s linear infinite;"></i><p>${msg}</p></div></div>`);
+        $('head').append('<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>');
+    }
+    function hideGlobalLoading() { $('#global-loading-overlay').remove(); }
+    
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+    
+    function formatDateDMY(dateObj) {
+        if(!dateObj) return "";
+        let d = dateObj.getDate().toString().padStart(2,'0');
+        let m = (dateObj.getMonth()+1).toString().padStart(2,'0');
+        let y = dateObj.getFullYear();
+        return `${d}/${m}/${y}`;
+    }
+
+    function parseDateDMY(str) {
+        if(!str) return null;
+        const parts = str.split('/');
+        if(parts.length === 3) {
+            return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+        }
+        return null;
+    }
+
+    function calculateAge(dobStr) {
+        if(!dobStr) return { years: 0, months: 0, days: 0, formatted: '—' };
+        const dob = parseDateDMY(dobStr);
+        if(!dob) return { years: 0, months: 0, days: 0, formatted: '—' };
+        
+        const today = new Date();
+        let years = today.getFullYear() - dob.getFullYear();
+        let months = today.getMonth() - dob.getMonth();
+        let days = today.getDate() - dob.getDate();
+        
+        if(days < 0) {
+            months--;
+            const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+            days += prevMonth.getDate();
+        }
+        if(months < 0) {
+            years--;
+            months += 12;
+        }
+        
+        const formatted = `${years}Y, ${months}M, ${days}D`;
+        return { years, months, days, formatted };
+    }
+
+    // ================= SELECT2 INIT =================
+    function initSelect2(selector, placeholder, allowClear = true) {
+        $(selector).select2({
+            theme: 'bootstrap-5',
+            placeholder: placeholder,
+            allowClear: allowClear,
+            width: '100%'
+        });
+    }
+
+    // ================= FETCH MASTER DATA =================
+    async function fetchMasterData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Master!A:H?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const records = [];
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    records.push({
+                        branchId: row[0] || '',
+                        homeId: row[1] || '',
+                        addressLine1: row[2] || '',
+                        addressLine2: row[3] || '',
+                        area: row[4] || '',
+                        location: row[5] || '',
+                        postOffice: row[6] || '',
+                        district: row[7] || ''
+                    });
+                }
+            }
+            masterData = records;
+            return records;
+        } catch(e) {
+            console.error("Error fetching master data:", e);
+            return [];
+        }
+    }
+
+    // ================= FETCH MEMBER DATA =================
+    async function fetchMemberData() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Members!A:N?key=${API_KEY}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const rows = data.values || [];
+            
+            const records = [];
+            for(let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if(row.length > 0 && row[0]) {
+                    records.push({
+                        memberId: row[0] || '',
+                        relation: row[1] || '',
+                        name: row[2] || '',
+                        dob: row[3] || '',
+                        gender: row[4] || '',
+                        contact: row[5] || '',
+                        education: row[6] || '',
+                        maritalStatus: row[7] || '',
+                        photo: row[8] || '',
+                        remarks: row[9] || '',
+                        branchId: row[10] || '',
+                        homeId: row[11] || '',
+                        status: row[12] || 'Active',
+                        job: row[13] || ''
+                    });
+                }
+            }
+            memberData = records;
+            return records;
+        } catch(e) {
+            console.error("Error fetching member data:", e);
+            return [];
+        }
+    }
+
+    // ================= GET ADDRESS BY BRANCH/HOME =================
+    function getAddress(branchId, homeId) {
+        const match = masterData.find(r => r.branchId === branchId && r.homeId === homeId);
+        if(match) {
+            const parts = [match.addressLine1, match.addressLine2, match.area, match.location, match.postOffice, match.district]
+                .filter(p => p && p.trim() !== '');
+            return parts.join(', ');
+        }
+        return '—';
+    }
+
+    // ================= PREPARE MEMBER DATA WITH ADDRESS AND SERIAL =================
+    function prepareMemberData(members) {
+        // Sort by member ID ascending
+        const sorted = [...members].sort((a, b) => {
+            const aParts = a.memberId.split('-');
+            const bParts = b.memberId.split('-');
+            const aNum = parseInt(aParts[aParts.length - 1]) || 0;
+            const bNum = parseInt(bParts[bParts.length - 1]) || 0;
+            return aNum - bNum;
+        });
+        
+        // Group by branch/home for address merging
+        const groups = {};
+        sorted.forEach(m => {
+            const key = `${m.branchId}|${m.homeId}`;
+            if(!groups[key]) {
+                groups[key] = {
+                    branchId: m.branchId,
+                    homeId: m.homeId,
+                    members: []
+                };
+            }
+            groups[key].members.push(m);
+        });
+        
+        // Build final data with address and serial numbers
+        const result = [];
+        let groupCounter = 0;
+        for(const key in groups) {
+            const group = groups[key];
+            const address = getAddress(group.branchId, group.homeId);
+            groupCounter++;
+            let serial = 0;
+            group.members.forEach((member, index) => {
+                serial++;
+                result.push({
+                    ...member,
+                    address: address,
+                    isFirstInGroup: index === 0,
+                    groupSize: group.members.length,
+                    addressDisplay: index === 0 ? address : '',
+                    serialNumber: index === 0 ? groupCounter : '',
+                    serialDisplay: index === 0 ? groupCounter : ''
+                });
+            });
+        }
+        
+        return result;
+    }
+
+    // ================= UPDATE SUMMARY =================
+    function updateSummary(data) {
+        if(!data || data.length === 0) {
+            $('#memberSummary').removeClass('active');
+            return;
+        }
+        
+        $('#memberSummary').addClass('active');
+        
+        const totalMembers = data.length;
+        const branchIds = new Set(data.map(r => r.branchId).filter(Boolean));
+        const homeIds = new Set(data.map(r => r.homeId).filter(Boolean));
+        const maleCount = data.filter(r => r.gender && r.gender.toLowerCase() === 'male').length;
+        const femaleCount = data.filter(r => r.gender && r.gender.toLowerCase() === 'female').length;
+        const otherCount = data.filter(r => r.gender && r.gender.toLowerCase() !== 'male' && r.gender.toLowerCase() !== 'female').length;
+        
+        let minAge = 999, maxAge = 0;
+        data.forEach(r => {
+            const age = calculateAge(r.dob);
+            if(age.years > 0 && age.years < minAge) minAge = age.years;
+            if(age.years > maxAge) maxAge = age.years;
+        });
+        
+        $('#summaryTotalMembers').text(totalMembers);
+        $('#summaryTotalBranches').text(branchIds.size);
+        $('#summaryTotalHomes').text(homeIds.size);
+        $('#summaryMaleCount').text(maleCount);
+        $('#summaryFemaleCount').text(femaleCount);
+        $('#summaryOtherCount').text(otherCount);
+        $('#summaryMinAge').text(minAge === 999 ? '—' : `${minAge}Y`);
+        $('#summaryMaxAge').text(maxAge === 0 ? '—' : `${maxAge}Y`);
+        
+        // Show filter status
+        const branch = $('#memberFilterBranch').val();
+        const home = $('#memberFilterHome').val();
+        const education = $('#memberFilterEducation').val();
+        const job = $('#memberFilterJob').val();
+        const marital = $('#memberFilterMarital').val();
+        const gender = $('#memberFilterGender').val();
+        const ageFrom = $('#memberFilterAgeFrom').val();
+        const ageTo = $('#memberFilterAgeTo').val();
+        
+        let filters = [];
+        if(branch) filters.push(`Branch: ${branch}`);
+        if(home) filters.push(`Home: ${home}`);
+        if(education) filters.push(`Education: ${education}`);
+        if(job) filters.push(`Job: ${job}`);
+        if(marital) filters.push(`Marital: ${marital}`);
+        if(gender) filters.push(`Gender: ${gender}`);
+        if(ageFrom) filters.push(`From: ${ageFrom}`);
+        if(ageTo) filters.push(`To: ${ageTo}`);
+        
+        $('#summaryFilterStatus').text(filters.length > 0 ? filters.join(' | ') : 'All Records');
+    }
+
+    // ================= POPULATE FILTER DROPDOWNS =================
+    function populateFilterDropdowns() {
+        // Master filters
+        const masterBranchIds = [...new Set(masterData.map(r => r.branchId).filter(Boolean))].sort();
+        const masterHomeIds = [...new Set(masterData.map(r => r.homeId).filter(Boolean))].sort();
+        const masterAreas = [...new Set(masterData.map(r => r.area).filter(Boolean))].sort();
+        const masterLocations = [...new Set(masterData.map(r => r.location).filter(Boolean))].sort();
+        const masterPostOffices = [...new Set(masterData.map(r => r.postOffice).filter(Boolean))].sort();
+        const masterDistricts = [...new Set(masterData.map(r => r.district).filter(Boolean))].sort();
+
+        populateSelect2Options('#masterFilterBranch', masterBranchIds, 'All Branches');
+        populateSelect2Options('#masterFilterHome', masterHomeIds, 'All Homes');
+        populateSelect2Options('#masterFilterArea', masterAreas, 'All Areas');
+        populateSelect2Options('#masterFilterLocation', masterLocations, 'All Locations');
+        populateSelect2Options('#masterFilterPostOffice', masterPostOffices, 'All Post Offices');
+        populateSelect2Options('#masterFilterDistrict', masterDistricts, 'All Districts');
+
+        // Member filters
+        const memberBranchIds = [...new Set(memberData.map(r => r.branchId).filter(Boolean))].sort();
+        const memberHomeIds = [...new Set(memberData.map(r => r.homeId).filter(Boolean))].sort();
+        const memberEducations = [...new Set(memberData.map(r => r.education).filter(Boolean))].sort();
+        const memberJobs = [...new Set(memberData.map(r => r.job).filter(Boolean))].sort();
+        const memberMaritalStatuses = [...new Set(memberData.map(r => r.maritalStatus).filter(Boolean))].sort();
+        const memberGenders = [...new Set(memberData.map(r => r.gender).filter(Boolean))].sort();
+
+        populateSelect2Options('#memberFilterBranch', memberBranchIds, 'All Branches');
+        populateSelect2Options('#memberFilterHome', memberHomeIds, 'All Homes');
+        populateSelect2Options('#memberFilterEducation', memberEducations, 'All Education');
+        populateSelect2Options('#memberFilterJob', memberJobs, 'All Jobs');
+        populateSelect2Options('#memberFilterMarital', memberMaritalStatuses, 'All Marital Status');
+        populateSelect2Options('#memberFilterGender', memberGenders, 'All Genders');
+
+        // Initialize Select2
+        initSelect2('#masterFilterBranch', 'All Branches');
+        initSelect2('#masterFilterHome', 'All Homes');
+        initSelect2('#masterFilterArea', 'All Areas');
+        initSelect2('#masterFilterLocation', 'All Locations');
+        initSelect2('#masterFilterPostOffice', 'All Post Offices');
+        initSelect2('#masterFilterDistrict', 'All Districts');
+
+        initSelect2('#memberFilterBranch', 'All Branches');
+        initSelect2('#memberFilterHome', 'All Homes');
+        initSelect2('#memberFilterEducation', 'All Education');
+        initSelect2('#memberFilterJob', 'All Jobs');
+        initSelect2('#memberFilterMarital', 'All Marital Status');
+        initSelect2('#memberFilterGender', 'All Genders');
+    }
+
+    function populateSelect2Options(selector, options, placeholder) {
+        const $select = $(selector);
+        $select.empty();
+        $select.append(`<option value="">${placeholder}</option>`);
+        options.forEach(opt => {
+            $select.append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+        });
+    }
+
+    // ================= IMAGE LIGHTBOX =================
+    function setupImageLightbox() {
+        const lightbox = document.getElementById('imageLightbox');
+        const lightboxImg = document.getElementById('lightboxImage');
+        const closeBtn = document.getElementById('lightboxCloseBtn');
+        
+        $(document).on('click', '.photo-thumb', function(e) {
+            e.stopPropagation();
+            const imgSrc = $(this).attr('src');
+            if(imgSrc && imgSrc !== '#') {
+                lightboxImg.src = imgSrc;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+            lightboxImg.src = '';
+        }
+        
+        closeBtn.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', closeLightbox);
+        
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape' && lightbox.classList.contains('active')) {
+                closeLightbox();
+            }
+        });
+    }
+
+    // ================= RENDER MASTER TABLE =================
+    function renderMasterTable(data) {
+        if(masterDataTable) {
+            masterDataTable.destroy();
+            masterDataTable = null;
+            $('#masterTable tbody').empty();
+        }
+        
+        if(!data || data.length === 0) {
+            $('#masterTable tbody').html(`<tr><td colspan="8" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <h6>No records found</h6>
+                <p>Try adjusting your filters</p>
+            </td></tr>`);
+            $('#masterRecordCount').text('0 Records');
+            $('#masterTotalCount').text('Total: 0');
+            return;
+        }
+        
+        $('#masterRecordCount').text(`${data.length} Records`);
+        $('#masterTotalCount').text(`Total: ${data.length}`);
+        
+        masterDataTable = $('#masterTable').DataTable({
+            data: data,
+            columns: [
+                { data: "branchId" },
+                { data: "homeId" },
+                { data: "addressLine1" },
+                { data: "addressLine2" },
+                { data: "area" },
+                { data: "location" },
+                { data: "postOffice" },
+                { data: "district" }
+            ],
+            order: [[0, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+            language: { 
+                search: "Filter:",
+                searchPlaceholder: "Search records...",
+                emptyTable: "No records found"
+            },
+            scrollX: true,
+            autoWidth: true,
+            columnDefs: [
+                { targets: '_all', className: 'text-truncate' }
+            ],
+            dom: '<"d-flex justify-content-between align-items-center flex-wrap"lf>tip',
+            drawCallback: function() {}
+        });
+    }
+
+    // ================= RENDER MEMBER TABLE =================
+    function renderMemberTable(data) {
+        if(memberDataTable) {
+            memberDataTable.destroy();
+            memberDataTable = null;
+            $('#memberTable tbody').empty();
+        }
+        
+        if(!data || data.length === 0) {
+            $('#memberTable tbody').html(`<tr><td colspan="14" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <h6>No records found</h6>
+                <p>Try adjusting your filters</p>
+            </td></tr>`);
+            $('#memberRecordCount').text('0 Records');
+            $('#memberTotalCount').text('Total: 0');
+            $('#memberSummary').removeClass('active');
+            return;
+        }
+        
+        // Prepare data with addresses and serial numbers
+        const preparedData = prepareMemberData(data);
+        currentMemberFilteredData = data;
+        
+        $('#memberRecordCount').text(`${preparedData.length} Records`);
+        $('#memberTotalCount').text(`Total: ${preparedData.length}`);
+        
+        // Update summary
+        updateSummary(data);
+        
+        memberDataTable = $('#memberTable').DataTable({
+            data: preparedData,
+            columns: [
+                { 
+                    data: "serialDisplay",
+                    render: function(data, type, row) {
+                        if(row.isFirstInGroup) {
+                            return `<span class="merged-serial">${data}</span>`;
+                        }
+                        return '';
+                    }
+                },
+                { 
+                    data: "addressDisplay",
+                    render: function(data, type, row) {
+                        if(row.isFirstInGroup) {
+                            return `<span class="merged-address">${escapeHtml(data)}</span>`;
+                        }
+                        return '';
+                    }
+                },
+                { data: "memberId" },
+                { data: "relation" },
+                { data: "name" },
+                { data: "dob" },
+                { 
+                    data: null,
+                    render: function(row) {
+                        const age = calculateAge(row.dob);
+                        return age.formatted;
+                    }
+                },
+                { data: "gender" },
+                { data: "contact" },
+                { data: "education" },
+                { data: "job" },
+                { data: "maritalStatus" },
+                { 
+                    data: null,
+                    render: function(row) {
+                        if(row.photo && row.photo.trim() !== "") {
+                            return `<img src="${escapeHtml(row.photo)}" class="photo-thumb" alt="Photo" title="Click to enlarge">`;
+                        }
+                        return '<span class="text-muted">—</span>';
+                    }
+                },
+                { data: "remarks" }
+            ],
+            order: [[2, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+            language: { 
+                search: "Filter:",
+                searchPlaceholder: "Search records...",
+                emptyTable: "No records found"
+            },
+            scrollX: true,
+            autoWidth: true,
+            columnDefs: [
+                { targets: 0, width: '50px', className: 'text-center' },
+                { targets: 1, className: 'merged-address', width: '250px' }
+            ],
+            dom: '<"d-flex justify-content-between align-items-center flex-wrap"lf>tip',
+            drawCallback: function() {
+                // Apply rowspan for merged serial and address cells
+                const table = $('#memberTable').DataTable();
+                const data = table.data();
+                let currentAddress = '';
+                let rowspanCount = 0;
+                let startIndex = 0;
+                
+                for(let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if(row.address && row.address !== currentAddress) {
+                        if(rowspanCount > 1) {
+                            // Merge serial number column
+                            const serialCell = table.cell(startIndex, 0).node();
+                            serialCell.rowSpan = rowspanCount;
+                            // Merge address column
+                            const addressCell = table.cell(startIndex, 1).node();
+                            addressCell.rowSpan = rowspanCount;
+                            // Hide cells in the same group
+                            for(let j = startIndex + 1; j < i; j++) {
+                                const hideSerialCell = table.cell(j, 0).node();
+                                hideSerialCell.style.display = 'none';
+                                const hideAddressCell = table.cell(j, 1).node();
+                                hideAddressCell.style.display = 'none';
+                            }
+                        }
+                        currentAddress = row.address;
+                        rowspanCount = 1;
+                        startIndex = i;
+                    } else if(row.address === currentAddress) {
+                        rowspanCount++;
+                    }
+                }
+                // Close last group
+                if(rowspanCount > 1) {
+                    const serialCell = table.cell(startIndex, 0).node();
+                    serialCell.rowSpan = rowspanCount;
+                    const addressCell = table.cell(startIndex, 1).node();
+                    addressCell.rowSpan = rowspanCount;
+                    for(let j = startIndex + 1; j < data.length; j++) {
+                        const hideSerialCell = table.cell(j, 0).node();
+                        hideSerialCell.style.display = 'none';
+                        const hideAddressCell = table.cell(j, 1).node();
+                        hideAddressCell.style.display = 'none';
+                    }
+                }
+            }
+        });
+    }
+
+    // ================= PDF EXPORT FUNCTIONS =================
+    function exportToPDF(data, filename, columns, title, isMemberReport = false) {
+        if(!data || data.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Data',
+                text: 'No records to export.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            
+            // Add title
+            doc.setFontSize(16);
+            doc.setTextColor(40, 80, 140);
+            doc.text(title, 14, 15);
+            
+            // Add date
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            doc.text(`Generated on: ${dateStr}`, 14, 22);
+            
+            // Add record count
+            doc.text(`Total Records: ${data.length}`, 14, 28);
+            
+            // Prepare table data
+            let tableData;
+            let headers;
+            
+            if(isMemberReport) {
+                const preparedData = prepareMemberData(data);
+                headers = ['#', 'Address', 'Member ID', 'Relation', 'Name', 'DoB', 'Age', 'Gender', 'Contact', 'Education', 'Job', 'Marital Status', 'Remarks'];
+                
+                tableData = preparedData.map(row => {
+                    let addressDisplay = '';
+                    let serialDisplay = '';
+                    if(row.isFirstInGroup) {
+                        addressDisplay = row.address || '';
+                        serialDisplay = row.serialNumber || '';
+                    }
+                    const age = calculateAge(row.dob);
+                    return [
+                        serialDisplay,
+                        addressDisplay,
+                        row.memberId || '',
+                        row.relation || '',
+                        row.name || '',
+                        row.dob || '',
+                        age.formatted,
+                        row.gender || '',
+                        row.contact || '',
+                        row.education || '',
+                        row.job || '',
+                        row.maritalStatus || '',
+                        row.remarks || ''
+                    ];
+                });
+            } else {
+                headers = columns.map(col => col.title || col.data);
+                tableData = data.map(row => {
+                    return columns.map(col => {
+                        let value = '';
+                        if(col.render) {
+                            value = col.render(row);
+                        } else {
+                            value = row[col.data] || '';
+                        }
+                        return String(value).replace(/<[^>]*>/g, '');
+                    });
+                });
+            }
+            
+            doc.autoTable({
+                head: [headers],
+                body: tableData,
+                startY: 32,
+                styles: {
+                    fontSize: 7,
+                    cellPadding: 2,
+                    overflow: 'linebreak',
+                    cellWidth: 'auto'
+                },
+                headStyles: {
+                    fillColor: [15, 91, 156],
+                    textColor: 255,
+                    fontSize: 8,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 248, 250]
+                },
+                margin: { top: 32, left: 10, right: 10, bottom: 10 },
+                pageBreak: 'auto',
+                tableWidth: 'auto'
+            });
+            
+            doc.save(`${filename}.pdf`);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'PDF Exported!',
+                text: `${data.length} records exported to PDF.`,
+                timer: 1500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } catch(e) {
+            console.error("PDF Export Error:", e);
+            Swal.fire({
+                icon: 'error',
+                title: 'PDF Export Failed',
+                text: 'Please make sure jsPDF libraries are loaded properly.',
+                timer: 3000,
+                showConfirmButton: true
+            });
+        }
+    }
+
+    // ================= EXPORT CSV =================
+    function exportToCSV(data, filename, columns, isMemberReport = false) {
+        if(!data || data.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Data',
+                text: 'No records to export.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+        
+        let headers, csvRows;
+        
+        if(isMemberReport) {
+            const preparedData = prepareMemberData(data);
+            headers = ['#', 'Address', 'Member ID', 'Relation', 'Name', 'DoB', 
+                       'Age_Yrs', 'Age_Months', 'Age_Days', 'Age_Formatted',
+                       'Gender', 'Contact', 'Education', 'Job', 'Marital Status', 'Remarks'];
+            
+            csvRows = preparedData.map(row => {
+                const age = calculateAge(row.dob);
+                let addressDisplay = '';
+                let serialDisplay = '';
+                if(row.isFirstInGroup) {
+                    addressDisplay = row.address || '';
+                    serialDisplay = row.serialNumber || '';
+                }
+                return [
+                    serialDisplay,
+                    addressDisplay,
+                    row.memberId || '',
+                    row.relation || '',
+                    row.name || '',
+                    row.dob || '',
+                    age.years,
+                    age.months,
+                    age.days,
+                    age.formatted,
+                    row.gender || '',
+                    row.contact || '',
+                    row.education || '',
+                    row.job || '',
+                    row.maritalStatus || '',
+                    row.remarks || ''
+                ];
+            });
+        } else {
+            headers = columns.map(col => col.title || col.data);
+            csvRows = data.map(row => {
+                return columns.map(col => {
+                    let value = '';
+                    if(col.render) {
+                        value = col.render(row);
+                    } else {
+                        value = row[col.data] || '';
+                    }
+                    return String(value).replace(/<[^>]*>/g, '');
+                });
+            });
+        }
+        
+        let csv = headers.join(',') + '\n';
+        
+        csvRows.forEach(row => {
+            const values = row.map(val => {
+                const str = String(val).replace(/"/g, '""');
+                if(str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str}"`;
+                }
+                return str;
+            });
+            csv += values.join(',') + '\n';
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `${filename}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Export Complete',
+            text: `${data.length} records exported`,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    // ================= FILTER FUNCTIONS =================
+    async function applyMasterFilters() {
+        const branch = $('#masterFilterBranch').val();
+        const home = $('#masterFilterHome').val();
+        const area = $('#masterFilterArea').val();
+        const location = $('#masterFilterLocation').val();
+        const postOffice = $('#masterFilterPostOffice').val();
+        const district = $('#masterFilterDistrict').val();
+        
+        showGlobalLoading("Loading master data...");
+        await fetchMasterData();
+        hideGlobalLoading();
+        
+        let filtered = masterData;
+        
+        if(branch) filtered = filtered.filter(r => r.branchId === branch);
+        if(home) filtered = filtered.filter(r => r.homeId === home);
+        if(area) filtered = filtered.filter(r => r.area === area);
+        if(location) filtered = filtered.filter(r => r.location === location);
+        if(postOffice) filtered = filtered.filter(r => r.postOffice === postOffice);
+        if(district) filtered = filtered.filter(r => r.district === district);
+        
+        renderMasterTable(filtered);
+        isMasterLoaded = true;
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Filters Applied',
+            text: `Showing ${filtered.length} records`,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    async function applyMemberFilters() {
+        const branch = $('#memberFilterBranch').val();
+        const home = $('#memberFilterHome').val();
+        const ageFrom = $('#memberFilterAgeFrom').val();
+        const ageTo = $('#memberFilterAgeTo').val();
+        const education = $('#memberFilterEducation').val();
+        const job = $('#memberFilterJob').val();
+        const marital = $('#memberFilterMarital').val();
+        const gender = $('#memberFilterGender').val();
+        
+        showGlobalLoading("Loading member data...");
+        await fetchMemberData();
+        hideGlobalLoading();
+        
+        let filtered = memberData;
+        
+        if(branch) filtered = filtered.filter(r => r.branchId === branch);
+        if(home) filtered = filtered.filter(r => r.homeId === home);
+        if(education) filtered = filtered.filter(r => r.education === education);
+        if(job) filtered = filtered.filter(r => r.job === job);
+        if(marital) filtered = filtered.filter(r => r.maritalStatus === marital);
+        if(gender) filtered = filtered.filter(r => r.gender === gender);
+        
+        if(ageFrom || ageTo) {
+            const fromDate = ageFrom ? parseDateDMY(ageFrom) : null;
+            const toDate = ageTo ? parseDateDMY(ageTo) : null;
+            
+            filtered = filtered.filter(r => {
+                if(!r.dob) return false;
+                const dob = parseDateDMY(r.dob);
+                if(!dob) return false;
+                
+                if(fromDate && toDate) {
+                    return dob >= fromDate && dob <= toDate;
+                } else if(fromDate) {
+                    return dob >= fromDate;
+                } else if(toDate) {
+                    return dob <= toDate;
+                }
+                return true;
+            });
+        }
+        
+        renderMemberTable(filtered);
+        isMemberLoaded = true;
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Filters Applied',
+            text: `Showing ${filtered.length} records`,
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    function resetMasterFilters() {
+        $('#masterFilterBranch').val('').trigger('change');
+        $('#masterFilterHome').val('').trigger('change');
+        $('#masterFilterArea').val('').trigger('change');
+        $('#masterFilterLocation').val('').trigger('change');
+        $('#masterFilterPostOffice').val('').trigger('change');
+        $('#masterFilterDistrict').val('').trigger('change');
+        
+        if(masterDataTable) {
+            masterDataTable.destroy();
+            masterDataTable = null;
+        }
+        $('#masterTable tbody').html(`<tr><td colspan="8" class="text-center py-5 text-muted">
+            <i class="bi bi-funnel fs-1"></i>
+            <h6>Apply filters to load data</h6>
+            <p>Select filters and click "Apply Filters"</p>
+        </td></tr>`);
+        $('#masterRecordCount').text('0 Records');
+        $('#masterTotalCount').text('Total: 0');
+        isMasterLoaded = false;
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Reset Complete',
+            text: 'Filters cleared. Click "Apply Filters" to load data.',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    function resetMemberFilters() {
+        $('#memberFilterBranch').val('').trigger('change');
+        $('#memberFilterHome').val('').trigger('change');
+        $('#memberFilterAgeFrom').val('');
+        $('#memberFilterAgeTo').val('');
+        $('#memberFilterEducation').val('').trigger('change');
+        $('#memberFilterJob').val('').trigger('change');
+        $('#memberFilterMarital').val('').trigger('change');
+        $('#memberFilterGender').val('').trigger('change');
+        
+        if(memberDataTable) {
+            memberDataTable.destroy();
+            memberDataTable = null;
+        }
+        $('#memberTable tbody').html(`<tr><td colspan="14" class="text-center py-5 text-muted">
+            <i class="bi bi-funnel fs-1"></i>
+            <h6>Apply filters to load data</h6>
+            <p>Select filters and click "Apply Filters"</p>
+        </td></tr>`);
+        $('#memberRecordCount').text('0 Records');
+        $('#memberTotalCount').text('Total: 0');
+        $('#memberSummary').removeClass('active');
+        isMemberLoaded = false;
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Reset Complete',
+            text: 'Filters cleared. Click "Apply Filters" to load data.',
+            timer: 1500,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    }
+
+    // ================= SWITCH TAB =================
+    function switchTab(tab) {
+        if(tab === 'master') {
+            $("#masterPane").addClass("active-pane");
+            $("#memberPane").removeClass("active-pane");
+            $("#tabMasterBtn").addClass("active");
+            $("#tabMemberBtn").removeClass("active");
+        } else {
+            $("#memberPane").addClass("active-pane");
+            $("#masterPane").removeClass("active-pane");
+            $("#tabMemberBtn").addClass("active");
+            $("#tabMasterBtn").removeClass("active");
+        }
+    }
+
+    // ================= INIT FLATPICKR =================
+    function initFlatpickr() {
+        flatpickrFrom = flatpickr("#memberFilterAgeFrom", { 
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            clickOpens: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.input.removeAttribute("readonly");
+                instance.input.type = "text";
+            }
+        });
+        
+        flatpickrTo = flatpickr("#memberFilterAgeTo", { 
+            dateFormat: "d/m/Y",
+            allowInput: true,
+            clickOpens: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.input.removeAttribute("readonly");
+                instance.input.type = "text";
+            }
+        });
+    }
+
+    // ================= INIT =================
+    $(async function() {
+        initFlatpickr();
+        setupImageLightbox();
+        
+        showGlobalLoading("Loading filter options...");
+        
+        try {
+            await Promise.all([
+                fetchMasterData(),
+                fetchMemberData()
+            ]);
+            
+            populateFilterDropdowns();
+            
+            // Event listeners for Master tab
+            $('#masterApplyFilter').on('click', applyMasterFilters);
+            $('#masterResetFilter').on('click', resetMasterFilters);
+            $('#masterExportCSV').on('click', function() {
+                const data = masterDataTable ? masterDataTable.data().toArray() : [];
+                const columns = [
+                    { data: 'branchId', title: 'Branch ID' },
+                    { data: 'homeId', title: 'Home ID' },
+                    { data: 'addressLine1', title: 'Address Line 1' },
+                    { data: 'addressLine2', title: 'Address Line 2' },
+                    { data: 'area', title: 'Area' },
+                    { data: 'location', title: 'Location' },
+                    { data: 'postOffice', title: 'Post Office' },
+                    { data: 'district', title: 'District' }
+                ];
+                exportToCSV(data, 'Master_Report', columns, false);
+            });
+            $('#masterExportPDF').on('click', function() {
+                const data = masterDataTable ? masterDataTable.data().toArray() : [];
+                const columns = [
+                    { data: 'branchId', title: 'Branch ID' },
+                    { data: 'homeId', title: 'Home ID' },
+                    { data: 'addressLine1', title: 'Address Line 1' },
+                    { data: 'addressLine2', title: 'Address Line 2' },
+                    { data: 'area', title: 'Area' },
+                    { data: 'location', title: 'Location' },
+                    { data: 'postOffice', title: 'Post Office' },
+                    { data: 'district', title: 'District' }
+                ];
+                exportToPDF(data, 'Master_Report', columns, 'Branch Master Report', false);
+            });
+            
+            // Event listeners for Member tab
+            $('#memberApplyFilter').on('click', applyMemberFilters);
+            $('#memberResetFilter').on('click', resetMemberFilters);
+            $('#memberExportCSV').on('click', function() {
+                const data = memberDataTable ? memberDataTable.data().toArray() : [];
+                exportToCSV(data, 'Member_Report', [], true);
+            });
+            $('#memberExportPDF').on('click', function() {
+                const data = memberDataTable ? memberDataTable.data().toArray() : [];
+                exportToPDF(data, 'Member_Report', [], 'Member Report', true);
+            });
+            
+            // Tab switching
+            $('#tabMasterBtn').on('click', () => switchTab('master'));
+            $('#tabMemberBtn').on('click', () => switchTab('member'));
+            
+            // Enter key support for filters
+            $('.filter-section').on('keypress', function(e) {
+                if(e.which === 13) {
+                    const activeTab = $('.tab-pane.active-pane').attr('id');
+                    if(activeTab === 'masterPane') {
+                        applyMasterFilters();
+                    } else if(activeTab === 'memberPane') {
+                        applyMemberFilters();
+                    }
+                }
+            });
+            
+        } catch(e) {
+            console.error("Error initializing:", e);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load filter options. Please refresh the page.'
+            });
+        }
+        
+        hideGlobalLoading();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Member Dashboard</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Member Dashboard">
+    
+    <!-- Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <!-- Bootstrap 5.3 + icons -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Noto+Sans+Malayalam:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin:0; padding:0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Noto Sans Malayalam', sans-serif;
+            background: #f1f5f9;
+            height: 100vh;
+        }
+        .light-theme { --bg-surface: #ffffff; --bg-soft: #f8fafc; --primary: #0f3b6a; --text-primary: #0f172a; --text-secondary: #334155; --border: #e2e8f0; }
+        
+        .dashboard-main {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f1f5f9;
+            overflow-y: auto;
+        }
+        
+        /* Top Bar */
+        .mobile-top-bar {
+            background: white;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mini-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: #0f3b6a;
+            padding: 4px;
+            object-fit: contain;
+        }
+        .brand-titles h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+        }
+        .brand-titles span {
+            font-size: 0.6rem;
+            color: #5b6e8c;
+        }
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .user-badge {
+            background: #eef2ff;
+            padding: 5px 12px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+        .user-badge i {
+            color: #0f3b6a;
+        }
+        .logout-mobile-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            color: #4b5563;
+            cursor: pointer;
+            padding: 5px;
+            transition: 0.2s;
+        }
+        .logout-mobile-btn:hover {
+            color: #dc2626;
+        }
+        
+        /* Flash News Strip */
+        .flash-strip {
+            background: #0f3b6a;
+            color: white;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 8px 0;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        .flash-strip.hidden {
+            display: none;
+        }
+        .ticker-wrap {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: tickerScroll 25s linear infinite;
+        }
+        .ticker-content span {
+            display: inline-block;
+            margin-right: 36px;
+        }
+        .ticker-content span i {
+            margin-right: 6px;
+        }
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* Member Info Banner */
+        .member-info-banner {
+            background: white;
+            padding: 12px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .member-info-banner .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #1e293b;
+        }
+        .member-info-banner .info-item i {
+            color: #0f3b6a;
+        }
+        .member-info-banner .info-item strong {
+            font-weight: 600;
+        }
+        .member-info-banner .status-badge {
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        /* Menu Grid */
+        .menu-grid-container {
+            flex: 1;
+            padding: 16px 14px;
+            overflow-y: auto;
+        }
+        .section-header {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2c3e66;
+            margin: 8px 0 12px 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 16px 10px;
+        }
+        .menu-tile {
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 6px 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border: 1px solid #edf2f7;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .menu-tile:active {
+            transform: scale(0.97);
+            background: #fef9e6;
+        }
+        .tile-icon {
+            font-size: 2.2rem;
+            color: #0f3b6a;
+            margin-bottom: 10px;
+        }
+        .tile-label {
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-align: center;
+            color: #1e293b;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 12px;
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        /* App Footer */
+        .app-footer {
+            text-align: center;
+            font-size: 0.65rem;
+            padding: 12px;
+            color: #6c757d;
+            border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            background: white;
+        }
+        
+        /* Iframe Modal */
+        .iframe-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 20000;
+            display: none;
+            flex-direction: column;
+        }
+        .iframe-modal.active {
+            display: flex;
+        }
+        .modal-header-bar {
+            background: #0f3b6a;
+            color: white;
+            padding: 14px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .back-to-menu-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 40px;
+            padding: 8px 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .back-to-menu-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .modal-title-text {
+            font-size: 1rem;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+        .modal-iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+        }
+        .iframe-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 12px 24px;
+            border-radius: 100px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .iframe-loading.active {
+            display: flex;
+        }
+        
+        @media (max-width: 480px) {
+            .tiles-grid { grid-template-columns: repeat(3, 1fr); }
+            .member-info-banner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 4px;
+            }
+            .member-info-banner .info-item {
+                font-size: 0.8rem;
+            }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+            .tiles-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (min-width: 769px) {
+            .tiles-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+    </style>
+</head>
+<body class="light-theme">
+
+<div class="dashboard-main" id="dashboardMain">
+    <!-- Top Bar -->
+    <div class="mobile-top-bar">
+        <div class="brand-area">
+            <img class="mini-logo" src="https://profile.mgovcloud.in/file?fs=thumb&amp;ID=2109903&amp;nps=404&amp;allowCORP=true" alt="logo">
+            <div class="brand-titles">
+                <h1>Member Portal</h1>
+                <span>Dashboard</span>
+            </div>
+        </div>
+        <div class="top-actions">
+            <div class="user-badge">
+                <i class="bi bi-person-circle"></i>
+                <span id="userShortName">Member</span>
+            </div>
+            <button class="logout-mobile-btn" id="logoutBtn" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Flash News Strip -->
+    <div id="flashNewsStrip" class="flash-strip hidden">
+        <div class="ticker-wrap">
+            <div class="ticker-content" id="memberTicker"></div>
+        </div>
+    </div>
+    
+    <!-- Member Info Banner -->
+    <div class="member-info-banner">
+        <div class="info-item">
+            <i class="bi bi-building"></i>
+            <span>Branch: <strong id="displayBranchId">—</strong></span>
+        </div>
+        <div class="info-item">
+            <i class="bi bi-house"></i>
+            <span>Home: <strong id="displayHomeId">—</strong></span>
+        </div>
+        <div class="info-item">
+            <i class="bi bi-person"></i>
+            <span>Name: <strong id="displayMemberName">—</strong></span>
+        </div>
+        <div class="info-item">
+            <i class="bi bi-envelope"></i>
+            <span id="displayMemberEmail">—</span>
+        </div>
+        <span class="status-badge"><i class="bi bi-check-circle-fill"></i> Active</span>
+    </div>
+    
+    <!-- Menu Grid -->
+    <div class="menu-grid-container">
+        <div class="section-header"><i class="bi bi-grid-3x3-gap-fill"></i> Applications</div>
+        <div class="tiles-grid" id="memberMenuGrid">
+            <div class="loading-spinner m-auto">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Loading menu...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="app-footer">Member Portal · Secure Access</div>
+</div>
+
+<!-- Iframe Modal -->
+<div class="iframe-modal" id="iframeModal">
+    <div class="modal-header-bar">
+        <button class="back-to-menu-btn" id="closeIframeBtn">
+            <i class="bi bi-arrow-left-short"></i> Menu
+        </button>
+        <div class="modal-title-text" id="modalTitleText">Content</div>
+        <div style="width: 48px;"></div>
+    </div>
+    <iframe id="popupIframe" src="about:blank" frameborder="0" class="modal-iframe"></iframe>
+    <div class="iframe-loading" id="iframeLoading">
+        <div class="spinner-grow text-primary" role="status"></div>
+        Loading...
+    </div>
+</div>
+
+<script>
+    // ================= CONFIGURATION =================
+    const CONFIG = {
+        // Main data source for menu
+        DATA_ID: '10g0Ctj_mEtozUcCPceI5LKXaZG1XXP0TpT0mGoNR3fM',
+        API_KEY: 'AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM',
+        // Menu sheet name for members
+        MENU_SHEET: 'BR-Menu',
+        // Flash news sheet
+        FLASH_SHEET: 'scroll texts',
+        // Member data source
+        MEMBER_SPREADSHEET_ID: '1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs',
+        MEMBER_API_KEY: 'AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM'
+    };
+
+    let branchId = '';
+    let homeId = '';
+    let memberName = '';
+    let memberEmail = '';
+    let menuStructure = [];
+    let iconMap = new Map();
+
+    // ================= HELPER FUNCTIONS =================
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function showToast(msg, type = 'info') {
+        // Create toast if it doesn't exist
+        let toast = document.getElementById('liveToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'liveToast';
+            toast.className = 'toast-custom';
+            toast.innerHTML = '<i class="bi me-2" id="toastIcon"></i><span id="toastMsg"></span>';
+            document.body.appendChild(toast);
+            
+            // Add toast styles if not present
+            if (!document.getElementById('toastStyles')) {
+                const style = document.createElement('style');
+                style.id = 'toastStyles';
+                style.textContent = `
+                    .toast-custom {
+                        position: fixed;
+                        bottom: 24px;
+                        right: 24px;
+                        left: 24px;
+                        max-width: 420px;
+                        margin: 0 auto;
+                        background: #1f1f1f;
+                        color: white;
+                        padding: 12px 20px;
+                        border-radius: 48px;
+                        z-index: 1090;
+                        opacity: 0;
+                        transition: opacity 0.3s;
+                        pointer-events: none;
+                        text-align: center;
+                        font-size: 0.9rem;
+                    }
+                    .toast-custom.show { opacity: 1; }
+                    .toast-custom.error { background: #dc2626; }
+                    .toast-custom.success { background: #16a34a; }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+        
+        const msgSpan = document.getElementById('toastMsg');
+        const icon = document.getElementById('toastIcon');
+        
+        msgSpan.innerText = msg;
+        toast.className = 'toast-custom';
+        
+        if (type === 'error') {
+            toast.classList.add('error');
+            icon.className = 'bi bi-exclamation-circle-fill me-2';
+        } else if (type === 'success') {
+            toast.classList.add('success');
+            icon.className = 'bi bi-check-circle-fill me-2';
+        } else {
+            icon.className = 'bi bi-info-circle-fill me-2';
+        }
+        
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 4000);
+    }
+
+    // ================= FETCH FUNCTIONS =================
+    async function fetchSheetJSON(url) {
+        try {
+            const res = await fetch(url);
+            return await res.json();
+        } catch (e) {
+            return { error: true };
+        }
+    }
+
+    // ================= PROCESS ICONS =================
+    function processIcons(rows) {
+        if (!rows || rows.length < 2) return;
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 6) continue;
+            const [mainMenu, mainIcon, subMenu, subIcon, linkItem, linkIcon] = row;
+            if (mainMenu && subMenu && linkItem) {
+                const key = `${mainMenu}|${subMenu}|${linkItem}`;
+                iconMap.set(key, { linkIcon: linkIcon || '<i class="bi bi-box-arrow-up-right"></i>' });
+                const mainKey = `${mainMenu}||`;
+                if (!iconMap.has(mainKey)) {
+                    iconMap.set(mainKey, { mainIcon: mainIcon || '<i class="bi bi-app-indicator"></i>' });
+                }
+                const subKey = `${mainMenu}|${subMenu}|`;
+                if (!iconMap.has(subKey)) {
+                    iconMap.set(subKey, { subIcon: subIcon || '<i class="bi bi-folder"></i>' });
+                }
+            }
+        }
+    }
+
+    function getIconFor(mainMenu, subMenu = '', linkItem = '', type) {
+        const full = `${mainMenu}|${subMenu}|${linkItem}`;
+        if (iconMap.has(full) && type === 'link') return iconMap.get(full).linkIcon;
+        if (type === 'main') {
+            const mkey = `${mainMenu}||`;
+            return iconMap.has(mkey) ? iconMap.get(mkey).mainIcon : '<i class="bi bi-grid"></i>';
+        }
+        if (type === 'sub') {
+            const skey = `${mainMenu}|${subMenu}|`;
+            return iconMap.has(skey) ? iconMap.get(skey).subIcon : '<i class="bi bi-folder2"></i>';
+        }
+        return '<i class="bi bi-link"></i>';
+    }
+
+    // ================= BUILD MENU =================
+    function buildMenuFromRows(rows) {
+        if (!rows || rows.length < 2) return [];
+        const menuMap = new Map();
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 4) continue;
+            const [mainMenu, subMenu, linkItem, url] = row;
+            if (!mainMenu || !subMenu || !linkItem || !url) continue;
+            if (!menuMap.has(mainMenu)) menuMap.set(mainMenu, new Map());
+            const subMap = menuMap.get(mainMenu);
+            if (!subMap.has(subMenu)) subMap.set(subMenu, []);
+            subMap.get(subMenu).push({
+                title: linkItem,
+                url: url,
+                icon: getIconFor(mainMenu, subMenu, linkItem, 'link')
+            });
+        }
+        const result = [];
+        for (let [mainTitle, subMap] of menuMap.entries()) {
+            const subArr = [];
+            for (let [subTitle, items] of subMap.entries()) {
+                subArr.push({
+                    title: subTitle,
+                    icon: getIconFor(mainTitle, subTitle, '', 'sub'),
+                    items: items
+                });
+            }
+            result.push({
+                title: mainTitle,
+                icon: getIconFor(mainTitle, '', '', 'main'),
+                subMenus: subArr
+            });
+        }
+        return result;
+    }
+
+    // ================= LOAD MENU =================
+    async function loadMenus() {
+        try {
+            // Load menu data from BR-Menu sheet
+            const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.DATA_ID}/values/${CONFIG.MENU_SHEET}!A:D?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            
+            // Try to load icons if available (optional)
+            const iconUrl = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.DATA_ID}/values/icons!A:F?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            
+            const [menuRes, iconRes] = await Promise.all([
+                fetchSheetJSON(menuUrl),
+                fetchSheetJSON(iconUrl)
+            ]);
+            
+            if (menuRes.error) {
+                throw new Error('Failed to load menu data');
+            }
+            
+            if (iconRes.values) {
+                processIcons(iconRes.values);
+            }
+            
+            return buildMenuFromRows(menuRes.values);
+        } catch (e) {
+            console.error('Error loading menu:', e);
+            return [];
+        }
+    }
+
+    // ================= LOAD FLASH NEWS =================
+    async function loadFlashNews() {
+        const strip = document.getElementById('flashNewsStrip');
+        const tickerDiv = document.getElementById('memberTicker');
+        if (!strip || !tickerDiv) return;
+        
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.DATA_ID}/values/${CONFIG.FLASH_SHEET}!A2:A?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            
+            if (data.error || !data.values || data.values.length === 0) {
+                strip.classList.add('hidden');
+                return;
+            }
+            
+            const texts = data.values.map(row => row[0] ? row[0].toString().trim() : '').filter(t => t !== '');
+            if (texts.length === 0) {
+                strip.classList.add('hidden');
+                return;
+            }
+            
+            let html = '';
+            texts.forEach(t => {
+                html += `<span><i class="bi bi-megaphone-fill"></i> ${escapeHtml(t)}</span>`;
+            });
+            tickerDiv.innerHTML = html;
+            strip.classList.remove('hidden');
+            
+            // Reset animation
+            const tickerWrap = document.querySelector('.ticker-wrap');
+            if (tickerWrap) {
+                tickerWrap.style.animation = 'none';
+                setTimeout(() => {
+                    tickerWrap.style.animation = 'tickerScroll 25s linear infinite';
+                }, 10);
+            }
+        } catch (e) {
+            strip.classList.add('hidden');
+        }
+    }
+
+    // ================= RENDER TILES =================
+    function renderTiles(menuData) {
+        const container = document.getElementById('memberMenuGrid');
+        if (!container) return;
+        
+        if (!menuData || menuData.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-info-circle"></i>
+                    <p>No applications available</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let allLinks = [];
+        for (let main of menuData) {
+            for (let sub of main.subMenus) {
+                for (let link of sub.items) {
+                    allLinks.push({
+                        title: link.title,
+                        url: link.url,
+                        iconHtml: link.icon || '<i class="bi bi-link-45deg"></i>'
+                    });
+                }
+            }
+        }
+        
+        if (allLinks.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-diagram-3"></i>
+                    <p>No links in menu</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let tileHtml = '';
+        allLinks.forEach(link => {
+            tileHtml += `
+                <div class="menu-tile" data-url="${escapeHtml(link.url)}" data-title="${escapeHtml(link.title)}">
+                    <div class="tile-icon">${link.iconHtml}</div>
+                    <div class="tile-label">${escapeHtml(link.title)}</div>
+                </div>
+            `;
+        });
+        container.innerHTML = tileHtml;
+        
+        // Add click handlers
+        document.querySelectorAll('.menu-tile').forEach(tile => {
+            tile.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const url = this.dataset.url;
+                const title = this.dataset.title;
+                if (url) {
+                    openPopupIframe(url, title);
+                }
+            });
+        });
+    }
+
+    // ================= IFRAME POPUP =================
+    const iframeModal = document.getElementById('iframeModal');
+    const popupIframe = document.getElementById('popupIframe');
+    const modalTitle = document.getElementById('modalTitleText');
+    const iframeLoading = document.getElementById('iframeLoading');
+
+    function openPopupIframe(url, title) {
+        if (!url) return;
+        
+        modalTitle.innerText = title || 'Content';
+        iframeModal.classList.add('active');
+        iframeLoading.classList.add('active');
+        popupIframe.style.opacity = '0';
+        popupIframe.src = url;
+        
+        popupIframe.onload = function() {
+            iframeLoading.classList.remove('active');
+            popupIframe.style.opacity = '1';
+        };
+        
+        popupIframe.onerror = function() {
+            iframeLoading.classList.remove('active');
+            iframeLoading.innerHTML = '<div class="alert alert-danger m-3">Failed to load content</div>';
+        };
+        
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeIframePopup() {
+        iframeModal.classList.remove('active');
+        popupIframe.src = 'about:blank';
+        iframeLoading.classList.remove('active');
+        iframeLoading.innerHTML = '<div class="spinner-grow text-primary" role="status"></div> Loading...';
+        document.body.style.overflow = '';
+    }
+
+    // ================= GET MEMBER DETAILS =================
+    async function getMemberDetails(branch, home) {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.MEMBER_SPREADSHEET_ID}/values/Members!A:N?key=${CONFIG.MEMBER_API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length >= 12) {
+                    const memberBranch = row[10] ? row[10].toString().trim() : '';
+                    const memberHome = row[11] ? row[11].toString().trim() : '';
+                    const memberNameVal = row[2] ? row[2].toString().trim() : '';
+                    const memberEmailVal = row[9] ? row[9].toString().trim() : '';
+                    const memberStatus = row[12] ? row[12].toString().trim() : 'Active';
+                    
+                    if (memberBranch === branch && memberHome === home) {
+                        return {
+                            name: memberNameVal,
+                            email: memberEmailVal,
+                            status: memberStatus
+                        };
+                    }
+                }
+            }
+            return null;
+        } catch (e) {
+            console.error('Error fetching member details:', e);
+            return null;
+        }
+    }
+
+    // ================= LOGOUT =================
+    function logout() {
+        localStorage.removeItem('memberSession');
+        sessionStorage.removeItem('memberSession');
+        window.location.href = 'member-login.html';
+    }
+
+    // ================= INIT DASHBOARD =================
+    async function initDashboard() {
+        // Get branch and home from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        branchId = urlParams.get('branch') || '';
+        homeId = urlParams.get('home') || '';
+        
+        // Also check session storage
+        if (!branchId || !homeId) {
+            const session = localStorage.getItem('memberSession');
+            if (session) {
+                try {
+                    const data = JSON.parse(session);
+                    branchId = data.branchId || '';
+                    homeId = data.homeId || '';
+                    memberName = data.name || '';
+                    memberEmail = data.email || '';
+                } catch (e) {}
+            }
+        }
+        
+        // If still no branch/home, redirect to login
+        if (!branchId || !homeId) {
+            showToast('Session expired. Please login again.', 'error');
+            setTimeout(() => {
+                window.location.href = 'member-login.html';
+            }, 1500);
+            return;
+        }
+        
+        // Fetch member details
+        const memberDetails = await getMemberDetails(branchId, homeId);
+        if (memberDetails) {
+            memberName = memberDetails.name || memberName;
+            memberEmail = memberDetails.email || memberEmail;
+            
+            // Check if member is active
+            if (memberDetails.status && memberDetails.status.toLowerCase() !== 'active') {
+                showToast(`Your account is ${memberDetails.status}. Please contact admin.`, 'error');
+                setTimeout(() => {
+                    logout();
+                }, 2000);
+                return;
+            }
+        }
+        
+        // Update session with latest details
+        const sessionData = {
+            branchId: branchId,
+            homeId: homeId,
+            name: memberName,
+            email: memberEmail,
+            loginTime: new Date().toISOString(),
+            isMember: true
+        };
+        localStorage.setItem('memberSession', JSON.stringify(sessionData));
+        sessionStorage.setItem('memberSession', JSON.stringify(sessionData));
+        
+        // Display member info
+        document.getElementById('displayBranchId').textContent = branchId;
+        document.getElementById('displayHomeId').textContent = homeId;
+        document.getElementById('displayMemberName').textContent = memberName || '—';
+        document.getElementById('displayMemberEmail').textContent = memberEmail || '—';
+        document.getElementById('userShortName').textContent = memberName ? memberName.split(' ')[0] : 'Member';
+        
+        // Load menu
+        const menuData = await loadMenus();
+        menuStructure = menuData;
+        renderTiles(menuData);
+        
+        // Load flash news
+        loadFlashNews();
+        
+        // Set up logout
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('closeIframeBtn').addEventListener('click', closeIframePopup);
+        
+        // Close iframe on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && iframeModal.classList.contains('active')) {
+                closeIframePopup();
+            }
+        });
+        
+        console.log('✅ Member Dashboard initialized');
+        console.log('Branch:', branchId, 'Home:', homeId);
+        console.log('Member:', memberName);
+    }
+
+    // ================= START =================
+    document.addEventListener('DOMContentLoaded', initDashboard);
+</script>
+
+</body>
+</html>

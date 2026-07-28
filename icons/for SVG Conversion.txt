@@ -1,0 +1,4 @@
+Follow :
+1.  https://www.adobe.com/express/feature/image/convert/svg
+2.  select any of the image with highest resolution.
+3.  Save and rename the converted svg file as "favicon" and drop it here.
