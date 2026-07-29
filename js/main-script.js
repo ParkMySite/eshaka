@@ -504,11 +504,11 @@ function updateNotificationBadge(count) {
         setTimeout(() => {
             if (badge) badge.style.animation = 'pulse-red 1.5s infinite';
         }, 500);
-        document.title = `(${count}) Park My Site`;
+        document.title = `(${count})e Shaka | Admin`;
     } else {
         badge.textContent = '0';
         badge.classList.add('zero');
-        document.title = ' Park My Site';
+        document.title = ' e Shaka | Admin';
     }
 }
 
@@ -876,7 +876,7 @@ function logout() {
 
     updateNotificationBadge(0);
     lastUnreadCount = 0;
-    document.title = ' Park My Site';
+    document.title = ' e Shaka | Admin';
     userInteracted = false;
 
     if (typeof window.hideUserPopup === 'function') {
