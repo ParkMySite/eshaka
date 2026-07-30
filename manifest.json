@@ -1,7 +1,7 @@
 {
-    "name": "App Admin",
-    "short_name": "App",
-    "description": "App Description",
+    "name": "eShaka Admin",
+    "short_name": "eShaka Admin",
+    "description": "Admin portal",
     "start_url": "index.html",
     "scope": ".",
     "display": "standalone",
