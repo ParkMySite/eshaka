@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Add Payment - Manual</title>
+    
+    <!-- Local CSS Resources -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+    
+    <style>
+       
+        .content-pane {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            transition: 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0f3b6a;
+            box-shadow: 0 0 0 3px rgba(15, 59, 106, 0.1);
+        }
+        .form-control:disabled, .form-control[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .receipt-id-display {
+            background: #e6f0fa;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #0f3b5f;
+            border: 1px solid #b3d4f0;
+            text-align: center;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        .receipt-id-display i {
+            color: #0f5b9c;
+            margin-right: 8px;
+        }
+        .section-divider {
+            border-top: 2px dashed #e2e8f0;
+            margin: 24px 0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+        }
+        .btn-primary-custom {
+            background: #0f3b6a;
+            border: none;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-primary-custom:hover {
+            background: #0a2c46;
+            transform: translateY(-1px);
+        }
+        .btn-success-custom {
+            background: #16a34a;
+            border: none;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-success-custom:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .btn-secondary-custom {
+            background: #64748b;
+            border: none;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-secondary-custom:hover {
+            background: #475569;
+        }
+        .btn-danger-custom {
+            background: #dc2626;
+            border: none;
+            color: white;
+            transition: 0.2s;
+        }
+        .btn-danger-custom:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+        }
+        .screenshot-preview {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            margin-top: 10px;
+        }
+        .info-banner {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            border-left: 4px solid #0f5b9c;
+            font-size: 0.85rem;
+        }
+        .info-banner .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #1e293b;
+        }
+        .info-banner .info-item i {
+            color: #0f5b9c;
+        }
+        .info-banner .info-item strong {
+            font-weight: 600;
+        }
+        .status-verified-badge {
+            display: inline-block;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-verified-badge i {
+            margin-right: 6px;
+        }
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 10px !important;
+            border-color: #cbd5e1 !important;
+            min-height: 46px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            line-height: 44px !important;
+        }
+        
+        .address-display {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            margin-top: 6px;
+            font-size: 0.9rem;
+            color: #1e293b;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+        .address-display i {
+            color: #0f5b9c;
+            margin-right: 8px;
+        }
+        .address-display .address-empty {
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        .amount-row {
+            background: #f0fdf4;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid #bbf7d0;
+            margin-top: 8px;
+        }
+        .amount-row .label-small {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .amount-row .value-large {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .amount-row .value-large .currency {
+            font-size: 1rem;
+            color: #64748b;
+            margin-right: 4px;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-top: 10px;
+            color: #92400e;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .warning-box.show {
+            display: block;
+        }
+        .warning-box i {
+            margin-right: 8px;
+        }
+        .warning-box .highlight {
+            font-weight: 600;
+            color: #78350f;
+        }
+        .warning-box.info {
+            background: #e0f2fe;
+            border-color: #0ea5e9;
+            color: #075985;
+        }
+        .warning-box.info i {
+            color: #0ea5e9;
+        }
+        .warning-box.error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+        .warning-box.error i {
+            color: #ef4444;
+        }
+        .warning-box.success {
+            background: #d1fae5;
+            border-color: #16a34a;
+            color: #065f46;
+        }
+        .warning-box.success i {
+            color: #16a34a;
+        }
+
+        /* Toast Notification */
+        .toast-custom {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            max-width: 450px;
+            width: calc(100% - 32px);
+            background: #1f1f1f;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            z-index: 1090;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+            text-align: center;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .toast-custom.show { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast-custom.error { 
+            background: #dc2626; 
+        }
+        .toast-custom.success { 
+            background: #16a34a; 
+        }
+        .toast-custom.info { 
+            background: #0f3b6a; 
+        }
+        .toast-custom .toast-icon {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        .toast-custom .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 4px;
+            margin-left: 12px;
+            transition: 0.2s;
+        }
+        .toast-custom .toast-close:hover {
+            color: white;
+        }
+        
+        @media (max-width: 480px) {
+            .content-pane { padding: 16px; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid" style="max-width: 98%; margin: 0 auto; padding: 16px;">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <i class="bi bi-plus-circle"></i>
+            <div>
+                <h1>Add Payment Manually</h1>
+                <p>Enter payment details directly and mark as verified</p>
+            </div>
+        </div>
+        <div>
+            <span class="status-verified-badge">
+                <i class="bi bi-check-circle-fill"></i> Status: Verified
+            </span>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-pane">
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <div class="info-item">
+                <i class="bi bi-info-circle"></i>
+                <span>All fields marked with <strong style="color:#dc2626;">*</strong> are required</span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-check-circle" style="color:#16a34a;"></i>
+                <span>Payment status will be set to <strong style="color:#16a34a;">Verified</strong> automatically</span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-house"></i>
+                <span>Address will auto-fill when Branch & Home are selected</span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-shield-exclamation" style="color:#f59e0b;"></i>
+                <span>System checks for existing payments automatically</span>
+            </div>
+        </div>
+
+        <!-- Receipt ID Display -->
+        <div class="receipt-id-display" id="receiptIdDisplay">
+            <i class="bi bi-hash"></i> <span id="receiptIdValue">—</span>
+            <span style="font-size:0.7rem;font-weight:400;color:#64748b;margin-left:10px;">
+                (Auto-generated)
+            </span>
+        </div>
+
+        <!-- Warning Box -->
+        <div class="warning-box" id="warningBox">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span id="warningMessage"></span>
+        </div>
+
+        <!-- Form -->
+        <form id="paymentForm" novalidate>
+            <div class="row g-3">
+                <!-- Branch ID -->
+                <div class="col-md-4">
+                    <label class="form-label required">Branch ID</label>
+                    <select id="branchId" class="form-select select2-field" required>
+                        <option value="">Select or type Branch</option>
+                    </select>
+                </div>
+
+                <!-- Home ID -->
+                <div class="col-md-4">
+                    <label class="form-label required">Home ID</label>
+                    <select id="homeId" class="form-select select2-field" required>
+                        <option value="">Select or type Home</option>
+                    </select>
+                </div>
+
+                <!-- Member ID (optional) -->
+                <div class="col-md-4">
+                    <label class="form-label">Member ID</label>
+                    <input type="text" id="memberId" class="form-control" placeholder="Optional member ID">
+                </div>
+
+                <!-- Address Display -->
+                <div class="col-12">
+                    <label class="form-label">Home Address</label>
+                    <div class="address-display" id="addressDisplay">
+                        <i class="bi bi-geo-alt"></i>
+                        <span class="address-empty">Select Branch and Home ID to view address</span>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="section-divider"></div>
+                </div>
+
+                <!-- Receipt Category -->
+                <div class="col-md-4">
+                    <label class="form-label required">Receipt Category</label>
+                    <select id="receiptCategory" class="form-select select2-field" required>
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+
+                <!-- Financial Year -->
+                <div class="col-md-4">
+                    <label class="form-label required">Financial Year</label>
+                    <select id="financialYear" class="form-select select2-field" required>
+                        <option value="">Select Financial Year</option>
+                    </select>
+                </div>
+
+                <!-- Receipt No (auto-generated, read-only) -->
+                <div class="col-md-4">
+                    <label class="form-label">Receipt No</label>
+                    <input type="text" id="receiptNo" class="form-control" readonly>
+                </div>
+
+                <!-- Amount Display Row -->
+                <div class="col-12">
+                    <div class="amount-row">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="label-small"><i class="bi bi-coin"></i> Actual Amount</div>
+                                <div class="value-large">
+                                    <span class="currency">₹</span>
+                                    <span id="actualAmountDisplay">0.00</span>
+                                </div>
+                                <input type="hidden" id="actualAmount" value="0">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="label-small"><i class="bi bi-receipt"></i> Receipt Amount</div>
+                                <div class="value-large">
+                                    <span class="currency">₹</span>
+                                    <span id="receiptAmountDisplay">0.00</span>
+                                </div>
+                                <input type="hidden" id="receiptAmountHidden" value="0">
+                            </div>
+                            <div class="col-md-4">
+                                <div class="label-small"><i class="bi bi-wallet2"></i> Balance</div>
+                                <div class="value-large" id="balanceDisplay">
+                                    <span class="currency">₹</span>
+                                    <span id="balanceValue">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt Amount Input -->
+                <div class="col-md-4">
+                    <label class="form-label required">Receipt Amount (₹)</label>
+                    <input type="number" id="receiptAmountInput" class="form-control" step="0.01" min="0" placeholder="Enter receipt amount" required>
+                    <small class="text-muted">Enter the amount actually paid</small>
+                </div>
+
+                <!-- Transaction ID (optional) -->
+                <div class="col-md-4">
+                    <label class="form-label">Transaction ID</label>
+                    <input type="text" id="transactionId" class="form-control" placeholder="Enter UPI Transaction ID / UTR (optional)">
+                </div>
+
+                <!-- Sender UPI ID -->
+                <div class="col-md-4">
+                    <label class="form-label">Sender UPI ID</label>
+                    <input type="text" id="senderUpiId" class="form-control" placeholder="Enter sender UPI ID (optional)">
+                </div>
+
+                <!-- Date -->
+                <div class="col-md-4">
+                    <label class="form-label required">Date</label>
+                    <input type="date" id="paymentDate" class="form-control" required>
+                </div>
+
+                <!-- Time -->
+                <div class="col-md-4">
+                    <label class="form-label required">Time</label>
+                    <input type="time" id="paymentTime" class="form-control" required>
+                </div>
+
+                <!-- Remarks -->
+                <div class="col-md-4">
+                    <label class="form-label">Remarks</label>
+                    <input type="text" id="remarks" class="form-control" placeholder="Optional remarks">
+                </div>
+
+                <!-- Screenshot Upload -->
+                <div class="col-12">
+                    <label class="form-label">Screenshot</label>
+                    <input type="file" id="screenshotUpload" class="form-control" accept="image/*">
+                    <div id="screenshotPreview" style="display:none;margin-top:10px;text-align:center;">
+                        <img id="screenshotPreviewImg" class="screenshot-preview" alt="Screenshot preview">
+                        <br>
+                        <button type="button" id="removeScreenshotBtn" class="btn btn-sm btn-danger-custom mt-2" style="padding:4px 16px;font-size:0.75rem;">
+                            <i class="bi bi-trash3"></i> Remove
+                        </button>
+                    </div>
+                    <small class="text-muted">Upload a payment screenshot (optional). Will be stored as base64.</small>
+                </div>
+            </div>
+        </form>
+
+        <div class="section-divider"></div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button type="button" id="submitBtn" class="btn btn-success-custom">
+                <i class="bi bi-check-circle"></i> Submit & Save
+            </button>
+            <button type="button" id="resetBtn" class="btn btn-secondary-custom">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset Form
+            </button>
+            <button type="button" id="generateReceiptBtn" class="btn btn-primary-custom">
+                <i class="bi bi-arrow-repeat"></i> Generate Receipt No
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="liveToast" class="toast-custom">
+    <span class="toast-icon" id="toastIcon"><i class="bi bi-info-circle-fill"></i></span>
+    <span id="toastMsg">Message</span>
+    <button class="toast-close" onclick="hideToast()">&times;</button>
+</div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+<script src="config.js"></script>
+
+<script>
+// ================= CONFIGURATION =================
+const PAYMENT_SPREADSHEET_ID = "1FKCX4TODUcQ_0o8xP14fGENYT17k4Mcm_rJe6eFSTjE";
+const MASTER_SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+const DATA_SHEET_NAME = "Data";
+const MASTER_SHEET_NAME = "Master";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby07_nWs_kdKrz1RCg7OnjWlvuWe6Rv9vb1kicuKzICr0XAuETl-O1-oo99tbO00D6oKA/exec";
+
+// Column mapping
+const COL = {
+    BRANCH_ID: 0,
+    HOME_ID: 1,
+    RECEIPT_NO: 2,
+    TRANSACTION_ID: 3,
+    CATEGORY: 4,
+    FINANCIAL_YEAR: 5,
+    SENDER_UPI: 6,
+    AMOUNT: 7,
+    RECEIPT_AMOUNT: 8,
+    BALANCE: 9,
+    PAYMENT_CONFIRM: 10,
+    REMARKS: 11,
+    TIME_STAMP: 12,
+    DATE: 13,
+    SCREENSHOT: 14,
+    SCREENSHOT_URL: 15,
+    OCR_TRANSACTION_ID: 16,
+    OCR_AMOUNT: 17,
+    OCR_DATE: 18,
+    OCR_UPI_ID: 19,
+    OCR_STATUS: 20,
+    OCR_TEXT: 21
+};
+
+// Master sheet columns
+const MASTER_COL = {
+    BRANCH: 0,
+    HOME_ID: 1,
+    ADDRESS_LINE_1: 2,
+    ADDRESS_LINE_2: 3,
+    AREA: 4,
+    LOCATION: 5,
+    POST_OFFICE: 6,
+    DISTRICT: 7,
+    STATUS: 8,
+    REMARKS: 9
+};
+
+let receiptCategories = [];
+let financialYears = [];
+let masterData = [];
+let branchOptions = [];
+let homeOptions = [];
+let homeAddresses = {};
+let isSubmitting = false;
+let existingPaymentData = null;
+let allPaymentRecords = [];
+let toastTimeout = null;
+let isInitialLoad = true;
+
+// ================= TOAST FUNCTIONS =================
+function showToast(msg, type = 'info', duration = 4000) {
+    const toast = document.getElementById('liveToast');
+    const msgSpan = document.getElementById('toastMsg');
+    const icon = document.getElementById('toastIcon');
+    
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+    }
+    
+    msgSpan.innerText = msg;
+    toast.className = 'toast-custom';
+    
+    if (type === 'error') {
+        toast.classList.add('error');
+        icon.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i>';
+    } else if (type === 'success') {
+        toast.classList.add('success');
+        icon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+    } else {
+        toast.classList.add('info');
+        icon.innerHTML = '<i class="bi bi-info-circle-fill"></i>';
+    }
+    
+    toast.classList.add('show');
+    
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        toastTimeout = null;
+    }, duration);
+}
+
+function hideToast() {
+    const toast = document.getElementById('liveToast');
+    toast.classList.remove('show');
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+    }
+}
+
+// ================= HELPER FUNCTIONS =================
+function escapeHtml(str) { 
+    if (!str) return ''; 
+    return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;':m); 
+}
+
+function padZero(num) {
+    return num.toString().padStart(2, '0');
+}
+
+function getCurrentMonth() { return padZero(new Date().getMonth() + 1); }
+function getCurrentDay() { return padZero(new Date().getDate()); }
+
+function buildAddress(addressLine1, addressLine2, area, location, postOffice, district) {
+    const parts = [];
+    if (addressLine1) parts.push(addressLine1);
+    if (addressLine2) parts.push(addressLine2);
+    if (area) parts.push(area);
+    if (location) parts.push(location);
+    if (postOffice) parts.push(postOffice);
+    if (district) parts.push(district);
+    return parts.join(', ');
+}
+
+// ================= FETCH DATA FROM SHEETS =================
+async function fetchMasterData() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SPREADSHEET_ID}/values/${MASTER_SHEET_NAME}!A:J?key=${API_KEY}&_=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const rows = data.values || [];
+        
+        const branches = new Set();
+        const homes = new Set();
+        const addresses = {};
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length > 0 && row[MASTER_COL.HOME_ID]) {
+                const branch = row[MASTER_COL.BRANCH] || '';
+                const homeId = String(row[MASTER_COL.HOME_ID]).trim();
+                const address = buildAddress(
+                    row[MASTER_COL.ADDRESS_LINE_1] || '',
+                    row[MASTER_COL.ADDRESS_LINE_2] || '',
+                    row[MASTER_COL.AREA] || '',
+                    row[MASTER_COL.LOCATION] || '',
+                    row[MASTER_COL.POST_OFFICE] || '',
+                    row[MASTER_COL.DISTRICT] || ''
+                );
+                
+                if (branch) branches.add(branch);
+                if (homeId) {
+                    homes.add(homeId);
+                    const key = `${branch}|${homeId}`;
+                    addresses[key] = address;
+                }
+            }
+        }
+        
+        branchOptions = Array.from(branches).filter(Boolean).sort();
+        homeOptions = Array.from(homes).filter(Boolean).sort();
+        homeAddresses = addresses;
+        
+        return { branchOptions, homeOptions, homeAddresses };
+    } catch (e) {
+        console.error('Error fetching master data:', e);
+        return { branchOptions: [], homeOptions: [], homeAddresses: {} };
+    }
+}
+
+async function fetchReceiptCategories() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/'Receipt Category and Amount'!A:C?key=${API_KEY}&_=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const rows = data.values || [];
+        
+        const categories = [];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length >= 3) {
+                categories.push({
+                    id: row[0] || '',
+                    category: row[1] || '',
+                    amount: parseFloat(row[2]) || 0
+                });
+            }
+        }
+        return categories;
+    } catch (e) {
+        console.error('Error fetching receipt categories:', e);
+        return [];
+    }
+}
+
+async function fetchFinancialYears() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/'Financial Years'!A:A?key=${API_KEY}&_=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const rows = data.values || [];
+        
+        const years = [];
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i] && rows[i][0]) {
+                years.push(rows[i][0]);
+            }
+        }
+        return years;
+    } catch (e) {
+        console.error('Error fetching financial years:', e);
+        return [];
+    }
+}
+
+// ================= FETCH ALL PAYMENT RECORDS =================
+async function fetchAllPaymentRecords() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/${DATA_SHEET_NAME}!A:J?key=${API_KEY}&_=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const rows = data.values || [];
+        
+        const records = [];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length >= 10) {
+                records.push({
+                    rowIndex: i,
+                    branchId: row[COL.BRANCH_ID] || '',
+                    homeId: row[COL.HOME_ID] || '',
+                    category: row[COL.CATEGORY] || '',
+                    financialYear: row[COL.FINANCIAL_YEAR] || '',
+                    amount: parseFloat(row[COL.AMOUNT]) || 0,
+                    receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
+                    balance: parseFloat(row[COL.BALANCE]) || 0
+                });
+            }
+        }
+        allPaymentRecords = records;
+        return records;
+    } catch (e) {
+        console.error('Error fetching payment records:', e);
+        return [];
+    }
+}
+
+// ================= CHECK EXISTING PAYMENT =================
+async function checkExistingPayment(branchId, homeId, categoryId, financialYear) {
+    if (allPaymentRecords.length === 0) {
+        await fetchAllPaymentRecords();
+    }
+    
+    const category = receiptCategories.find(c => c.id === categoryId);
+    const categoryName = category ? category.category : '';
+    
+    const matchingRecords = allPaymentRecords.filter(record => 
+        record.branchId === branchId && 
+        record.homeId === homeId && 
+        record.category === categoryName && 
+        record.financialYear === financialYear
+    );
+    
+    if (matchingRecords.length > 0) {
+        matchingRecords.sort((a, b) => b.rowIndex - a.rowIndex);
+        const latestRecord = matchingRecords[0];
+        
+        return {
+            amount: latestRecord.amount,
+            receiptAmount: latestRecord.receiptAmount,
+            balance: latestRecord.balance,
+            rowIndex: latestRecord.rowIndex,
+            totalRecords: matchingRecords.length
+        };
+    }
+    
+    return null;
+}
+
+// ================= GENERATE RECEIPT ID =================
+function generateReceiptId() {
+    const branch = document.getElementById('branchId').value || 'NA';
+    const home = document.getElementById('homeId').value || 'NA';
+    const month = getCurrentMonth();
+    const day = getCurrentDay();
+    
+    const categorySelect = document.getElementById('receiptCategory');
+    const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+    const categoryId = selectedCategory ? selectedCategory.value : 'XX';
+    
+    const yearSelect = document.getElementById('financialYear');
+    const selectedYear = yearSelect.options[yearSelect.selectedIndex];
+    const yearValue = selectedYear ? selectedYear.value.replace('-', '') : '2425';
+    
+    const receiptId = `SN${branch}${home}${categoryId}${month}${day}${yearValue}`;
+    return receiptId;
+}
+
+function updateReceiptId() {
+    const receiptId = generateReceiptId();
+    document.getElementById('receiptIdValue').textContent = receiptId;
+    document.getElementById('receiptNo').value = receiptId;
+    return receiptId;
+}
+
+// ================= UPDATE ADDRESS =================
+function updateAddress() {
+    const branch = document.getElementById('branchId').value;
+    const home = document.getElementById('homeId').value;
+    const addressDisplay = document.getElementById('addressDisplay');
+    
+    if (branch && home) {
+        const key = `${branch}|${home}`;
+        const address = homeAddresses[key] || '';
+        
+        if (address) {
+            addressDisplay.innerHTML = `<i class="bi bi-geo-alt"></i> ${escapeHtml(address)}`;
+        } else {
+            addressDisplay.innerHTML = `<i class="bi bi-geo-alt"></i> <span class="address-empty">No address found for this Branch/Home combination</span>`;
+        }
+    } else {
+        addressDisplay.innerHTML = `<i class="bi bi-geo-alt"></i> <span class="address-empty">Select Branch and Home ID to view address</span>`;
+    }
+}
+
+// ================= CHECK AND UPDATE AMOUNTS =================
+async function checkAndUpdateAmounts() {
+    const branchId = document.getElementById('branchId').value;
+    const homeId = document.getElementById('homeId').value;
+    const categorySelect = document.getElementById('receiptCategory');
+    const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+    const categoryId = selectedCategory ? selectedCategory.value : '';
+    const financialYear = document.getElementById('financialYear').value;
+    const warningBox = document.getElementById('warningBox');
+    const warningMessage = document.getElementById('warningMessage');
+    const receiptAmountInput = document.getElementById('receiptAmountInput');
+    
+    warningBox.classList.remove('show');
+    warningBox.className = 'warning-box';
+    existingPaymentData = null;
+    receiptAmountInput.disabled = false;
+    receiptAmountInput.style.backgroundColor = '';
+    
+    const category = receiptCategories.find(c => c.id === categoryId);
+    const categoryAmount = category ? category.amount : 0;
+    
+    // Check if all required fields are selected
+    if (branchId && homeId && categoryId && financialYear) {
+        const existing = await checkExistingPayment(branchId, homeId, categoryId, financialYear);
+        
+        if (existing) {
+            existingPaymentData = existing;
+            
+            if (existing.balance <= 0) {
+                warningBox.classList.add('show');
+                warningBox.className = 'warning-box error';
+                warningMessage.innerHTML = `
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>⚠️ Already Fully Paid!</strong><br>
+                    This home already has a <span class="highlight">${category ? category.category : 'payment'}</span> 
+                    for financial year <span class="highlight">${financialYear}</span> with balance <strong>₹0.00</strong>.<br>
+                    The payment is already fully paid. Please verify before proceeding.
+                `;
+                receiptAmountInput.disabled = true;
+                receiptAmountInput.style.backgroundColor = '#f1f5f9';
+                receiptAmountInput.value = '';
+                
+                document.getElementById('actualAmount').value = existing.amount;
+                document.getElementById('actualAmountDisplay').textContent = existing.amount.toFixed(2);
+                document.getElementById('receiptAmountHidden').value = 0;
+                document.getElementById('receiptAmountDisplay').textContent = '0.00';
+                document.getElementById('balanceValue').textContent = '0.00';
+                
+                return;
+            } else {
+                const remainingBalance = existing.balance;
+                
+                warningBox.classList.add('show');
+                warningBox.className = 'warning-box info';
+                warningMessage.innerHTML = `
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong>Existing Payment Found</strong><br>
+                    This home already has a <span class="highlight">${category ? category.category : 'payment'}</span> 
+                    for financial year <span class="highlight">${financialYear}</span>.<br>
+                    <strong>Remaining Balance:</strong> ₹${remainingBalance.toFixed(2)}<br>
+                    <span style="font-size:0.85rem;">The receipt amount has been set to the remaining balance by default.</span>
+                `;
+                
+                document.getElementById('actualAmount').value = remainingBalance;
+                document.getElementById('actualAmountDisplay').textContent = remainingBalance.toFixed(2);
+                
+                receiptAmountInput.value = remainingBalance.toFixed(2);
+                document.getElementById('receiptAmountHidden').value = remainingBalance;
+                document.getElementById('receiptAmountDisplay').textContent = remainingBalance.toFixed(2);
+                document.getElementById('balanceValue').textContent = '0.00';
+                
+                receiptAmountInput.disabled = false;
+                receiptAmountInput.style.backgroundColor = '';
+                
+                showToast(`Remaining balance set to ₹${remainingBalance.toFixed(2)}`, 'success', 3000);
+                return;
+            }
+        }
+    }
+    
+    // No existing payment or fields not fully selected
+    document.getElementById('actualAmount').value = categoryAmount;
+    document.getElementById('actualAmountDisplay').textContent = categoryAmount.toFixed(2);
+    
+    // Only set receipt amount if it's empty or zero and category has amount
+    const currentReceiptAmount = parseFloat(receiptAmountInput.value) || 0;
+    if (currentReceiptAmount === 0 && categoryAmount > 0) {
+        receiptAmountInput.value = categoryAmount.toFixed(2);
+        document.getElementById('receiptAmountHidden').value = categoryAmount;
+        document.getElementById('receiptAmountDisplay').textContent = categoryAmount.toFixed(2);
+    }
+    
+    calculateBalance();
+    receiptAmountInput.disabled = false;
+    receiptAmountInput.style.backgroundColor = '';
+}
+
+function updateAmounts() {
+    const categorySelect = document.getElementById('receiptCategory');
+    const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+    const categoryId = selectedCategory ? selectedCategory.value : '';
+    const category = receiptCategories.find(c => c.id === categoryId);
+    const categoryAmount = category ? category.amount : 0;
+    
+    const branchId = document.getElementById('branchId').value;
+    const homeId = document.getElementById('homeId').value;
+    const financialYear = document.getElementById('financialYear').value;
+    
+    // Check if all fields are selected - if yes, run the full check
+    if (branchId && homeId && categoryId && financialYear) {
+        checkAndUpdateAmounts();
+        return;
+    }
+    
+    // Otherwise just set basic amounts
+    if (!existingPaymentData) {
+        document.getElementById('actualAmount').value = categoryAmount;
+        document.getElementById('actualAmountDisplay').textContent = categoryAmount.toFixed(2);
+        
+        const receiptAmountInput = document.getElementById('receiptAmountInput');
+        if (!receiptAmountInput.value || parseFloat(receiptAmountInput.value) === 0) {
+            receiptAmountInput.value = categoryAmount > 0 ? categoryAmount.toFixed(2) : '';
+            document.getElementById('receiptAmountHidden').value = categoryAmount;
+            document.getElementById('receiptAmountDisplay').textContent = categoryAmount.toFixed(2);
+        }
+        document.getElementById('balanceValue').textContent = '0.00';
+    }
+    
+    calculateBalance();
+}
+
+function calculateBalance() {
+    const actualAmount = parseFloat(document.getElementById('actualAmount').value) || 0;
+    const receiptAmount = parseFloat(document.getElementById('receiptAmountInput').value) || 0;
+    
+    document.getElementById('receiptAmountHidden').value = receiptAmount;
+    document.getElementById('receiptAmountDisplay').textContent = receiptAmount.toFixed(2);
+    
+    const balance = actualAmount - receiptAmount;
+    document.getElementById('balanceValue').textContent = Math.max(0, balance).toFixed(2);
+    
+    const errorEl = document.getElementById('receiptAmountError');
+    if (receiptAmount > actualAmount && actualAmount > 0) {
+        if (!errorEl) {
+            const input = document.getElementById('receiptAmountInput');
+            const err = document.createElement('div');
+            err.id = 'receiptAmountError';
+            err.style.cssText = 'color:#dc2626;font-size:0.75rem;margin-top:4px;';
+            err.textContent = `Receipt amount (₹${receiptAmount.toFixed(2)}) exceeds actual amount (₹${actualAmount.toFixed(2)})`;
+            input.parentNode.appendChild(err);
+            input.style.borderColor = '#dc2626';
+        } else {
+            errorEl.textContent = `Receipt amount (₹${receiptAmount.toFixed(2)}) exceeds actual amount (₹${actualAmount.toFixed(2)})`;
+            errorEl.style.display = 'block';
+        }
+        return false;
+    } else {
+        const input = document.getElementById('receiptAmountInput');
+        input.style.borderColor = '';
+        const errorEl2 = document.getElementById('receiptAmountError');
+        if (errorEl2) errorEl2.style.display = 'none';
+        return true;
+    }
+}
+
+// ================= RESET FORM COMPLETELY =================
+function resetForm(showToastMsg = true) {
+    // Reset all Select2 dropdowns
+    $('#branchId').val('').trigger('change');
+    $('#homeId').val('').trigger('change');
+    $('#receiptCategory').val('').trigger('change');
+    $('#financialYear').val('').trigger('change');
+    
+    // Reset text inputs
+    document.getElementById('memberId').value = '';
+    document.getElementById('transactionId').value = '';
+    document.getElementById('senderUpiId').value = '';
+    document.getElementById('remarks').value = '';
+    document.getElementById('receiptAmountInput').value = '';
+    
+    // Reset amounts
+    document.getElementById('actualAmount').value = 0;
+    document.getElementById('actualAmountDisplay').textContent = '0.00';
+    document.getElementById('receiptAmountHidden').value = 0;
+    document.getElementById('receiptAmountDisplay').textContent = '0.00';
+    document.getElementById('balanceValue').textContent = '0.00';
+    
+    // Reset address
+    document.getElementById('addressDisplay').innerHTML = `<i class="bi bi-geo-alt"></i> <span class="address-empty">Select Branch and Home ID to view address</span>`;
+    
+    // Reset warning
+    document.getElementById('warningBox').classList.remove('show');
+    document.getElementById('warningBox').className = 'warning-box';
+    existingPaymentData = null;
+    document.getElementById('receiptAmountInput').disabled = false;
+    document.getElementById('receiptAmountInput').style.backgroundColor = '';
+    
+    // Reset date and time to current
+    const now = new Date();
+    document.getElementById('paymentDate').value = now.toISOString().split('T')[0];
+    document.getElementById('paymentTime').value = now.toTimeString().slice(0, 5);
+    
+    // Reset screenshot
+    document.getElementById('screenshotUpload').value = '';
+    document.getElementById('screenshotPreview').style.display = 'none';
+    document.getElementById('screenshotPreviewImg').src = '';
+    
+    // Reset receipt ID
+    updateReceiptId();
+    
+    // Clear any error messages
+    const errorEl = document.getElementById('receiptAmountError');
+    if (errorEl) errorEl.style.display = 'none';
+    
+    if (showToastMsg) {
+        showToast('Form reset successfully', 'info', 2000);
+    }
+}
+
+// ================= SUBMIT FORM =================
+async function submitPayment() {
+    if (isSubmitting) return;
+    
+    // Validate required fields
+    const branchId = document.getElementById('branchId').value;
+    const homeId = document.getElementById('homeId').value;
+    const receiptCategory = document.getElementById('receiptCategory').value;
+    const financialYear = document.getElementById('financialYear').value;
+    const receiptAmount = parseFloat(document.getElementById('receiptAmountInput').value) || 0;
+    const paymentDate = document.getElementById('paymentDate').value;
+    const paymentTime = document.getElementById('paymentTime').value;
+    const actualAmount = parseFloat(document.getElementById('actualAmount').value) || 0;
+    
+    if (!branchId) {
+        showToast('Please select or enter a Branch ID.', 'error', 3000);
+        document.getElementById('branchId').focus();
+        return;
+    }
+    if (!homeId) {
+        showToast('Please select or enter a Home ID.', 'error', 3000);
+        document.getElementById('homeId').focus();
+        return;
+    }
+    if (!receiptCategory) {
+        showToast('Please select a Receipt Category.', 'error', 3000);
+        document.getElementById('receiptCategory').focus();
+        return;
+    }
+    if (!financialYear) {
+        showToast('Please select a Financial Year.', 'error', 3000);
+        document.getElementById('financialYear').focus();
+        return;
+    }
+    if (receiptAmount <= 0) {
+        showToast('Please enter a valid Receipt Amount.', 'error', 3000);
+        document.getElementById('receiptAmountInput').focus();
+        return;
+    }
+    if (receiptAmount > actualAmount && actualAmount > 0) {
+        showToast(`Receipt amount (₹${receiptAmount.toFixed(2)}) exceeds actual amount (₹${actualAmount.toFixed(2)}).`, 'error', 3000);
+        document.getElementById('receiptAmountInput').focus();
+        return;
+    }
+    if (!paymentDate) {
+        showToast('Please select a Date.', 'error', 3000);
+        document.getElementById('paymentDate').focus();
+        return;
+    }
+    if (!paymentTime) {
+        showToast('Please select a Time.', 'error', 3000);
+        document.getElementById('paymentTime').focus();
+        return;
+    }
+    
+    const balance = actualAmount - receiptAmount;
+    if (balance < 0) {
+        showToast('Receipt amount cannot exceed actual amount.', 'error', 3000);
+        return;
+    }
+    
+    // Check if balance is 0 and show warning
+    if (balance === 0) {
+        const confirmResult = await Swal.fire({
+            title: '⚠️ Payment Will Be Fully Paid',
+            text: `This payment will clear the remaining balance. New balance will be ₹0.00.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, Submit',
+            cancelButtonText: 'Cancel'
+        });
+        
+        if (!confirmResult.isConfirmed) return;
+    }
+    
+    // Confirm submission
+    const result = await Swal.fire({
+        title: 'Confirm Submission',
+        html: `
+            <div style="text-align:left;">
+                <p><strong>Receipt No:</strong> ${escapeHtml(document.getElementById('receiptIdValue').textContent)}</p>
+                <p><strong>Branch ID:</strong> ${escapeHtml(branchId)}</p>
+                <p><strong>Home ID:</strong> ${escapeHtml(homeId)}</p>
+                <p><strong>Category:</strong> ${escapeHtml(document.getElementById('receiptCategory').options[document.getElementById('receiptCategory').selectedIndex]?.text || '')}</p>
+                <p><strong>Financial Year:</strong> ${escapeHtml(document.getElementById('financialYear').options[document.getElementById('financialYear').selectedIndex]?.text || '')}</p>
+                <p><strong>Transaction ID:</strong> ${escapeHtml(document.getElementById('transactionId').value.trim() || 'N/A')}</p>
+                <p><strong>Actual Amount:</strong> ₹${actualAmount.toFixed(2)}</p>
+                <p><strong>Receipt Amount:</strong> ₹${receiptAmount.toFixed(2)}</p>
+                <p><strong>Balance:</strong> ₹${balance.toFixed(2)}</p>
+                <p><strong>Status:</strong> <span style="color:#16a34a;font-weight:600;">Verified</span></p>
+                ${existingPaymentData ? `<p style="color:#f59e0b;font-size:0.85rem;margin-top:8px;"><i class="bi bi-info-circle"></i> This is an additional payment for an existing receipt.</p>` : ''}
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="bi bi-check-circle"></i> Yes, Submit',
+        cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    isSubmitting = true;
+    const btn = document.getElementById('submitBtn');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Submitting...';
+    btn.disabled = true;
+    
+    try {
+        // Get screenshot
+        let screenshotDataUrl = '';
+        const screenshotFile = document.getElementById('screenshotUpload').files[0];
+        if (screenshotFile) {
+            try {
+                const reader = new FileReader();
+                const base64Data = await new Promise((resolve) => {
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(screenshotFile);
+                });
+                screenshotDataUrl = await convertToJpegDataUrl(base64Data, screenshotFile.type);
+            } catch (e) {
+                console.warn('Screenshot conversion error:', e);
+            }
+        }
+        
+        const receiptNo = document.getElementById('receiptIdValue').textContent;
+        const categoryText = document.getElementById('receiptCategory').options[document.getElementById('receiptCategory').selectedIndex]?.text || '';
+        const yearText = document.getElementById('financialYear').options[document.getElementById('financialYear').selectedIndex]?.text || '';
+        const transactionId = document.getElementById('transactionId').value.trim();
+        const senderUpiId = document.getElementById('senderUpiId').value.trim();
+        const remarks = document.getElementById('remarks').value.trim();
+        const memberId = document.getElementById('memberId').value.trim();
+        
+        const dateTimeStr = `${paymentDate} ${paymentTime}`;
+        const isAdditionalPayment = existingPaymentData !== null && existingPaymentData.balance > 0;
+        
+        const payload = {
+            action: "ADD_MANUAL_PAYMENT",
+            branchId: branchId,
+            homeId: homeId,
+            memberId: memberId,
+            receiptNo: receiptNo,
+            transactionId: transactionId,
+            receiptCategory: categoryText,
+            financialYear: yearText,
+            senderUpiId: senderUpiId,
+            amount: actualAmount,
+            receiptAmount: receiptAmount,
+            balance: balance,
+            remarks: remarks,
+            paymentConfirm: "Verified",
+            date: paymentDate,
+            time: paymentTime,
+            timestamp: dateTimeStr,
+            screenshotDataUrl: screenshotDataUrl,
+            existingPaymentRow: existingPaymentData ? existingPaymentData.rowIndex : null,
+            isAdditionalPayment: isAdditionalPayment,
+            previousBalance: existingPaymentData ? existingPaymentData.balance : 0,
+            originalAmount: existingPaymentData ? existingPaymentData.amount : actualAmount
+        };
+        
+        console.log('Submitting payment:', payload);
+        
+        await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        // Show success with admin verification note
+        await Swal.fire({
+            title: '✅ Payment Saved Successfully!',
+            html: `
+                <div style="text-align:left;font-size:0.95rem;">
+                    <p><strong>Receipt No:</strong> <span style="font-family:monospace;">${escapeHtml(receiptNo)}</span></p>
+                    <p><strong>Branch:</strong> ${escapeHtml(branchId)} | <strong>Home:</strong> ${escapeHtml(homeId)}</p>
+                    <p><strong>Category:</strong> ${escapeHtml(categoryText)}</p>
+                    <p><strong>Amount Paid:</strong> ₹${receiptAmount.toFixed(2)}</p>
+                    <p><strong>New Balance:</strong> ₹${balance.toFixed(2)}</p>
+                    ${transactionId ? `<p><strong>Transaction ID:</strong> ${escapeHtml(transactionId)}</p>` : ''}
+                    ${isAdditionalPayment ? `<p style="color:#f59e0b;font-size:0.85rem;margin-top:8px;"><i class="bi bi-info-circle"></i> This payment was added to an existing receipt.</p>` : '<p style="color:#16a34a;font-size:0.85rem;margin-top:8px;"><i class="bi bi-plus-circle"></i> New payment created for this category/year.</p>'}
+                    <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin-top:12px;text-align:center;font-size:0.9rem;">
+                        <i class="bi bi-shield-check" style="color:#f59e0b;font-size:1.2rem;"></i>
+                        <strong style="color:#92400e;">Payment recorded successfully!</strong>
+                        <p style="color:#78350f;margin:4px 0 0 0;font-size:0.8rem;">
+                            <i class="bi bi-info-circle"></i> Please allow admin to verify the payment.
+                        </p>
+                    </div>
+                </div>
+            `,
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#0f3b6a'
+        });
+        
+        // Reset form completely after successful submission
+        resetForm(false);
+        
+        // Show toast notification with admin verification note
+        showToast('✅ Payment recorded! Admin verification pending.', 'success', 5000);
+        
+    } catch (err) {
+        console.error('Error submitting payment:', err);
+        await Swal.fire({
+            title: '⚠️ Submission Issue',
+            html: `
+                <p>There was an issue submitting the payment, but the data may have been saved.</p>
+                <p style="font-size:0.85rem;color:#64748b;">Please check the Data sheet to verify.</p>
+                <p style="font-size:0.8rem;color:#dc2626;">Error: ${escapeHtml(err.message || 'Unknown error')}</p>
+            `,
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#0f3b6a'
+        });
+        showToast('⚠️ Please verify if the payment was saved.', 'error', 5000);
+    } finally {
+        isSubmitting = false;
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+// ================= CONVERT IMAGE TO JPEG DATA URL =================
+function convertToJpegDataUrl(base64Data, mimeType) {
+    return new Promise((resolve, reject) => {
+        try {
+            const img = new Image();
+            const fullDataUrl = `data:${mimeType || 'image/jpeg'};base64,${base64Data}`;
+            
+            img.onload = function() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    resolve(jpegDataUrl);
+                } catch (canvasError) {
+                    reject(new Error('Canvas conversion error: ' + canvasError.message));
+                }
+            };
+            img.onerror = function() {
+                reject(new Error('Failed to load image for conversion'));
+            };
+            img.src = fullDataUrl;
+        } catch (error) {
+            reject(new Error('Image conversion error: ' + error.message));
+        }
+    });
+}
+
+// ================= SET DEFAULT DATE/TIME =================
+function setDefaultDateTime() {
+    const now = new Date();
+    document.getElementById('paymentDate').value = now.toISOString().split('T')[0];
+    document.getElementById('paymentTime').value = now.toTimeString().slice(0, 5);
+}
+
+// ================= POPULATE DROPDOWNS =================
+function populateSelect2Options(selector, options, placeholder) {
+    const $select = $(selector);
+    $select.empty();
+    $select.append(`<option value="">${placeholder}</option>`);
+    options.forEach(opt => {
+        $select.append(`<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
+    });
+}
+
+function populateBranches() {
+    populateSelect2Options('#branchId', branchOptions, 'Select or type Branch');
+    $('#branchId').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select or type Branch',
+        allowClear: true,
+        width: '100%',
+        tags: true,
+        createTag: function(params) {
+            return {
+                id: params.term,
+                text: params.term,
+                newOption: true
+            };
+        }
+    });
+    $('#branchId').on('change', function() {
+        updateAddress();
+        updateReceiptId();
+        checkAndUpdateAmounts();
+    });
+}
+
+function populateHomes() {
+    populateSelect2Options('#homeId', homeOptions, 'Select or type Home');
+    $('#homeId').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select or type Home',
+        allowClear: true,
+        width: '100%',
+        tags: true,
+        createTag: function(params) {
+            return {
+                id: params.term,
+                text: params.term,
+                newOption: true
+            };
+        }
+    });
+    $('#homeId').on('change', function() {
+        updateAddress();
+        updateReceiptId();
+        checkAndUpdateAmounts();
+    });
+}
+
+function populateReceiptCategories(categories) {
+    const select = document.getElementById('receiptCategory');
+    select.innerHTML = '<option value="">Select Category</option>';
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.category;
+        option.dataset.amount = cat.amount;
+        select.appendChild(option);
+    });
+    
+    $('#receiptCategory').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select Category',
+        allowClear: true,
+        width: '100%'
+    });
+    
+    $('#receiptCategory').on('change', function() {
+        updateAmounts();
+        updateReceiptId();
+        checkAndUpdateAmounts();
+    });
+}
+
+function populateFinancialYears(years) {
+    const select = document.getElementById('financialYear');
+    select.innerHTML = '<option value="">Select Financial Year</option>';
+    
+    const sortedYears = [...years].sort((a, b) => {
+        const aStart = parseInt(a.split('-')[0]);
+        const bStart = parseInt(b.split('-')[0]);
+        return bStart - aStart;
+    });
+    
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        select.appendChild(option);
+    });
+    
+    $('#financialYear').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select Financial Year',
+        allowClear: true,
+        width: '100%'
+    });
+    
+    $('#financialYear').on('change', function() {
+        updateReceiptId();
+        checkAndUpdateAmounts();
+    });
+    
+    if (sortedYears.length > 0) {
+        select.value = sortedYears[0];
+        $('#financialYear').trigger('change');
+    }
+}
+
+// ================= SCREENSHOT HANDLING =================
+document.getElementById('screenshotUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('Please select an image file.', 'error', 3000);
+        this.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const preview = document.getElementById('screenshotPreview');
+        const previewImg = document.getElementById('screenshotPreviewImg');
+        previewImg.src = event.target.result;
+        preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('removeScreenshotBtn').addEventListener('click', function() {
+    document.getElementById('screenshotUpload').value = '';
+    document.getElementById('screenshotPreview').style.display = 'none';
+    document.getElementById('screenshotPreviewImg').src = '';
+});
+
+// ================= INIT =================
+async function init() {
+    showToast('Loading data...', 'info', 2000);
+    
+    try {
+        await fetchMasterData();
+        
+        const [categories, years] = await Promise.all([
+            fetchReceiptCategories(),
+            fetchFinancialYears()
+        ]);
+        
+        receiptCategories = categories;
+        financialYears = years;
+        
+        await fetchAllPaymentRecords();
+        
+        populateBranches();
+        populateHomes();
+        populateReceiptCategories(categories);
+        populateFinancialYears(years);
+        
+        setDefaultDateTime();
+        updateReceiptId();
+        
+        // Wait for select2 to fully initialize then check for existing payments
+        setTimeout(async function() {
+            await checkAndUpdateAmounts();
+            isInitialLoad = false;
+        }, 500);
+        
+        console.log('Initialization complete!');
+        console.log('Branches:', branchOptions);
+        console.log('Homes:', homeOptions);
+        console.log('Categories:', categories);
+        console.log('Years:', years);
+        console.log('Payment Records:', allPaymentRecords.length);
+        
+        showToast('Ready to add payment', 'success', 2000);
+        
+    } catch (e) {
+        console.error('Error initializing:', e);
+        showToast('Failed to load data. Please refresh.', 'error', 4000);
+    }
+}
+
+// ================= EVENT LISTENERS =================
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+        init();
+    } else {
+        const checkReady = setInterval(function() {
+            if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+                clearInterval(checkReady);
+                init();
+            }
+        }, 100);
+    }
+    
+    document.getElementById('submitBtn').addEventListener('click', submitPayment);
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        resetForm(true);
+    });
+    document.getElementById('generateReceiptBtn').addEventListener('click', function() {
+        updateReceiptId();
+        showToast('Receipt ID regenerated!', 'success', 2000);
+    });
+    
+    document.getElementById('receiptAmountInput').addEventListener('input', calculateBalance);
+    
+    document.getElementById('paymentForm').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            submitPayment();
+        }
+    });
+});
+</script>
+</body>
+</html>
