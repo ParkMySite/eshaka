@@ -1,0 +1,284 @@
+// ==================== PAYMENT VERIFICATION API ====================
+// Deploy as Web App (Execute as: "Me", Access: "Anyone" - including anonymous)
+// Spreadsheet ID: 1FKCX4TODUcQ_0o8xP14fGENYT17k4Mcm_rJe6eFSTjE
+
+const SPREADSHEET_ID = "1FKCX4TODUcQ_0o8xP14fGENYT17k4Mcm_rJe6eFSTjE";
+const API_KEY = "AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM";
+
+function doPost(e) {
+  // Set CORS headers for response
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  try {
+    let requestData;
+    if (e.postData.type === "application/json") {
+      requestData = JSON.parse(e.postData.contents);
+    } else {
+      requestData = JSON.parse(e.postData.getDataAsString());
+    }
+    
+    console.log("Request received:", requestData);
+    
+    const action = requestData.action;
+    
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    
+    let result;
+    switch(action) {
+      case "UPDATE_PAYMENT_STATUS":
+        result = handleUpdatePaymentStatus(ss, requestData);
+        break;
+      default:
+        result = { status: "error", error: "Unknown action: " + action };
+    }
+    
+    return createResponse(result, corsHeaders);
+    
+  } catch(error) {
+    console.error("Error in doPost:", error);
+    return createResponse({ 
+      status: "error", 
+      error: error.toString(),
+      stack: error.stack 
+    }, corsHeaders);
+  }
+}
+
+// Handle GET requests and OPTIONS preflight
+function doGet(e) {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+  
+  return createResponse({ 
+    status: "success", 
+    message: "Payment Verification API is running",
+    operations: ["UPDATE_PAYMENT_STATUS"],
+    spreadsheet: SPREADSHEET_ID
+  }, corsHeaders);
+}
+
+// ==================== HANDLE UPDATE PAYMENT STATUS ====================
+function handleUpdatePaymentStatus(ss, data) {
+  try {
+    const sheet = ss.getSheetByName("Data");
+    
+    if (!sheet) {
+      throw new Error("Data sheet not found");
+    }
+    
+    const rowIndex = data.rowIndex;
+    if (!rowIndex && rowIndex !== 0) {
+      throw new Error("Row index missing for update");
+    }
+    
+    const rowNumber = parseInt(rowIndex);
+    
+    // Validate row exists
+    const lastRow = sheet.getLastRow();
+    if (rowNumber > lastRow) {
+      throw new Error("Row does not exist. Row number: " + rowNumber + ", Last row: " + lastRow);
+    }
+    
+    const status = data.status;
+    if (!status) {
+      throw new Error("Status is required");
+    }
+    
+    const notes = data.notes || '';
+    const verifiedBy = data.verifiedBy || Session.getActiveUser().getEmail() || 'Admin';
+    
+    // Update Payment Confirm - Column K (index 11)
+    sheet.getRange(rowNumber, 11).setValue(status);
+    
+    // Update Remarks with verification notes - Column L (index 12)
+    if (notes) {
+      const currentRemarks = sheet.getRange(rowNumber, 12).getValue() || '';
+      const timestamp = Utilities.formatDate(
+        new Date(),
+        Session.getScriptTimeZone(),
+        'dd/MM/yyyy HH:mm'
+      );
+      const newEntry = `[${timestamp}] ${status}: ${notes} (by: ${verifiedBy})`;
+      const newRemarks = currentRemarks 
+        ? currentRemarks + ' | ' + newEntry 
+        : newEntry;
+      sheet.getRange(rowNumber, 12).setValue(newRemarks);
+    }
+    
+    // Update verification log
+    try {
+      updateVerificationLog(ss, data.receiptNo, status, notes, verifiedBy);
+    } catch(logError) {
+      console.error("Error updating verification log:", logError);
+      // Continue even if log update fails
+    }
+    
+    const verificationTime = Utilities.formatDate(
+      new Date(),
+      Session.getScriptTimeZone(),
+      'yyyy-MM-dd HH:mm:ss'
+    );
+    
+    return { 
+      status: "success", 
+      message: "Payment status updated successfully",
+      receiptNo: data.receiptNo,
+      status: status,
+      rowIndex: rowNumber,
+      updatedAt: verificationTime
+    };
+    
+  } catch(error) {
+    console.error("Error in handleUpdatePaymentStatus:", error);
+    throw error;
+  }
+}
+
+// ==================== UPDATE VERIFICATION LOG ====================
+function updateVerificationLog(ss, receiptNo, status, notes, verifiedBy) {
+  try {
+    let logSheet = ss.getSheetByName("Verification_Log");
+    
+    // Create log sheet if it doesn't exist
+    if (!logSheet) {
+      logSheet = ss.insertSheet("Verification_Log");
+      logSheet.getRange(1, 1, 1, 6).setValues([
+        ['Receipt No', 'Status', 'Notes', 'Verified By', 'Timestamp', 'Date']
+      ]);
+    }
+    
+    const timestamp = Utilities.formatDate(
+      new Date(),
+      Session.getScriptTimeZone(),
+      'yyyy-MM-dd HH:mm:ss'
+    );
+    const dateStr = Utilities.formatDate(
+      new Date(),
+      Session.getScriptTimeZone(),
+      'yyyy-MM-dd'
+    );
+    
+    logSheet.appendRow([
+      receiptNo || '',
+      status || '',
+      notes || '',
+      verifiedBy || '',
+      timestamp,
+      dateStr
+    ]);
+    
+  } catch(error) {
+    console.error("Error updating verification log:", error);
+    throw error;
+  }
+}
+
+// ==================== CREATE RESPONSE ====================
+function createResponse(data, corsHeaders) {
+  const output = ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  
+  if (corsHeaders) {
+    for (const key in corsHeaders) {
+      output.setHeader(key, corsHeaders[key]);
+    }
+  }
+  
+  return output;
+}
+
+// ==================== INITIALIZE SHEETS ====================
+function initializeSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  
+  // Initialize Data sheet
+  let dataSheet = ss.getSheetByName("Data");
+  if (!dataSheet) {
+    dataSheet = ss.insertSheet("Data");
+  }
+  if (dataSheet.getLastRow() === 0) {
+    dataSheet.getRange(1, 1, 1, 15).setValues([
+      ["Branch ID", "Home ID", "Receipt No", "Transaction ID", 
+       "Receipt Category", "Financial Year", "Sender UPI ID",
+       "Amount", "Receipt Amount", "Balance", "Payment Confirm",
+       "Remarks", "Timestamp", "Date", "Screenshot Data URL"]
+    ]);
+  }
+  
+  // Initialize Verification_Log sheet
+  let logSheet = ss.getSheetByName("Verification_Log");
+  if (!logSheet) {
+    logSheet = ss.insertSheet("Verification_Log");
+    logSheet.getRange(1, 1, 1, 6).setValues([
+      ['Receipt No', 'Status', 'Notes', 'Verified By', 'Timestamp', 'Date']
+    ]);
+  }
+  
+  return "Sheets initialized successfully!";
+}
+
+// ==================== TEST FUNCTION ====================
+function testUpdateStatus() {
+  // Test function to verify the update works
+  const testData = {
+    action: "UPDATE_PAYMENT_STATUS",
+    rowIndex: 2,  // Change this to a valid row
+    receiptNo: "TEST123",
+    status: "Verified",
+    notes: "Test verification",
+    verifiedBy: "Test User"
+  };
+  
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const result = handleUpdatePaymentStatus(ss, testData);
+  console.log("Test result:", result);
+  return result;
+}
+
+// ==================== CHECK SHEET STRUCTURE ====================
+function checkSheetStructure() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName("Data");
+    
+    if (!sheet) {
+      console.log('Sheet "Data" not found!');
+      return { success: false, error: 'Sheet "Data" not found!' };
+    }
+    
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    console.log('Sheet found. Rows:', lastRow, 'Columns:', lastCol);
+    
+    if (lastRow > 0) {
+      const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      console.log('Headers:', headers);
+      
+      if (lastRow > 1) {
+        const sampleRow = sheet.getRange(2, 1, 1, Math.min(lastCol, 5)).getValues()[0];
+        console.log('Sample row (first 5 columns):', sampleRow);
+      }
+    }
+    
+    return {
+      success: true,
+      rows: lastRow,
+      columns: lastCol,
+      headers: lastRow > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : []
+    };
+    
+  } catch(error) {
+    console.error('Error checking sheet:', error);
+    return { success: false, error: error.toString() };
+  }
+}
