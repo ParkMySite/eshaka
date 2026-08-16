@@ -366,6 +366,10 @@
                             <label class="form-check-label" for="paidUsers">
                                 <i class="bi bi-check-circle-fill" style="color:#16a34a;"></i> Paid
                             </label>
+                            <input class="form-check-input ms-3" type="radio" name="paymentType" id="partialUsers" value="partial">
+                            <label class="form-check-label" for="partialUsers">
+                                <i class="bi bi-exclamation-triangle text-warning"></i> Partially Paid
+                            </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="paymentType" id="notPaidUsers" value="notpaid" checked>
@@ -413,10 +417,6 @@
                         <th>Address</th>
                         <th>Member Name</th>
                         <th>Receipt No</th>
-                        <th>Sender ID</th>
-                        <th>Remarks</th>
-                        <th>Timestamp</th>
-                        <th>Payment Mode</th>
                         <th>Category</th>
                         <th>Financial Year</th>
                         <th>Amount</th>
@@ -429,7 +429,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="17" class="text-center py-5 text-muted">
+                        <td colspan="13" class="text-center py-5 text-muted">
                             <i class="bi bi-funnel fs-1"></i>
                             <h6>Apply filters to load data</h6>
                             <p>Select your filters and click "Apply Filters" to generate the report.</p>
@@ -442,7 +442,7 @@
                         <td id="grandTotalAmount" class="text-end">0.00</td>
                         <td id="grandTotalReceiptAmount" class="text-end">0.00</td>
                         <td id="grandTotalBalance" class="text-end">0.00</td>
-                        <td colspan="4"></td>
+                        <td colspan="3"></td>
                     </tr>
                 </tfoot>
 
@@ -515,7 +515,7 @@ const COL = {
     OCR_DATE: 18,
     OCR_UPI_ID: 19,
     OCR_STATUS: 20,
-    PAYMENT_MODE: 21
+    OCR_TEXT: 21
 };
 
 // Master sheet columns
@@ -625,7 +625,7 @@ function getPaymentTypeBadge(balance, hasPayment) {
     if (balance <= 0) {
         return `<span class="paid-status paid"><i class="bi bi-check-circle"></i> Paid</span>`;
     }
-    return `<span class="paid-status partial"><i class="bi bi-exclamation-triangle"></i> Partial</span>`;
+    return `<span class="paid-status partial"><i class="bi bi-exclamation-triangle"></i> Partially Paid</span>`;
 }
 
 function buildAddress(row) {
@@ -672,7 +672,7 @@ async function fetchData() {
 
         // Data sheet is used only to identify branch/home combinations
         // that already have a payment record and to display payment details.
-        const paymentUrl = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/${DATA_SHEET_NAME}!A:V?key=${API_KEY}&_=${Date.now()}`;
+        const paymentUrl = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/${DATA_SHEET_NAME}!A:N?key=${API_KEY}&_=${Date.now()}`;
         const paymentResp = await fetch(paymentUrl);
         if (!paymentResp.ok) throw new Error(`Payment Data sheet request failed: ${paymentResp.status}`);
         const paymentDataJson = await paymentResp.json();
@@ -759,10 +759,6 @@ async function fetchData() {
                 category: row[COL.CATEGORY] || '',
                 financialYear: row[COL.FINANCIAL_YEAR] || '',
                 senderUpi: row[COL.SENDER_UPI] || '',
-                senderId: row[COL.SENDER_UPI] || '',
-                remarks: row[COL.REMARKS] || '',
-                timeStamp: row[COL.TIME_STAMP] || '',
-                paymentMode: row[COL.PAYMENT_MODE] || '',
                 amount: parseFloat(row[COL.AMOUNT]) || 0,
                 receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
                 balance: parseFloat(row[COL.BALANCE]) || 0,
@@ -795,8 +791,8 @@ async function fetchData() {
                 branchId: home.branchId,
                 homeId: home.homeId,
                 receiptNo: '', transactionId: '', category: '', financialYear: '',
-                senderUpi: '', senderId: '', amount: 0, receiptAmount: 0, balance: 0,
-                paymentConfirm: '', remarks: '', timeStamp: '', paymentMode: '', date: '',
+                senderUpi: '', amount: 0, receiptAmount: 0, balance: 0,
+                paymentConfirm: '', remarks: '', date: '',
                 masterRow: home.masterRow,
                 members: memberMap.get(home.key) || [],
                 hasPayment: false,
@@ -824,10 +820,6 @@ async function fetchData() {
                 category: row[COL.CATEGORY] || '',
                 financialYear: row[COL.FINANCIAL_YEAR] || '',
                 senderUpi: row[COL.SENDER_UPI] || '',
-                senderId: row[COL.SENDER_UPI] || '',
-                remarks: row[COL.REMARKS] || '',
-                timeStamp: row[COL.TIME_STAMP] || '',
-                paymentMode: row[COL.PAYMENT_MODE] || '',
                 amount: parseFloat(row[COL.AMOUNT]) || 0,
                 receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
                 balance: parseFloat(row[COL.BALANCE]) || 0,
@@ -954,7 +946,7 @@ function renderTable(data) {
     }
 
     if (!data || data.length === 0) {
-        $('#reportTable tbody').html(`<tr><td colspan="17" class="text-center py-5 text-muted">
+        $('#reportTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-1"></i>
             <h6>No records found</h6>
             <p>Try adjusting your filters</p>
@@ -1010,10 +1002,6 @@ function renderTable(data) {
                     return row.receiptNo ? `<span style="font-family:monospace;">${escapeHtml(row.receiptNo)}</span>` : '<span class="text-muted">—</span>';
                 }
             },
-            { data: null, render: row => row.isDataRecord && row.senderId ? escapeHtml(row.senderId) : '<span class="text-muted">—</span>' },
-            { data: null, render: row => row.isDataRecord && row.remarks ? escapeHtml(row.remarks) : '<span class="text-muted">—</span>' },
-            { data: null, render: row => row.isDataRecord && row.timeStamp ? escapeHtml(row.timeStamp) : '<span class="text-muted">—</span>' },
-            { data: null, render: row => row.isDataRecord && row.paymentMode ? escapeHtml(row.paymentMode) : '<span class="text-muted">—</span>' },
             { 
                 data: null,
                 render: function(row) {
@@ -1178,6 +1166,11 @@ async function applyFilters() {
             data = data.filter(d => d.hasPayment && d.balance <= 0);
         }
 
+        if (paymentType === 'partial') {
+            // Partially Paid = receipt exists and balance is still outstanding.
+            data = data.filter(d => d.isDataRecord && d.balance > 0 && d.receiptAmount > 0);
+        }
+
         // Receipt-side criteria apply to actual Data/receipt records.
         // Master-only Not Paid records remain unaffected by these fields.
         if (category) {
@@ -1213,14 +1206,15 @@ function resetFilters() {
     document.getElementById('filterStatus').value = '';
     $('#filterStatus').trigger('change');
     document.getElementById('paidUsers').checked = false;
-    document.getElementById('notPaidUsers').checked = true;
+        document.getElementById('partialUsers').checked = false;
+        document.getElementById('notPaidUsers').checked = true;
     
     // Clear table
     if (dataTable) {
         dataTable.destroy();
         dataTable = null;
     }
-    $('#reportTable tbody').html(`<tr><td colspan="17" class="text-center py-5 text-muted">
+    $('#reportTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
         <i class="bi bi-funnel fs-1"></i>
         <h6>Apply filters to load data</h6>
         <p>Select your filters and click "Apply Filters" to generate the report.</p>
@@ -1242,7 +1236,7 @@ function exportCSV() {
         return;
     }
     
-    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Sender ID', 'Remarks', 'Timestamp', 'Payment Mode', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Receipt Status', 'Receipt Type', 'Date'];
+    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Receipt Status', 'Receipt Type', 'Date'];
     
     let csv = headers.join(',') + '\n';
     
@@ -1257,10 +1251,6 @@ function exportCSV() {
             `"${address}"`,
             `"${members}"`,
             row.receiptNo || '',
-            row.senderId || '',
-            row.remarks || '',
-            row.timeStamp || '',
-            row.paymentMode || '',
             row.category || '',
             row.financialYear || '',
             row.hasPayment ? row.amount.toFixed(2) : '',
@@ -1289,6 +1279,7 @@ async function init() {
         // Default report type is Not Paid.
         // Do NOT generate/load the report automatically on page load.
         document.getElementById('paidUsers').checked = false;
+        document.getElementById('partialUsers').checked = false;
         document.getElementById('notPaidUsers').checked = true;
 
         // Filter option lists can be loaded on page load, but the actual
