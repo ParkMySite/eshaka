@@ -413,6 +413,10 @@
                         <th>Address</th>
                         <th>Member Name</th>
                         <th>Receipt No</th>
+                        <th>Sender ID</th>
+                        <th>Remarks</th>
+                        <th>Timestamp</th>
+                        <th>Payment Mode</th>
                         <th>Category</th>
                         <th>Financial Year</th>
                         <th>Amount</th>
@@ -425,7 +429,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td colspan="13" class="text-center py-5 text-muted">
+                        <td colspan="17" class="text-center py-5 text-muted">
                             <i class="bi bi-funnel fs-1"></i>
                             <h6>Apply filters to load data</h6>
                             <p>Select your filters and click "Apply Filters" to generate the report.</p>
@@ -438,7 +442,7 @@
                         <td id="grandTotalAmount" class="text-end">0.00</td>
                         <td id="grandTotalReceiptAmount" class="text-end">0.00</td>
                         <td id="grandTotalBalance" class="text-end">0.00</td>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                     </tr>
                 </tfoot>
 
@@ -511,7 +515,7 @@ const COL = {
     OCR_DATE: 18,
     OCR_UPI_ID: 19,
     OCR_STATUS: 20,
-    OCR_TEXT: 21
+    PAYMENT_MODE: 21
 };
 
 // Master sheet columns
@@ -668,7 +672,7 @@ async function fetchData() {
 
         // Data sheet is used only to identify branch/home combinations
         // that already have a payment record and to display payment details.
-        const paymentUrl = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/${DATA_SHEET_NAME}!A:N?key=${API_KEY}&_=${Date.now()}`;
+        const paymentUrl = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/${DATA_SHEET_NAME}!A:V?key=${API_KEY}&_=${Date.now()}`;
         const paymentResp = await fetch(paymentUrl);
         if (!paymentResp.ok) throw new Error(`Payment Data sheet request failed: ${paymentResp.status}`);
         const paymentDataJson = await paymentResp.json();
@@ -755,6 +759,10 @@ async function fetchData() {
                 category: row[COL.CATEGORY] || '',
                 financialYear: row[COL.FINANCIAL_YEAR] || '',
                 senderUpi: row[COL.SENDER_UPI] || '',
+                senderId: row[COL.SENDER_UPI] || '',
+                remarks: row[COL.REMARKS] || '',
+                timeStamp: row[COL.TIME_STAMP] || '',
+                paymentMode: row[COL.PAYMENT_MODE] || '',
                 amount: parseFloat(row[COL.AMOUNT]) || 0,
                 receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
                 balance: parseFloat(row[COL.BALANCE]) || 0,
@@ -787,8 +795,8 @@ async function fetchData() {
                 branchId: home.branchId,
                 homeId: home.homeId,
                 receiptNo: '', transactionId: '', category: '', financialYear: '',
-                senderUpi: '', amount: 0, receiptAmount: 0, balance: 0,
-                paymentConfirm: '', remarks: '', date: '',
+                senderUpi: '', senderId: '', amount: 0, receiptAmount: 0, balance: 0,
+                paymentConfirm: '', remarks: '', timeStamp: '', paymentMode: '', date: '',
                 masterRow: home.masterRow,
                 members: memberMap.get(home.key) || [],
                 hasPayment: false,
@@ -816,6 +824,10 @@ async function fetchData() {
                 category: row[COL.CATEGORY] || '',
                 financialYear: row[COL.FINANCIAL_YEAR] || '',
                 senderUpi: row[COL.SENDER_UPI] || '',
+                senderId: row[COL.SENDER_UPI] || '',
+                remarks: row[COL.REMARKS] || '',
+                timeStamp: row[COL.TIME_STAMP] || '',
+                paymentMode: row[COL.PAYMENT_MODE] || '',
                 amount: parseFloat(row[COL.AMOUNT]) || 0,
                 receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
                 balance: parseFloat(row[COL.BALANCE]) || 0,
@@ -942,7 +954,7 @@ function renderTable(data) {
     }
 
     if (!data || data.length === 0) {
-        $('#reportTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+        $('#reportTable tbody').html(`<tr><td colspan="17" class="text-center py-5 text-muted">
             <i class="bi bi-inbox fs-1"></i>
             <h6>No records found</h6>
             <p>Try adjusting your filters</p>
@@ -998,6 +1010,10 @@ function renderTable(data) {
                     return row.receiptNo ? `<span style="font-family:monospace;">${escapeHtml(row.receiptNo)}</span>` : '<span class="text-muted">—</span>';
                 }
             },
+            { data: null, render: row => row.isDataRecord && row.senderId ? escapeHtml(row.senderId) : '<span class="text-muted">—</span>' },
+            { data: null, render: row => row.isDataRecord && row.remarks ? escapeHtml(row.remarks) : '<span class="text-muted">—</span>' },
+            { data: null, render: row => row.isDataRecord && row.timeStamp ? escapeHtml(row.timeStamp) : '<span class="text-muted">—</span>' },
+            { data: null, render: row => row.isDataRecord && row.paymentMode ? escapeHtml(row.paymentMode) : '<span class="text-muted">—</span>' },
             { 
                 data: null,
                 render: function(row) {
@@ -1204,7 +1220,7 @@ function resetFilters() {
         dataTable.destroy();
         dataTable = null;
     }
-    $('#reportTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+    $('#reportTable tbody').html(`<tr><td colspan="17" class="text-center py-5 text-muted">
         <i class="bi bi-funnel fs-1"></i>
         <h6>Apply filters to load data</h6>
         <p>Select your filters and click "Apply Filters" to generate the report.</p>
@@ -1226,7 +1242,7 @@ function exportCSV() {
         return;
     }
     
-    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Receipt Status', 'Receipt Type', 'Date'];
+    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Sender ID', 'Remarks', 'Timestamp', 'Payment Mode', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Receipt Status', 'Receipt Type', 'Date'];
     
     let csv = headers.join(',') + '\n';
     
@@ -1241,6 +1257,10 @@ function exportCSV() {
             `"${address}"`,
             `"${members}"`,
             row.receiptNo || '',
+            row.senderId || '',
+            row.remarks || '',
+            row.timeStamp || '',
+            row.paymentMode || '',
             row.category || '',
             row.financialYear || '',
             row.hasPayment ? row.amount.toFixed(2) : '',
