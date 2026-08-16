@@ -768,43 +768,68 @@ async function fetchData() {
         }
 
         // ------------------------------------------------------------
-        // 4. MASTER-FIRST COMBINATION.
+        // 4. Build the report datasets.
         //
-        //    Every report record starts from Master.
-        //    If Master key exists in Data => hasPayment = true.
-        //    If Master key does NOT exist in Data => hasPayment = false.
+        // NOT PAID: Master is authoritative. Every Master Branch + Home ID
+        // combination is included, and combinations found in Data are excluded.
         //
-        //    Therefore:
-        //    Not Paid = Master combinations - Data combinations
+        // PAID: Data/receipt sheet is authoritative. Every receipt record
+        // matching the selected criteria is included, even when its Branch +
+        // Home ID combination is NOT present in Master. Multiple receipt
+        // records for the same Branch + Home ID are preserved.
         // ------------------------------------------------------------
         const combinedData = [];
 
+        // Master-only records are used for the Not Paid report.
         for (const home of masterHomes) {
-            const payment = paymentMap.get(home.key) || null;
-
             combinedData.push({
                 key: home.key,
                 branchId: home.branchId,
                 homeId: home.homeId,
-                receiptNo: payment ? payment.receiptNo : '',
-                transactionId: payment ? payment.transactionId : '',
-                category: payment ? payment.category : '',
-                financialYear: payment ? payment.financialYear : '',
-                senderUpi: payment ? payment.senderUpi : '',
-                amount: payment ? payment.amount : 0,
-                receiptAmount: payment ? payment.receiptAmount : 0,
-                balance: payment ? payment.balance : 0,
-                paymentConfirm: payment ? payment.paymentConfirm : '',
-                remarks: payment ? payment.remarks : '',
-                date: payment ? payment.date : '',
+                receiptNo: '', transactionId: '', category: '', financialYear: '',
+                senderUpi: '', amount: 0, receiptAmount: 0, balance: 0,
+                paymentConfirm: '', remarks: '', date: '',
                 masterRow: home.masterRow,
                 members: memberMap.get(home.key) || [],
-                hasPayment: !!payment,
-                rowIndex: payment ? payment.rowIndex : null
+                hasPayment: false,
+                isDataRecord: false,
+                rowIndex: null
             });
         }
 
-        // Keep allData as the complete Master-based dataset.
+        // Every Data/receipt record is added separately. If it exists in
+        // Master, use Master address/member information; otherwise still
+        // show the complete receipt record with blank Master-only fields.
+        for (let i = 1; i < paymentRows.length; i++) {
+            const row = paymentRows[i] || [];
+            const branchId = normalizeKeyPart(row[COL.BRANCH_ID]);
+            const homeId = normalizeKeyPart(row[COL.HOME_ID]);
+            if (!branchId || !homeId || !row[COL.RECEIPT_NO]) continue;
+
+            const key = makeKey(branchId, homeId);
+            combinedData.push({
+                key,
+                branchId,
+                homeId,
+                receiptNo: row[COL.RECEIPT_NO] || '',
+                transactionId: row[COL.TRANSACTION_ID] || '',
+                category: row[COL.CATEGORY] || '',
+                financialYear: row[COL.FINANCIAL_YEAR] || '',
+                senderUpi: row[COL.SENDER_UPI] || '',
+                amount: parseFloat(row[COL.AMOUNT]) || 0,
+                receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
+                balance: parseFloat(row[COL.BALANCE]) || 0,
+                paymentConfirm: row[COL.PAYMENT_CONFIRM] || 'Pending Verification',
+                remarks: row[COL.REMARKS] || '',
+                date: row[COL.DATE] || '',
+                masterRow: masterMap.get(key) || null,
+                members: memberMap.get(key) || [],
+                hasPayment: true,
+                isDataRecord: true,
+                rowIndex: i
+            });
+        }
+
         allData = combinedData;
         return combinedData;
 
@@ -1137,19 +1162,18 @@ async function applyFilters() {
             data = data.filter(d => d.hasPayment && d.balance <= 0);
         }
 
-        // Payment-side filters are applied only to records that have
-        // payment data. This prevents blank Master-only Not Paid rows
-        // from being accidentally removed.
+        // Receipt-side criteria apply to actual Data/receipt records.
+        // Master-only Not Paid records remain unaffected by these fields.
         if (category) {
-            data = data.filter(d => !d.hasPayment || d.category === category);
+            data = data.filter(d => !d.isDataRecord || d.category === category);
         }
 
         if (year) {
-            data = data.filter(d => !d.hasPayment || d.financialYear === year);
+            data = data.filter(d => !d.isDataRecord || d.financialYear === year);
         }
 
         if (status) {
-            data = data.filter(d => !d.hasPayment || d.paymentConfirm === status);
+            data = data.filter(d => !d.isDataRecord || d.paymentConfirm === status);
         }
 
         renderTable(data);
