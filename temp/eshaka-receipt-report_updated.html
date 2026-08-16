@@ -309,7 +309,9 @@
             .report-actions { flex-direction: column; }
             .report-actions .btn { width: 100%; }
         }
-    </style>
+    
+        #reportTable tfoot td { white-space: nowrap; font-weight: 700; }
+</style>
 </head>
 <body>
 
@@ -346,7 +348,7 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Payment Status</label>
+                    <label class="form-label">Receipt Status</label>
                     <select id="filterStatus" class="form-select select2-filter">
                         <option value="">All Status</option>
                         <option value="Verified">Verified</option>
@@ -357,7 +359,7 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Payment Type</label>
+                    <label class="form-label">Receipt Type</label>
                     <div class="radio-group">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="paymentType" id="paidUsers" value="paid">
@@ -416,8 +418,8 @@
                         <th>Amount</th>
                         <th>Receipt Amount</th>
                         <th>Balance</th>
-                        <th>Payment Status</th>
-                        <th>Payment Type</th>
+                        <th>Receipt Status</th>
+                        <th>Receipt Type</th>
                         <th>Date</th>
                     </tr>
                 </thead>
@@ -430,6 +432,16 @@
                         </td>
                     </tr>
                 </tbody>
+                <tfoot>
+                    <tr class="table-primary fw-bold">
+                        <td colspan="7" class="text-end">Overall Grand Total</td>
+                        <td id="grandTotalAmount" class="text-end">0.00</td>
+                        <td id="grandTotalReceiptAmount" class="text-end">0.00</td>
+                        <td id="grandTotalBalance" class="text-end">0.00</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+
             </table>
         </div>
     </div>
@@ -1027,6 +1039,14 @@ function renderTable(data) {
         autoWidth: true,
         dom: '<"d-flex justify-content-between align-items-center flex-wrap"lf>tip'
     });
+
+    // Overall Grand Total for the currently displayed report.
+    const grandTotalAmount = data.reduce((sum, row) => sum + (row.hasPayment ? (parseFloat(row.amount) || 0) : 0), 0);
+    const grandTotalReceiptAmount = data.reduce((sum, row) => sum + (row.hasPayment ? (parseFloat(row.receiptAmount) || 0) : 0), 0);
+    const grandTotalBalance = data.reduce((sum, row) => sum + (row.hasPayment ? (parseFloat(row.balance) || 0) : 0), 0);
+    document.getElementById('grandTotalAmount').textContent = grandTotalAmount.toFixed(2);
+    document.getElementById('grandTotalReceiptAmount').textContent = grandTotalReceiptAmount.toFixed(2);
+    document.getElementById('grandTotalBalance').textContent = grandTotalBalance.toFixed(2);
 }
 
 // ================= UPDATE STATS =================
@@ -1099,7 +1119,7 @@ async function applyFilters() {
         // A home is Not Paid when its Branch + Home ID combination
         // does not exist in the Data sheet.
         //
-        // Category / Financial Year / Payment Status are payment-side
+        // Category / Financial Year / Receipt Status are payment-side
         // fields and therefore do not change the Master-vs-Data
         // Not Paid calculation.
         // ------------------------------------------------------------
@@ -1182,7 +1202,7 @@ function exportCSV() {
         return;
     }
     
-    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Payment Status', 'Payment Type', 'Date'];
+    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Receipt Status', 'Receipt Type', 'Date'];
     
     let csv = headers.join(',') + '\n';
     
@@ -1212,7 +1232,7 @@ function exportCSV() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `payment_report_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `receipt_report_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
     
