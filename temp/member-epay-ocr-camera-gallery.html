@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Make Payment</title>
+    
+    <!-- Bootstrap 5.3 + icons -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <!-- Common Styles -->
+    <link rel="stylesheet" href="../css/common.css">
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            padding: 16px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container-fluid {
+            max-width: 98%;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Access Denied Overlay */
+        .access-denied-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.95);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            backdrop-filter: blur(8px);
+            padding: 20px;
+        }
+        .access-denied-overlay.active {
+            display: flex;
+        }
+        .access-denied-overlay i {
+            font-size: 4rem;
+            color: #dc2626;
+            margin-bottom: 15px;
+        }
+        .access-denied-overlay h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .access-denied-overlay p {
+            color: #64748b;
+            text-align: center;
+            max-width: 320px;
+        }
+        .access-denied-overlay .btn-login {
+            margin-top: 20px;
+            padding: 12px 32px;
+            border-radius: 40px;
+            background: #0f3b6a;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .access-denied-overlay .btn-login:hover {
+            background: #0a2c4a;
+        }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .loading-box {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .loading-box p {
+            margin-top: 12px;
+            color: #64748b;
+        }
+        
+        /* Header */
+        .page-header {
+            background: #0f3b6a;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .page-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-header .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .page-header .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Content Card */
+        .content-card {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            min-height: 400px;
+        }
+        
+        /* Info Banner */
+        .info-banner {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            border-left: 4px solid #0f5b9c;
+            font-size: 0.8rem;
+        }
+        .info-banner .info-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #1e293b;
+        }
+        .info-banner .info-item i {
+            color: #0f5b9c;
+            font-size: 0.9rem;
+        }
+        .info-banner .info-item strong {
+            font-weight: 600;
+        }
+        
+        /* Receipt ID Display */
+        .receipt-id-display {
+            background: #e6f0fa;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #0f3b5f;
+            border: 1px solid #b3d4f0;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+        .receipt-id-display i {
+            color: #0f5b9c;
+            margin-right: 8px;
+        }
+        
+        /* Form Styles */
+        .form-label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            transition: 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0f3b6a;
+            box-shadow: 0 0 0 3px rgba(15, 59, 106, 0.1);
+        }
+        .form-control:disabled, .form-control[readonly] {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .form-control.is-invalid {
+            border-color: #dc2626;
+        }
+        .form-control.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        .invalid-feedback-custom {
+            color: #dc2626;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            display: none;
+        }
+        .invalid-feedback-custom.show {
+            display: block;
+        }
+        
+        /* Section Divider */
+        .section-divider {
+            border-top: 2px dashed #e2e8f0;
+            margin: 20px 0;
+        }
+        
+        /* Buttons */
+        .btn-primary-custom {
+            background: #0f3b6a;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-primary-custom:hover:not(:disabled) {
+            background: #0a2c46;
+            transform: translateY(-1px);
+        }
+        .btn-primary-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-secondary-custom {
+            background: #64748b;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-secondary-custom:hover {
+            background: #475569;
+        }
+        .btn-success-custom {
+            background: #16a34a;
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .btn-success-custom:hover:not(:disabled) {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .btn-success-custom:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-outline-primary-custom {
+            background: transparent;
+            border: 1px solid #0f5b9c;
+            color: #0f5b9c;
+            padding: 8px 16px;
+            font-weight: 500;
+            border-radius: 40px;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        .btn-outline-primary-custom:hover {
+            background: #e6f0fa;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        .action-buttons .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        /* Payment Info Box */
+        .payment-info-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 2px solid #16a34a;
+            text-align: center;
+        }
+        .payment-info-box .upi-id {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #0f3b6a;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: inline-block;
+            margin: 8px 0;
+        }
+        .payment-info-box .amount-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .payment-info-box .copy-btn {
+            background: transparent;
+            border: none;
+            color: #0f5b9c;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        .payment-info-box .copy-btn:hover {
+            text-decoration: underline;
+        }
+        
+        /* QR Code */
+        #qrCodeContainer {
+            display: none;
+            text-align: center;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        #qrCodeContainer .qr-code-img {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        /* Toast */
+        .toast-custom {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 400px;
+            width: calc(100% - 32px);
+            background: #1f1f1f;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 48px;
+            z-index: 1090;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .toast-custom.show { opacity: 1; }
+        .toast-custom.error { background: #dc2626; }
+        .toast-custom.success { background: #16a34a; }
+        
+        /* Select2 Override */
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 10px !important;
+            border-color: #cbd5e1 !important;
+            min-height: 42px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            line-height: 40px !important;
+        }
+        .select2-container--bootstrap-5 .select2-dropdown {
+            z-index: 1060 !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            body { padding: 8px; }
+            .content-card { padding: 14px; }
+            .action-buttons { flex-direction: column; }
+            .action-buttons .btn { width: 100%; }
+            .receipt-id-display { font-size: 0.8rem; padding: 10px; }
+            #qrCodeContainer .qr-code-img { width: 150px; height: 150px; }
+            .payment-info-box .amount-display { font-size: 1.4rem; }
+            .payment-info-box .upi-id { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Access Denied Overlay -->
+<div class="access-denied-overlay" id="accessDeniedOverlay">
+    <i class="bi bi-lock-fill"></i>
+    <h3>Access Denied</h3>
+    <p>You are not authorized to view this page. Please login to the member portal first.</p>
+    <a href="member-login.html" class="btn-login"><i class="bi bi-box-arrow-right"></i> Go to Login</a>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p id="loadingText">Loading...</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid" id="mainContent" style="display: none;">
+    <!-- Header -->
+    <div class="page-header">
+        <h4><i class="bi bi-receipt"></i> Make Payment</h4>
+        <button class="back-btn" onclick="goBackToDashboard()">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+    </div>
+    
+    <div class="content-card">
+        <!-- Info Banner -->
+        <div class="info-banner" id="infoBanner">
+            <div class="info-item">
+                <i class="bi bi-building"></i>
+                <span>Branch: <strong id="displayBranchId">—</strong></span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-house"></i>
+                <span>Home: <strong id="displayHomeId">—</strong></span>
+            </div>
+            <div class="info-item">
+                <i class="bi bi-person"></i>
+                <span>Member: <strong id="displayMemberName">—</strong></span>
+            </div>
+        </div>
+        
+        <!-- Receipt ID Display -->
+        <div class="receipt-id-display" id="receiptIdDisplay">
+            <i class="bi bi-hash"></i> <span id="receiptIdValue">—</span>
+        </div>
+        
+        <!-- Form -->
+        <form id="receiptForm" novalidate>
+            <div class="row g-3">
+                <!-- Branch ID (Hidden) -->
+                <input type="hidden" id="branchId" value="">
+                <input type="hidden" id="homeId" value="">
+                
+                <!-- Receipt Category -->
+                <div class="col-md-6">
+                    <label class="form-label required">Receipt Category</label>
+                    <select id="receiptCategory" class="form-select select2-receipt" required>
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+                
+                <!-- Financial Year -->
+                <div class="col-md-6">
+                    <label class="form-label required">Financial Year</label>
+                    <select id="financialYear" class="form-select select2-receipt" required>
+                        <option value="">Select Financial Year</option>
+                    </select>
+                </div>
+                
+                <!-- Transaction ID -->
+                <div class="col-md-6">
+                    <label class="form-label">Transaction ID</label>
+                    <div class="input-group">
+                            <input type="text" id="transactionId" class="form-control" placeholder="Enter UPI Transaction ID / UTR after payment">
+                            <button type="button" id="scanTransactionBtn" class="btn btn-outline-primary" title="Scan transaction ID with camera">
+                                <i class="bi bi-camera"></i> Scan
+                            </button>
+                        </div>
+                        <div style="font-size:0.72rem;color:#64748b;margin-top:5px;">Use Scan to photograph the payment-success screen and extract the UTR/transaction ID.</div>
+                </div>
+                
+                <!-- Sender UPI ID -->
+                <div class="col-md-6">
+                    <label class="form-label">Sender UPI ID</label>
+                    <input type="text" id="senderUpiId" class="form-control" placeholder="Enter your UPI ID (optional)">
+                </div>
+
+                <!-- Payment screenshot -->
+                <div class="col-12" id="paymentProofSection" style="display:none;">
+                    <label class="form-label">Payment Screenshot</label>
+                    <input type="file" id="paymentScreenshot" class="form-control" accept="image/*">
+                    <div style="font-size:0.75rem;color:#64748b;margin-top:6px;">
+                        Upload the successful payment screenshot. The system will OCR the screenshot and save the extracted payment details to Google Sheets.
+                    </div>
+                    <div id="screenshotPreview" style="display:none;margin-top:10px;text-align:center;">
+                        <img id="screenshotPreviewImg" alt="Payment screenshot preview" style="max-width:100%;max-height:220px;border-radius:10px;border:1px solid #e2e8f0;">
+                    </div>
+                </div>
+                
+                <!-- Amount (Read-only, auto-filled) -->
+                <div class="col-md-6">
+                    <label class="form-label required">Amount (₹)</label>
+                    <input type="number" id="amount" class="form-control" readonly step="0.01" min="0">
+                </div>
+                
+                <!-- Receipt Amount -->
+                <div class="col-md-6">
+                    <label class="form-label required">Receipt Amount (₹)</label>
+                    <input type="number" id="receiptAmount" class="form-control" step="0.01" min="0" placeholder="Enter receipt amount">
+                    <div class="invalid-feedback-custom" id="receiptAmountError">Please enter a valid amount.</div>
+                </div>
+                
+                <!-- Balance (Read-only, auto-calculated) -->
+                <div class="col-md-6">
+                    <label class="form-label">Balance (₹)</label>
+                    <input type="number" id="balance" class="form-control" readonly step="0.01" min="0">
+                </div>
+                
+                <!-- Remarks -->
+                <div class="col-12">
+                    <label class="form-label">Remarks</label>
+                    <textarea id="remarks" class="form-control" rows="2" placeholder="Optional remarks"></textarea>
+                </div>
+            </div>
+        </form>
+        
+        <div class="section-divider"></div>
+        
+        <!-- Payment Info Box -->
+        <div class="payment-info-box" id="paymentInfoBox">
+            <div style="font-size:0.8rem;color:#64748b;margin-bottom:8px;">
+                <i class="bi bi-credit-card"></i> Pay to this UPI ID
+            </div>
+            <div class="upi-id" id="upiIdDisplay">
+                <span id="upiIdValue">—</span>
+                <button class="copy-btn" onclick="copyUpiId()"><i class="bi bi-clipboard"></i> Copy</button>
+            </div>
+            <div style="margin:10px 0;">
+                <span style="font-size:0.8rem;color:#64748b;">Amount</span>
+                <div class="amount-display" id="amountDisplay">₹0.00</div>
+            </div>
+            <div style="font-size:0.75rem;color:#94a3b8;">
+                <i class="bi bi-info-circle"></i> Click "Pay Now" to open your UPI app
+            </div>
+        </div>
+        
+        <!-- Hosted UPI QR -->
+        <div id="qrCodeContainer" style="display:none;">
+            <div style="font-size:0.85rem;font-weight:600;color:#0f3b6a;margin-bottom:10px;">
+                <i class="bi bi-qr-code"></i> Scan to Pay
+            </div>
+            <button type="button" id="downloadQrBtn" class="btn btn-outline-primary btn-sm mt-2">
+                <i class="bi bi-download"></i> Download QR
+            </button>
+
+            <div class="small text-muted mt-2">
+                Receipt number is included in the UPI payment note for easier payment matching.
+            </div>
+
+            <img id="upiQrImage"
+                 src="https://sndpeshaka.github.io/member/app/upi/upi.png"
+                 alt="UPI QR Code"
+                 style="width:min(320px,90vw);height:auto;border:1px solid #e2e8f0;border-radius:14px;padding:10px;background:#fff;">
+            <p style="font-size:0.8rem;color:#64748b;margin-top:8px;">
+                Scan this QR code with any UPI app and complete the payment.
+            </p>
+            <button type="button" id="qrPaidBtn" class="btn btn-success-custom" style="margin-top:4px;">
+                <i class="bi bi-check-circle"></i> I Paid — Upload Screenshot
+            </button>
+        </div>
+
+        <!-- Action Buttons -->
+        
+<div id="adminVerificationNotice" class="alert alert-info mt-3" role="alert">
+    <i class="bi bi-shield-check"></i>
+    <strong>Important:</strong> Payment will be approved only after the payment
+    details and proof are verified by an administrator.
+</div>
+<div class="action-buttons">
+            <button type="button" id="payNowBtn" class="btn btn-success-custom">
+                <i class="bi bi-upc-scan"></i> Pay Now
+            </button>
+            <button type="button" id="showQrBtn" class="btn btn-primary-custom">
+                <i class="bi bi-qr-code"></i> Show QR
+            </button>
+            <button type="button" id="resetBtn" class="btn btn-secondary-custom">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset
+            </button>
+        </div>
+        
+        <!-- Save Button (hidden, just for recording) -->
+        <div style="margin-top:12px;text-align:center;">
+            <button type="button" id="saveBtn" class="btn btn-outline-primary-custom" style="font-size:0.7rem;">
+                <i class="bi bi-save"></i> Save Receipt (Record Only)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction ID Camera Scanner -->
+<div class="modal fade" id="transactionScannerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-camera"></i> Scan Transaction ID / UTR</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div style="position:relative;width:100%;">
+          <video id="transactionCamera" autoplay playsinline muted
+                 style="width:100%;border-radius:12px;background:#000;max-height:55vh;object-fit:cover;"></video>
+          <div id="transactionScanGuide"
+               style="position:absolute;left:8%;right:8%;top:30%;height:40%;
+                      border:2px solid #22c55e;border-radius:12px;
+                      box-shadow:0 0 0 9999px rgba(0,0,0,.22);
+                      pointer-events:none;">
+          </div>
+        </div>
+        <canvas id="transactionCaptureCanvas" style="display:none;"></canvas>
+        <div id="transactionScanStatus" style="font-size:.8rem;color:#475569;margin-top:10px;text-align:center;">
+          Place the UTR / Transaction ID inside the green box, keep the phone steady, then tap Capture &amp; Scan.
+        </div>
+        <div id="transactionOcrProgress" style="display:none;margin-top:10px;">
+          <div class="progress" style="height:6px;"><div id="transactionOcrBar" class="progress-bar" style="width:0%"></div></div>
+          <div id="transactionOcrText" style="font-size:.75rem;color:#64748b;margin-top:5px;text-align:center;">Reading…</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+        <div class="d-grid gap-2 mt-2">
+
+        <div class="small text-muted text-center mt-2">
+          You can also select a saved payment screenshot from your Gallery instead of using the camera.
+        </div>
+          <button type="button" id="transactionGalleryBtn" class="btn btn-outline-secondary">
+            <i class="bi bi-images"></i> Select Screenshot from Gallery
+          </button>
+          <input type="file" id="transactionGalleryInput" accept="image/*" hidden>
+        </div>
+        <button type="button" class="btn btn-primary-custom" id="captureTransactionBtn"><i class="bi bi-camera-fill"></i> Capture & Scan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Message -->
+<div id="liveToast" class="toast-custom"><i class="bi me-2" id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<script>
+    // ================= CONFIGURATION =================
+    const CONFIG = (function() {
+        const _s = '1FKCX4TODUcQ_0o8xP14fGENYT17k4Mcm_rJe6eFSTjE';
+        const _k = 'AIzaSyDc8tegwi2rgHyDFYm7uWBqVqQ7Fwb3uWM';
+        const _url = 'https://script.google.com/macros/s/AKfycbxEtLaaH3RqBuuhL6tVzR5nR9FuHmIsfXh8ynZVNN1IfUlI30Xyw4lt-zmMcCAoewz0sw/exec';
+        
+        return {
+            get SPREADSHEET_ID() { return _s; },
+            get API_KEY() { return _k; },
+            get APPS_SCRIPT_URL() { return _url; }
+        };
+    })();
+
+    let branchId = '';
+    let homeId = '';
+    let memberName = '';
+    let receiptCategories = [];
+    let financialYears = [];
+    let receiptUpiId = '';
+    let selectedCategoryAmount = 0;
+    let isSubmitting = false;
+    let qrVisible = false;
+
+    // ================= SECURITY: GET SESSION =================
+    function getSessionFromStorage() {
+        let session = localStorage.getItem('memberSession');
+        if (session) {
+            try { return JSON.parse(session); } catch(e) {}
+        }
+        session = sessionStorage.getItem('memberSession');
+        if (session) {
+            try { return JSON.parse(session); } catch(e) {}
+        }
+        return null;
+    }
+
+    function isValidSession(session) {
+        if (!session) return false;
+        if (!session.branchId || !session.homeId) return false;
+        if (!session.isMember) return false;
+        return true;
+    }
+
+    // ================= HELPER FUNCTIONS =================
+    function showToast(msg, type = 'info') {
+        const toast = document.getElementById('liveToast');
+        const msgSpan = document.getElementById('toastMsg');
+        const icon = document.getElementById('toastIcon');
+        
+        msgSpan.innerText = msg;
+        toast.className = 'toast-custom';
+        
+        if (type === 'error') {
+            toast.classList.add('error');
+            icon.className = 'bi bi-exclamation-circle-fill me-2';
+        } else if (type === 'success') {
+            toast.classList.add('success');
+            icon.className = 'bi bi-check-circle-fill me-2';
+        } else {
+            icon.className = 'bi bi-info-circle-fill me-2';
+        }
+        
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    function showLoading(show, text = 'Loading...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const textEl = document.getElementById('loadingText');
+        if (show) {
+            textEl.textContent = text;
+            overlay.classList.add('active');
+        } else {
+            overlay.classList.remove('active');
+        }
+    }
+
+    function escapeHtml(str) { 
+        if (!str) return ''; 
+        return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;':m); 
+    }
+
+    function padZero(num) {
+        return num.toString().padStart(2, '0');
+    }
+
+    function getCurrentMonth() {
+        return padZero(new Date().getMonth() + 1);
+    }
+
+    function getCurrentDay() {
+        return padZero(new Date().getDate());
+    }
+
+    function goBackToDashboard() {
+        window.location.href = 'member-dashboard.html';
+    }
+
+    // ================= FETCH DATA FROM SHEET =================
+    async function fetchReceiptCategories() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/'Receipt Category and Amount'!A:C?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            const categories = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.length >= 3) {
+                    categories.push({
+                        id: row[0] || '',
+                        category: row[1] || '',
+                        amount: parseFloat(row[2]) || 0
+                    });
+                }
+            }
+            return categories;
+        } catch (e) {
+            console.error('Error fetching receipt categories:', e);
+            return [];
+        }
+    }
+
+    async function fetchFinancialYears() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/'Financial Years'!A:A?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            const years = [];
+            for (let i = 1; i < rows.length; i++) {
+                if (rows[i] && rows[i][0]) {
+                    years.push(rows[i][0]);
+                }
+            }
+            return years;
+        } catch (e) {
+            console.error('Error fetching financial years:', e);
+            return [];
+        }
+    }
+
+    async function fetchReceiptUpiId() {
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/'Receipt UPI ID'!A:A?key=${CONFIG.API_KEY}&_=${Date.now()}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            if (rows.length > 1 && rows[1] && rows[1][0]) {
+                return rows[1][0];
+            }
+            return '';
+        } catch (e) {
+            console.error('Error fetching UPI ID:', e);
+            return '';
+        }
+    }
+
+    // ================= GENERATE RECEIPT ID =================
+    function generateReceiptId() {
+        const branch = branchId || 'NA';
+        const home = homeId || 'NA';
+        const month = getCurrentMonth();
+        const day = getCurrentDay();
+        
+        const categorySelect = document.getElementById('receiptCategory');
+        const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+        const categoryId = selectedCategory ? selectedCategory.value : 'XX';
+        
+        const yearSelect = document.getElementById('financialYear');
+        const selectedYear = yearSelect.options[yearSelect.selectedIndex];
+        const yearValue = selectedYear ? selectedYear.value : '2425';
+        
+        const receiptId = `SN${branch}${home}${categoryId}${month}${day}${yearValue}`;
+        return receiptId;
+    }
+
+    function updateReceiptId() {
+        const receiptId = generateReceiptId();
+        document.getElementById('receiptIdValue').textContent = receiptId;
+        return receiptId;
+    }
+
+    // ================= UPDATE AMOUNT =================
+    function updateAmount() {
+        const categorySelect = document.getElementById('receiptCategory');
+        const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+        const categoryId = selectedCategory ? selectedCategory.value : '';
+        
+        const category = receiptCategories.find(c => c.id === categoryId);
+        if (category) {
+            document.getElementById('amount').value = category.amount.toFixed(2);
+            selectedCategoryAmount = category.amount;
+            document.getElementById('receiptAmount').value = category.amount.toFixed(2);
+            calculateBalance();
+            updatePaymentDisplay();
+        } else {
+            document.getElementById('amount').value = '';
+            selectedCategoryAmount = 0;
+            document.getElementById('receiptAmount').value = '';
+            document.getElementById('balance').value = '';
+            updatePaymentDisplay();
+        }
+        updateReceiptId();
+    }
+
+    // ================= CALCULATE BALANCE =================
+    function calculateBalance() {
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const receiptAmount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+        
+        const balance = amount - receiptAmount;
+        document.getElementById('balance').value = balance >= 0 ? balance.toFixed(2) : '0.00';
+        
+        const errorEl = document.getElementById('receiptAmountError');
+        const input = document.getElementById('receiptAmount');
+        
+        if (receiptAmount <= 0) {
+            errorEl.textContent = 'Receipt amount must be greater than zero.';
+            errorEl.classList.add('show');
+            input.classList.add('is-invalid');
+            updatePaymentDisplay();
+            return false;
+        }
+        
+        if (receiptAmount > amount) {
+            errorEl.textContent = `Receipt amount cannot exceed ₹${amount.toFixed(2)}.`;
+            errorEl.classList.add('show');
+            input.classList.add('is-invalid');
+            updatePaymentDisplay();
+            return false;
+        }
+        
+        if (receiptAmount % 1 !== 0) {
+            errorEl.textContent = 'Receipt amount must be a whole number (no decimals).';
+            errorEl.classList.add('show');
+            input.classList.add('is-invalid');
+            updatePaymentDisplay();
+            return false;
+        }
+        
+        errorEl.classList.remove('show');
+        input.classList.remove('is-invalid');
+        updatePaymentDisplay();
+        return true;
+    }
+
+    // ================= UPDATE PAYMENT DISPLAY =================
+    function updatePaymentDisplay() {
+        const amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+        document.getElementById('upiIdValue').textContent = receiptUpiId || '—';
+        document.getElementById('amountDisplay').textContent = `₹${amount.toFixed(2)}`;
+    }
+
+    // ================= POPULATE DROPDOWNS =================
+    function populateReceiptCategories(categories) {
+        const select = document.getElementById('receiptCategory');
+        select.innerHTML = '<option value="">Select Category</option>';
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.category;
+            option.dataset.amount = cat.amount;
+            select.appendChild(option);
+        });
+        
+        $('#receiptCategory').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Select Category',
+            allowClear: true,
+            width: '100%'
+        });
+        
+        $('#receiptCategory').on('change', function() {
+            updateAmount();
+            if (qrVisible) setTimeout(() => generateDynamicQr(false), 0);
+        });
+    }
+
+    function populateFinancialYears(years) {
+        const select = document.getElementById('financialYear');
+        select.innerHTML = '<option value="">Select Financial Year</option>';
+        
+        const sortedYears = [...years].sort((a, b) => {
+            const aStart = parseInt(a.split('-')[0]);
+            const bStart = parseInt(b.split('-')[0]);
+            return bStart - aStart;
+        });
+        
+        sortedYears.forEach(year => {
+            const option = document.createElement('option');
+            option.value = year.replace('-', '');
+            option.textContent = year;
+            select.appendChild(option);
+        });
+        
+        if (sortedYears.length > 0) {
+            select.value = sortedYears[0].replace('-', '');
+        }
+        
+        $('#financialYear').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Select Financial Year',
+            allowClear: true,
+            width: '100%'
+        });
+        
+        $('#financialYear').on('change', function() {
+            updateReceiptId();
+        });
+    }
+
+    // ================= GENERATE QR CODE =================
+    function generateUpiQR(upiId, amount, receiptNo) {
+        const safeUpiId = String(upiId || '').trim();
+        const safeAmount = Number(amount || 0).toFixed(2);
+
+        // Put the generated receipt number into UPI's transaction-note (tn).
+        // Keep it compact and URL-safe for broad UPI-app compatibility.
+        const note = String(receiptNo || 'UPI Payment')
+            .replace(/[^A-Za-z0-9._-]/g, '')
+            .slice(0, 80);
+
+        const upiString =
+            `upi://pay?pa=${safeUpiId}` +
+            `&am=${safeAmount}` +
+            `&cu=INR` +
+            `&tn=${note}`;
+
+        const qrUrl =
+            `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiString)}`;
+
+        const img = document.getElementById('upiQrImage');
+        if (img) {
+            img.src = qrUrl;
+            img.alt = `UPI payment QR for receipt ${receiptNo}`;
+        }
+
+        // Keep a copy for debugging / display if needed.
+        const qrContainer = document.getElementById('qrCode');
+        if (qrContainer) {
+            qrContainer.innerHTML =
+                `<img src="${qrUrl}" alt="UPI QR Code for receipt ${receiptNo}" class="qr-code-img">`;
+        }
+    }
+
+    function toggleQrCode() {
+        const container = document.getElementById('qrCodeContainer');
+        const btn = document.getElementById('showQrBtn');
+        
+        if (qrVisible) {
+            container.style.display = 'none';
+            btn.innerHTML = '<i class="bi bi-qr-code"></i> Show QR';
+            qrVisible = false;
+        } else {
+            const receiptAmount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+            const receiptNo = document.getElementById('receiptIdValue').textContent;
+            
+            if (receiptAmount <= 0) {
+                showToast('Please enter a valid amount first.', 'error');
+                return;
+            }
+            
+            if (!receiptUpiId) {
+                showToast('UPI ID not available.', 'error');
+                return;
+            }
+            
+            generateUpiQR(receiptUpiId, receiptAmount, receiptNo);
+            container.style.display = 'block';
+            btn.innerHTML = '<i class="bi bi-qr-code"></i> Hide QR';
+            qrVisible = true;
+        }
+    }
+
+    function copyUpiId() {
+        const upiId = document.getElementById('upiIdValue').textContent;
+        if (upiId === '—') {
+            showToast('No UPI ID available.', 'error');
+            return;
+        }
+        
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(upiId).then(() => {
+                showToast('UPI ID copied!', 'success');
+            }).catch(() => {
+                fallbackCopy(upiId);
+            });
+        } else {
+            fallbackCopy(upiId);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('UPI ID copied!', 'success');
+        } catch (e) {
+            showToast('Failed to copy.', 'error');
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // ================= UPI PAYMENT FLOW =================
+    // Dynamic QR is generated from the currently selected receipt category/amount.
+    // The QR opens a standard UPI pay URI. No APK/bridge is required.
+    const UPI_QR_SERVICE = 'https://api.qrserver.com/v1/create-qr-code/';
+    let transactionCameraStream = null;
+    let transactionScannerModal = null;
+
+    function buildDynamicUpiUri() {
+        const upiId = String(receiptUpiId || '').trim();
+        const amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+        const receiptNo = document.getElementById('receiptIdValue').textContent.trim();
+        if (!upiId || amount <= 0) return null;
+
+        // Keep the VPA in normal form for broad UPI-app compatibility.
+        const tn = String(receiptNo || 'UPI Payment').replace(/[^A-Za-z0-9._ -]/g, '').slice(0, 80);
+        return `upi://pay?pa=${upiId}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(tn)}`;
+    }
+
+    function generateDynamicQr(show = true) {
+        const upiUri = buildDynamicUpiUri();
+        if (!upiUri) {
+            showToast('Please select a receipt category and enter a valid receipt amount first.', 'error');
+            return false;
+        }
+
+        const qrImage = document.getElementById('upiQrImage');
+        const qrUrl = UPI_QR_SERVICE + '?size=320x320&margin=12&data=' + encodeURIComponent(upiUri);
+        qrImage.src = qrUrl;
+        qrImage.dataset.upiUri = upiUri;
+
+        if (show) {
+            document.getElementById('qrCodeContainer').style.display = 'block';
+            document.getElementById('qrCodeContainer').scrollIntoView({behavior:'smooth', block:'center'});
+            qrVisible = true;
+        }
+        return true;
+    }
+
+    function showHostedQr() {
+        generateDynamicQr(true);
+    }
+
+    function hideHostedQr() {
+        document.getElementById('qrCodeContainer').style.display = 'none';
+        qrVisible = false;
+    }
+
+    // Pay Now now means: generate a fresh QR for the user's selected amount/category.
+    // This avoids the inconsistent cross-app browser UPI-intent behaviour encountered earlier.
+    function handlePayNow() {
+        const amount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+        const category = document.getElementById('receiptCategory').value;
+        if (!category || amount <= 0) {
+            showToast('Please select a receipt category and enter the receipt amount.', 'error');
+            return;
+        }
+        generateDynamicQr(true);
+        showToast('QR generated. Scan it with Google Pay, BHIM, PhonePe or another UPI app.', 'success');
+    }
+
+    function normalizeOcrText(text) {
+        return String(text || '')
+            .replace(/[|]/g, 'I')
+            .replace(/[“”‘’]/g, '')
+            .replace(/[^\x20-\x7E\n]/g, ' ')
+            .replace(/[ \t]+/g, ' ')
+            .replace(/\n{2,}/g, '\n')
+            .trim();
+    }
+
+    function cleanOcrToken(token) {
+        return String(token || '')
+            .toUpperCase()
+            .replace(/[^A-Z0-9]/g, '')
+            .replace(/^(UTR|UPI|REF|REFERENCE|TRANSACTION|TXN|ID|NO|NUMBER)+/g, '');
+    }
+
+    function extractUtrFromText(text) {
+        const normalized = normalizeOcrText(text);
+        if (!normalized) return '';
+
+        const lines = normalized.split(/\n+/).map(s => s.trim()).filter(Boolean);
+        const candidates = [];
+
+        // First preference: text immediately following transaction/UTR labels.
+        const labelled = [
+            /(?:UTR|UPI\s*REF(?:ERENCE)?|TRANSACTION\s*(?:ID|NO|NUMBER)|TXN\s*(?:ID|NO|NUMBER))\s*[:#=\-]?\s*([A-Z0-9][A-Z0-9 .:/_-]{7,40})/ig,
+            /(?:REFERENCE|REF)\s*(?:ID|NO|NUMBER)?\s*[:#=\-]?\s*([A-Z0-9][A-Z0-9 .:/_-]{7,40})/ig
+        ];
+
+        for (const re of labelled) {
+            let m;
+            while ((m = re.exec(normalized)) !== null) {
+                const c = cleanOcrToken(m[1]);
+                if (c.length >= 8 && c.length <= 35) {
+                    candidates.push({ value: c, score: 100 });
+                }
+            }
+        }
+
+        // Look at individual OCR tokens. This handles screenshots where
+        // "UTR" and the number are separated into different OCR blocks.
+        const tokenLines = lines.map(line =>
+            line.split(/[\s:;,=()]+/).map(cleanOcrToken).filter(Boolean)
+        );
+
+        tokenLines.forEach((tokens, lineIndex) => {
+            tokens.forEach((t, i) => {
+                if (t.length >= 8 && t.length <= 35) {
+                    let score = 10;
+
+                    // Prefer long numeric UTRs and mixed alphanumeric references.
+                    if (/^\d{10,20}$/.test(t)) score += 30;
+                    if (/^[A-Z]{1,6}\d{7,30}$/.test(t)) score += 35;
+                    if (/[A-Z]/.test(t) && /\d/.test(t)) score += 20;
+
+                    const line = lines[lineIndex].toUpperCase();
+                    if (/(UTR|REFERENCE|TRANSACTION|TXN)/.test(line)) score += 60;
+                    if (/(AMOUNT|TOTAL|₹|INR|DATE|TIME|PHONE|MOBILE|UPI ID)/.test(line)) score -= 25;
+
+                    candidates.push({ value: t, score });
+                }
+            });
+        });
+
+        // Final fallback: contiguous digit/alphanumeric strings from OCR output.
+        const fallback = normalized.toUpperCase().match(/\b[A-Z0-9]{8,35}\b/g) || [];
+        fallback.forEach(t => {
+            const c = cleanOcrToken(t);
+            if (c.length >= 8 && c.length <= 35) {
+                let score = 5;
+                if (/^\d{10,20}$/.test(c)) score += 25;
+                if (/^[A-Z]{1,6}\d{7,30}$/.test(c)) score += 30;
+                candidates.push({ value: c, score });
+            }
+        });
+
+        // De-duplicate and select the highest-confidence candidate.
+        const best = new Map();
+        for (const c of candidates) {
+            if (!c.value) continue;
+            const old = best.get(c.value);
+            if (!old || c.score > old.score) best.set(c.value, c);
+        }
+
+        return [...best.values()]
+            .sort((a, b) => b.score - a.score || b.value.length - a.value.length)[0]?.value || '';
+    }
+
+    function preprocessTransactionCanvas(sourceCanvas, mode) {
+        const sw = sourceCanvas.width;
+        const sh = sourceCanvas.height;
+
+        // Use the central guide area, but keep several alternate crops so
+        // different UPI apps/screens still have a chance to be recognized.
+        const crops = [
+            { x: 0, y: 0, w: sw, h: sh },
+            { x: sw * 0.05, y: sh * 0.18, w: sw * 0.90, h: sh * 0.64 },
+            { x: sw * 0.05, y: sh * 0.32, w: sw * 0.90, h: sh * 0.50 },
+            { x: sw * 0.10, y: sh * 0.45, w: sw * 0.80, h: sh * 0.40 }
+        ];
+
+        const crop = crops[Math.min(mode, crops.length - 1)];
+        const scale = 2.5;
+        const out = document.createElement('canvas');
+        out.width = Math.max(900, Math.round(crop.w * scale));
+        out.height = Math.max(500, Math.round(crop.h * scale));
+
+        const ctx = out.getContext('2d', { willReadFrequently: true });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(
+            sourceCanvas,
+            crop.x, crop.y, crop.w, crop.h,
+            0, 0, out.width, out.height
+        );
+
+        const image = ctx.getImageData(0, 0, out.width, out.height);
+        const d = image.data;
+
+        // Grayscale + contrast enhancement. Alternate modes use
+        // thresholding/inversion to handle light/dark UPI screens.
+        for (let i = 0; i < d.length; i += 4) {
+            const gray = (0.299 * d[i]) + (0.587 * d[i + 1]) + (0.114 * d[i + 2]);
+            let v = gray;
+
+            if (mode % 3 === 1) {
+                v = gray > 155 ? 255 : 0;
+            } else if (mode % 3 === 2) {
+                v = gray > 135 ? 0 : 255;
+            } else {
+                v = Math.max(0, Math.min(255, ((gray - 128) * 1.65) + 128));
+            }
+
+            d[i] = d[i + 1] = d[i + 2] = v;
+        }
+        ctx.putImageData(image, 0, 0);
+        return out;
+    }
+
+    async function runTransactionOcrVariants(sourceCanvas, progressBar, progressText) {
+        const allText = [];
+        const total = 8;
+        let completed = 0;
+
+        // Multiple crops × preprocessing modes.
+        for (let cropMode = 0; cropMode < 4; cropMode++) {
+            for (let prep = 0; prep < 2; prep++) {
+                const mode = cropMode + (prep ? 4 : 0);
+                const processed = preprocessTransactionCanvas(sourceCanvas, mode);
+
+                const result = await Tesseract.recognize(processed, 'eng', {
+                    logger: m => {
+                        if (typeof m.progress === 'number') {
+                            const p = Math.round(((completed + m.progress) / total) * 100);
+                            progressBar.style.width = Math.max(5, Math.min(99, p)) + '%';
+                            progressText.textContent = 'Reading payment screen… ' + Math.max(5, Math.min(99, p)) + '%';
+                        }
+                    },
+                    config: {
+                        tessedit_pageseg_mode: '6',
+                        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:-#./ '
+                    }
+                });
+
+                if (result?.data?.text) allText.push(result.data.text);
+                completed++;
+                progressBar.style.width = Math.round((completed / total) * 100) + '%';
+            }
+        }
+
+        return allText.join('\n');
+    }
+
+    async function openTransactionScanner() {
+        const modalEl = document.getElementById('transactionScannerModal');
+        transactionScannerModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const video = document.getElementById('transactionCamera');
+        const status = document.getElementById('transactionScanStatus');
+        status.textContent = 'Requesting camera permission…';
+
+        try {
+            transactionCameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false
+            });
+            video.srcObject = transactionCameraStream;
+            status.textContent = 'Point the camera at the UTR/Transaction ID and tap Capture & Scan.';
+            transactionScannerModal.show();
+        } catch (err) {
+            console.error(err);
+            showToast('Camera access was not available. Please allow camera permission or enter the UTR manually.', 'error');
+        }
+    }
+
+    function stopTransactionCamera() {
+        if (transactionCameraStream) {
+            transactionCameraStream.getTracks().forEach(t => t.stop());
+            transactionCameraStream = null;
+        }
+        const video = document.getElementById('transactionCamera');
+        if (video) video.srcObject = null;
+    }
+
+    async function captureAndScanTransactionId() {
+        const video = document.getElementById('transactionCamera');
+        const canvas = document.getElementById('transactionCaptureCanvas');
+        const status = document.getElementById('transactionScanStatus');
+        const progressWrap = document.getElementById('transactionOcrProgress');
+        const progressBar = document.getElementById('transactionOcrBar');
+        const progressText = document.getElementById('transactionOcrText');
+
+        if (!video.videoWidth) {
+            status.textContent = 'Camera is not ready yet. Please wait a moment.';
+            return;
+        }
+
+        // Capture at the actual camera resolution.
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        progressWrap.style.display = 'block';
+        status.textContent = 'Processing the payment screen. Keep the phone steady…';
+        progressBar.style.width = '3%';
+        progressText.textContent = 'Preparing image…';
+
+        try {
+            const text = await runTransactionOcrVariants(canvas, progressBar, progressText);
+            console.log('Transaction OCR combined:', text);
+
+            const utr = extractUtrFromText(text);
+
+            if (utr) {
+                document.getElementById('transactionId').value = utr;
+                const swalInput = document.getElementById('swalTransactionId');
+                if (swalInput) swalInput.value = utr;
+
+                status.textContent = 'Transaction ID found: ' + utr;
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Transaction ID detected successfully.';
+                showToast('Transaction ID detected and filled automatically.', 'success');
+
+                setTimeout(() => transactionScannerModal?.hide(), 900);
+            } else {
+                status.textContent =
+                    'Transaction ID not detected. Make sure the UTR is inside the green box, ' +
+                    'move closer, increase brightness, and try again.';
+                progressBar.style.width = '100%';
+                progressText.textContent = 'No confident UTR found.';
+                showToast('Could not detect the UTR. Please try a closer, sharper photo.', 'error');
+            }
+        } catch (err) {
+            console.error('Enhanced OCR error:', err);
+            status.textContent =
+                'OCR could not read this screen. Try again with the UTR clearly visible, or enter it manually.';
+            progressText.textContent = 'OCR error';
+            showToast('OCR failed. Please try again.', 'error');
+        }
+    }
+
+    async function showSuccessProofDialog() {
+        const result = await Swal.fire({
+            title: 'Payment proof',
+            html: `
+                <div style="text-align:left;font-size:0.9rem;">
+                    <p style="color:#475569;">After completing payment, enter the UTR/Transaction ID. You can scan it using your camera.</p>
+                    <div class="input-group" style="margin-bottom:10px;">
+                        <input id="swalTransactionId" class="swal2-input" style="margin:0;flex:1;" placeholder="UTR / Transaction ID">
+                        <button type="button" id="swalScanTransactionBtn" class="btn btn-outline-primary" style="margin-left:6px;"><i class="bi bi-camera"></i> Scan</button>
+                    </div>
+                    <input id="swalSenderUpiId" class="swal2-input" placeholder="Your UPI ID (optional)">
+                    <label style="font-size:0.78rem;color:#64748b;margin-top:5px;">Payment screenshot</label>
+                    <input id="swalPaymentScreenshot" type="file" accept="image/*" class="swal2-file" style="width:100%;">
+                </div>
+            `,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'Submit Payment Proof',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#16a34a',
+            didOpen: () => {
+                document.getElementById('swalScanTransactionBtn')?.addEventListener('click', () => {
+                    Swal.close();
+                    setTimeout(() => openTransactionScanner(), 250);
+                });
+            },
+            preConfirm: async () => {
+                const file = document.getElementById('swalPaymentScreenshot')?.files[0];
+                const transactionId = document.getElementById('swalTransactionId')?.value.trim() || document.getElementById('transactionId').value.trim();
+                const senderUpiId = document.getElementById('swalSenderUpiId')?.value.trim() || '';
+                if (!file) {
+                    Swal.showValidationMessage('Please upload the successful payment screenshot.');
+                    return false;
+                }
+                if (!file.type.startsWith('image/')) {
+                    Swal.showValidationMessage('Please select an image file.');
+                    return false;
+                }
+                if (file.size > 6 * 1024 * 1024) {
+                    Swal.showValidationMessage('Please use an image smaller than 6 MB.');
+                    return false;
+                }
+                if (transactionId) document.getElementById('transactionId').value = transactionId;
+                if (senderUpiId) document.getElementById('senderUpiId').value = senderUpiId;
+                Swal.showLoading();
+                const screenshotBase64 = await fileToBase64(file);
+                return { transactionId, senderUpiId, screenshotBase64, screenshotName:file.name, screenshotMimeType:file.type };
+            }
+        });
+
+        if (result.isConfirmed && result.value) {
+            document.getElementById('transactionId').value = result.value.transactionId;
+            document.getElementById('senderUpiId').value = result.value.senderUpiId;
+            await saveReceipt({
+                screenshotBase64: result.value.screenshotBase64,
+                screenshotName: result.value.screenshotName,
+                screenshotMimeType: result.value.screenshotMimeType,
+                paymentMethod: 'UPI'
+            });
+        }
+    }
+
+    // ================= SAVE RECEIPT (Record Only) =================
+   async function saveReceipt(proof = null) {
+    if (isSubmitting) return;
+    
+    if (!calculateBalance()) {
+        showToast('Please fix the amount error.', 'error');
+        return;
+    }
+    
+    const receiptNo = document.getElementById('receiptIdValue').textContent;
+    const category = document.getElementById('receiptCategory');
+    const categoryText = category.options[category.selectedIndex]?.text || '';
+    const year = document.getElementById('financialYear');
+    const yearText = year.options[year.selectedIndex]?.text || '';
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const receiptAmount = parseFloat(document.getElementById('receiptAmount').value) || 0;
+    const transactionId = document.getElementById('transactionId').value.trim();
+    const senderUpiId = document.getElementById('senderUpiId').value.trim();
+    const remarks = document.getElementById('remarks').value.trim();
+    
+    if (!category.value) {
+        showToast('Please select a receipt category.', 'error');
+        return;
+    }
+    
+    if (!year.value) {
+        showToast('Please select a financial year.', 'error');
+        return;
+    }
+    
+    if (receiptAmount <= 0) {
+        showToast('Receipt amount must be greater than zero.', 'error');
+        return;
+    }
+    
+    isSubmitting = true;
+    const btn = document.getElementById('saveBtn');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Saving...';
+    btn.disabled = true;
+    showLoading(true, 'Saving receipt...');
+    
+    try {
+        const receiptData = {
+            branchId: branchId,
+            homeId: homeId,
+            receiptNo: receiptNo,
+            transactionId: transactionId,
+            receiptCategory: categoryText,
+            financialYear: yearText,
+            senderUpiId: senderUpiId,
+            amount: amount,
+            receiptAmount: receiptAmount,
+            balance: amount - receiptAmount,
+            remarks: remarks
+        };
+        
+        // Process screenshot to JPEG data URL if provided
+        let screenshotDataUrl = '';
+        if (proof?.screenshotBase64) {
+            // Convert any image to JPEG format
+            screenshotDataUrl = await convertToJpegDataUrl(
+                proof.screenshotBase64,
+                proof.screenshotMimeType || 'image/jpeg'
+            );
+        }
+        
+        const payload = {
+            action: 'ADD_RECEIPT',
+            branchId: receiptData.branchId,
+            homeId: receiptData.homeId,
+            receiptNo: receiptData.receiptNo,
+            transactionId: receiptData.transactionId || '',
+            receiptCategory: receiptData.receiptCategory,
+            financialYear: receiptData.financialYear,
+            senderUpiId: receiptData.senderUpiId || '',
+            amount: receiptData.amount,
+            receiptAmount: receiptData.receiptAmount,
+            balance: receiptData.balance,
+            remarks: receiptData.remarks || '',
+            paymentMethod: proof?.paymentMethod || 'UPI',
+            screenshotDataUrl: screenshotDataUrl  // Send as JPEG data URL
+        };
+        
+        await fetch(CONFIG.APPS_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        showLoading(false);
+        showToast('Receipt saved successfully!', 'success');
+        
+        await Swal.fire({
+            title: '✅ Receipt Saved',
+            html: `
+                <p style="font-size:0.9rem;">
+                    Receipt No: <strong>${escapeHtml(receiptNo)}</strong>
+                </p>
+                <p style="font-size:0.9rem;">
+                    Amount: <strong>₹${receiptAmount.toFixed(2)}</strong>
+                </p>
+                <p style="font-size:0.85rem;color:#64748b;">
+                    Status: <strong style="color:#d97706;">Verification Pending</strong>
+                </p>
+                <p style="font-size:0.8rem;color:#94a3b8;margin-top:10px;">
+                    Admin will verify the payment.
+                </p>
+            `,
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#0f3b6a'
+        });
+        
+    } catch (err) {
+        showLoading(false);
+        console.error('Error:', err);
+        showToast('Failed to save receipt. Please try again.', 'error');
+    } finally {
+        isSubmitting = false;
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+function convertToJpegDataUrl(base64Data, mimeType) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Create an image from the base64 data
+            const img = new Image();
+            const fullDataUrl = `data:${mimeType || 'image/jpeg'};base64,${base64Data}`;
+            
+            img.onload = function() {
+                try {
+                    // Create canvas and draw image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // White background for JPEG (handles transparency)
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert to JPEG with quality 0.85
+                    const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    resolve(jpegDataUrl);
+                } catch (canvasError) {
+                    reject(new Error('Canvas conversion error: ' + canvasError.message));
+                }
+            };
+            
+            img.onerror = function() {
+                reject(new Error('Failed to load image for conversion'));
+            };
+            
+            img.src = fullDataUrl;
+        } catch (error) {
+            reject(new Error('Image conversion error: ' + error.message));
+        }
+    });
+}
+
+    // ================= RESET FORM =================
+    function resetForm() {
+        document.getElementById('receiptCategory').value = '';
+        $('#receiptCategory').trigger('change');
+        
+        const yearSelect = document.getElementById('financialYear');
+        const options = yearSelect.options;
+        if (options.length > 1) {
+            yearSelect.value = options[1].value;
+        }
+        $('#financialYear').trigger('change');
+        
+        document.getElementById('transactionId').value = '';
+        document.getElementById('senderUpiId').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('receiptAmount').value = '';
+        document.getElementById('balance').value = '';
+        document.getElementById('remarks').value = '';
+        document.getElementById('receiptAmountError').classList.remove('show');
+        document.getElementById('receiptAmount').classList.remove('is-invalid');
+        
+        // Hide QR
+        document.getElementById('qrCodeContainer').style.display = 'none';
+        qrVisible = false;
+        document.getElementById('showQrBtn').innerHTML = '<i class="bi bi-qr-code"></i> Show QR';
+        
+        updateAmount();
+        updateReceiptId();
+    }
+
+    // ================= INIT =================
+    async function init() {
+        const session = getSessionFromStorage();
+        if (!isValidSession(session)) {
+            document.getElementById('accessDeniedOverlay').classList.add('active');
+            return;
+        }
+        
+        branchId = session.branchId;
+        homeId = session.homeId;
+        memberName = session.name || 'Member';
+        
+        document.getElementById('mainContent').style.display = 'block';
+        document.getElementById('accessDeniedOverlay').classList.remove('active');
+        
+        document.getElementById('displayBranchId').textContent = branchId;
+        document.getElementById('displayHomeId').textContent = homeId;
+        document.getElementById('displayMemberName').textContent = memberName;
+        document.getElementById('branchId').value = branchId;
+        document.getElementById('homeId').value = homeId;
+        
+        showLoading(true, 'Loading data...');
+        
+        try {
+            const [categories, years, upiId] = await Promise.all([
+                fetchReceiptCategories(),
+                fetchFinancialYears(),
+                fetchReceiptUpiId()
+            ]);
+            
+            receiptCategories = categories;
+            financialYears = years;
+            receiptUpiId = upiId;
+            
+            populateReceiptCategories(categories);
+            populateFinancialYears(years);
+            
+            updateReceiptId();
+            updatePaymentDisplay();
+            
+            if (categories.length > 0) {
+                document.getElementById('receiptCategory').value = categories[0].id;
+                $('#receiptCategory').trigger('change');
+            }
+            
+        } catch (e) {
+            console.error('Error initializing:', e);
+            showToast('Failed to load data. Please refresh.', 'error');
+        }
+        
+        showLoading(false);
+        
+        // Event listeners
+        document.getElementById('payNowBtn').addEventListener('click', handlePayNow);
+        document.getElementById('showQrBtn').addEventListener('click', showHostedQr);
+        document.getElementById('qrPaidBtn').addEventListener('click', showSuccessProofDialog);
+        document.getElementById('scanTransactionBtn').addEventListener('click', openTransactionScanner);
+        document.getElementById('captureTransactionBtn').addEventListener('click', captureAndScanTransactionId);
+        document.getElementById('transactionScannerModal').addEventListener('hidden.bs.modal', stopTransactionCamera);
+        document.getElementById('resetBtn').addEventListener('click', resetForm);
+        document.getElementById('saveBtn').addEventListener('click', saveReceipt);
+        document.getElementById('receiptAmount').addEventListener('input', function() {
+            calculateBalance();
+        });
+    }
+
+    // ================= START =================
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $.fn.select2 !== 'undefined') {
+            init();
+        } else {
+            const checkSelect2 = setInterval(function() {
+                if (typeof $.fn.select2 !== 'undefined') {
+                    clearInterval(checkSelect2);
+                    init();
+                }
+            }, 100);
+        }
+    });
+</script>
+
+<script>
+(function () {
+    function qrImage() {
+        return document.getElementById('upiQrImage') ||
+               document.querySelector('#qrCode img') ||
+               document.querySelector('#qrCodeContainer img');
+    }
+
+    window.downloadQrScreenshot = async function () {
+        const img = qrImage();
+        if (!img || !img.src) {
+            if (typeof showToast === 'function') showToast('QR code is not available.', 'error');
+            return;
+        }
+        try {
+            if (!img.complete) await new Promise((res, rej) => {
+                img.onload = res; img.onerror = rej;
+            });
+            const receipt = document.getElementById('receiptIdValue')?.textContent?.trim() || 'payment';
+            const amount = document.getElementById('receiptAmount')?.value || '';
+            const canvas = document.createElement('canvas');
+            canvas.width = 900; canvas.height = 1100;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 900, 1100);
+            ctx.fillStyle = '#111'; ctx.textAlign = 'center';
+            ctx.font = 'bold 40px Arial'; ctx.fillText('UPI Payment', 450, 70);
+            ctx.font = 'bold 32px Arial'; ctx.fillText('Amount: ₹' + amount, 450, 125);
+            ctx.font = '24px Arial'; ctx.fillText('Receipt No: ' + receipt, 450, 170);
+            ctx.drawImage(img, 125, 205, 650, 650);
+            ctx.font = '22px Arial';
+            ctx.fillText('Scan this QR to make the payment', 450, 900);
+            ctx.font = '19px Arial';
+            ctx.fillText('Payment is subject to administrator verification.', 450, 945);
+            canvas.toBlob(function (blob) {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'UPI-QR-' + receipt + '.jpg';
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }, 'image/jpeg', 0.92);
+        } catch (e) {
+            if (typeof showToast === 'function') showToast('Unable to save QR image.', 'error');
+        }
+    };
+
+    window.convertImageFileToJpegDataUrl = function (file) {
+        return new Promise((resolve, reject) => {
+            if (!file || !file.type.startsWith('image/')) {
+                reject(new Error('Please select a valid image file.')); return;
+            }
+            const r = new FileReader();
+            r.onerror = () => reject(new Error('Unable to read the image.'));
+            r.onload = () => {
+                const img = new Image();
+                img.onerror = () => reject(new Error('Image could not be decoded.'));
+                img.onload = () => {
+                    const max = 1600;
+                    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+                    const c = document.createElement('canvas');
+                    c.width = Math.max(1, Math.round(img.naturalWidth * scale));
+                    c.height = Math.max(1, Math.round(img.naturalHeight * scale));
+                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                    c.toBlob(blob => {
+                        if (!blob) return reject(new Error('JPG conversion failed.'));
+                        const fr = new FileReader();
+                        fr.onload = () => resolve(fr.result);
+                        fr.onerror = () => reject(new Error('JPG data creation failed.'));
+                        fr.readAsDataURL(blob);
+                    }, 'image/jpeg', 0.88);
+                };
+                img.src = r.result;
+            };
+            r.readAsDataURL(file);
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const b = document.getElementById('downloadQrBtn');
+        if (b) b.addEventListener('click', window.downloadQrScreenshot);
+    });
+})();
+</script>
+
+
+<script id="transactionGalleryOcr">
+(function () {
+    function setOcrStatus(message, type) {
+        const el = document.getElementById('transactionScanStatus');
+        if (!el) return;
+        el.textContent = message;
+        el.className = 'small mt-2 text-center ' +
+            (type === 'success' ? 'text-success' :
+             type === 'error' ? 'text-danger' : 'text-muted');
+    }
+
+    function setProgress(percent, text) {
+        const wrap = document.getElementById('transactionOcrProgress');
+        const bar = document.getElementById('transactionOcrBar');
+        const label = document.getElementById('transactionOcrText');
+        if (wrap) wrap.style.display = 'block';
+        if (bar) bar.style.width = Math.max(0, Math.min(100, percent)) + '%';
+        if (label) label.textContent = text || '';
+    }
+
+    function fileToCanvas(file) {
+        return new Promise((resolve, reject) => {
+            if (!file || !file.type || !file.type.startsWith('image/')) {
+                reject(new Error('Please select a valid image screenshot.'));
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('Unable to read the selected screenshot.'));
+            reader.onload = () => {
+                const img = new Image();
+                img.onerror = () => reject(new Error('The selected screenshot could not be opened.'));
+                img.onload = () => {
+                    const maxDimension = 2600;
+                    const scale = Math.min(
+                        1,
+                        maxDimension / Math.max(img.naturalWidth, img.naturalHeight)
+                    );
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+                    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    resolve(canvas);
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function runGalleryOcr(file) {
+        setOcrStatus('Preparing screenshot for OCR…', 'info');
+        setProgress(5, 'Loading screenshot…');
+
+        try {
+            const canvas = await fileToCanvas(file);
+
+            // Reuse the enhanced OCR pipeline already added to the page.
+            if (typeof runTransactionOcrVariants !== 'function') {
+                throw new Error('Enhanced OCR engine is not available.');
+            }
+
+            setOcrStatus(
+                'Reading the screenshot. This may take a few seconds…',
+                'info'
+            );
+            setProgress(10, 'Running enhanced OCR…');
+
+            const text = await runTransactionOcrVariants(
+                canvas,
+                document.getElementById('transactionOcrBar'),
+                document.getElementById('transactionOcrText')
+            );
+
+            console.log('Gallery OCR combined text:', text);
+
+            if (typeof extractUtrFromText !== 'function') {
+                throw new Error('Transaction ID detector is not available.');
+            }
+
+            const utr = extractUtrFromText(text);
+
+            if (utr) {
+                const input = document.getElementById('transactionId');
+                if (input) input.value = utr;
+
+                const swalInput = document.getElementById('swalTransactionId');
+                if (swalInput) swalInput.value = utr;
+
+                setProgress(100, 'Transaction ID detected successfully.');
+                setOcrStatus(
+                    'Transaction ID detected: ' + utr,
+                    'success'
+                );
+
+                if (typeof showToast === 'function') {
+                    showToast('Transaction ID detected and filled automatically.', 'success');
+                }
+
+                // Do not close immediately; let the user verify the detected value.
+            } else {
+                setProgress(100, 'No confident UTR found.');
+                setOcrStatus(
+                    'Transaction ID could not be detected. Select a clearer payment screenshot or enter it manually.',
+                    'error'
+                );
+
+                if (typeof showToast === 'function') {
+                    showToast(
+                        'Transaction ID not detected. Please select a clearer screenshot.',
+                        'error'
+                    );
+                }
+            }
+        } catch (err) {
+            console.error('Gallery OCR error:', err);
+            setProgress(100, 'OCR failed.');
+            setOcrStatus(
+                err.message || 'Could not read the selected screenshot. Please try another image.',
+                'error'
+            );
+
+            if (typeof showToast === 'function') {
+                showToast(
+                    err.message || 'Gallery OCR failed.',
+                    'error'
+                );
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('transactionGalleryBtn');
+        const input = document.getElementById('transactionGalleryInput');
+
+        if (btn && input) {
+            btn.addEventListener('click', function () {
+                input.value = '';
+                input.click();
+            });
+
+            input.addEventListener('change', function () {
+                const file = input.files && input.files[0];
+                if (file) runGalleryOcr(file);
+            });
+        }
+    });
+})();
+</script>
+
+</body>
+</html>
