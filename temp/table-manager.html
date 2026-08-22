@@ -59,6 +59,44 @@
 
         .sheet-body {
             padding: 18px;
+            display: none;
+        }
+
+        .sheet-card.is-open .sheet-body {
+            display: block;
+        }
+
+        .sheet-header > div:last-child {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sheet-toggle {
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,.16);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background .2s ease;
+        }
+
+        .sheet-toggle:hover {
+            background: rgba(255,255,255,.28);
+        }
+
+        .sheet-toggle i {
+            transition: transform .2s ease;
+        }
+
+        .sheet-card.is-open .sheet-toggle i {
+            transform: rotate(90deg);
         }
 
         .table-responsive {
@@ -480,6 +518,17 @@
 
                             </button>
 
+                            <button
+                                type="button"
+                                class="sheet-toggle"
+                                aria-expanded="false"
+                                aria-label="Expand ${escapeHtml(sheetName)}"
+                                title="Show table">
+
+                                <i class="bi bi-chevron-right"></i>
+
+                            </button>
+
                         </div>
 
                     </div>
@@ -661,6 +710,37 @@
     */
 
     function attachEventHandlers() {
+        /*
+        =====================================================
+        SHEET EXPAND / COLLAPSE
+        =====================================================
+        */
+
+        $(".sheet-toggle")
+            .off("click")
+            .on("click", function(event) {
+
+                event.stopPropagation();
+
+                const button = $(this);
+                const sheetCard = button.closest(".sheet-card");
+                const isOpen = sheetCard.hasClass("is-open");
+
+                sheetCard.toggleClass("is-open", !isOpen);
+
+                button.attr("aria-expanded", String(!isOpen));
+                button.attr(
+                    "aria-label",
+                    (!isOpen ? "Collapse " : "Expand ")
+                    + sheetCard.data("sheet")
+                );
+                button.attr(
+                    "title",
+                    !isOpen ? "Hide table" : "Show table"
+                );
+            });
+
+
 
 
         /*
