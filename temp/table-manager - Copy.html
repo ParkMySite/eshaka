@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Multi‑Sheet Table Manager</title>
+    <!-- Local CSS Resources (relative paths) -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        .sheet-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #dee2e6; padding-bottom: 0.5rem; }
+        .sheet-tab-btn { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 40px; padding: 0.4rem 1.2rem; font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .sheet-tab-btn.active { background: #0f3b5f; color: white; border-color: #0f3b5f; }
+        .sheet-tab-btn i { margin-right: 6px; }
+        .table-wrapper { overflow-x: auto; margin-bottom: 2rem; }
+        .table th { background: #e9ecef; white-space: nowrap; }
+        .table td { vertical-align: middle; }
+        .row-actions { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+        .add-row-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+        .add-row-bar .form-control { width: auto; min-width: 120px; }
+        .sheet-card { background: white; border-radius: 16px; padding: 1.2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 2rem; border: 1px solid #e9ecef; }
+        .sheet-card h5 { display: flex; align-items: center; gap: 0.5rem; }
+        .sheet-card h5 small { font-size: 0.8rem; color: #6c757d; font-weight: normal; }
+        .modal-lg { max-width: 800px; }
+        #global-loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:9999; }
+        #global-loading-overlay > div { background: white; padding: 30px; border-radius: 24px; text-align: center; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn-primary-custom { background: #0f3b5f; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 8px; }
+        .btn-primary-custom:hover { background: #1a4a6f; color: white; }
+        .btn-success-custom { background: #198754; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 8px; }
+        .btn-success-custom:hover { background: #157347; color: white; }
+        .btn-secondary-custom { background: #6c757d; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 8px; }
+        .btn-secondary-custom:hover { background: #5a6268; color: white; }
+    </style>
+</head>
+<body>
+<div class="page-header">
+    <div class="page-header-left">
+        <i class="bi bi-table"></i>
+        <div>
+            <h1>Multi‑Sheet Table Manager</h1>
+            <p>Manage all sheets as tables – edit, add rows, delete rows</p>
+        </div>
+    </div>
+</div>
+<div class="app-card">
+    <!-- sheet tabs -->
+    <div id="sheetTabsContainer" class="sheet-tabs">
+        <!-- dynamically filled -->
+    </div>
+
+    <!-- content area: each sheet table rendered here -->
+    <div id="sheetContent">
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-arrow-repeat fs-1"></i>
+            <h6>Loading sheets...</h6>
+        </div>
+    </div>
+
+    <!-- global actions -->
+    <div class="mt-4 d-flex gap-2">
+        <button id="refreshAllBtn" class="btn btn-primary-custom"><i class="bi bi-arrow-repeat"></i> Refresh all</button>
+        <button id="addSheetBtn" class="btn btn-success-custom"><i class="bi bi-plus-circle"></i> Add new sheet</button>
+    </div>
+</div>
+
+<!-- Modal: Add / Edit Row -->
+<div class="modal fade" id="rowModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="rowModalLabel"><i class="bi bi-pencil-square"></i> Edit Row</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="rowModalBody">
+                <!-- dynamic form -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="saveRowBtn" class="btn btn-primary"><i class="bi bi-check2"></i> Save Row</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add new sheet -->
+<div class="modal fade" id="addSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add new sheet</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Sheet name</label>
+                <input type="text" id="newSheetName" class="form-control" placeholder="e.g. New Table">
+                <small class="text-muted">Will create a new sheet with a header row "Column 1", "Column 2"...</small>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="createSheetBtn" class="btn btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../js/dataTables.bootstrap5.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+<script>
+    // ================= CONFIG =================
+    // IMPORTANT: Replace with your Apps Script Web App URL
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXTn0qn5z6zmJf_j79R3PXZyPJONM0TnV0mTdJYW88N5TODQkhQBni0LOHE3wsLAJ4MA/exec";
+
+    // ================= STATE =================
+    let sheetsData = {};
+    let currentSheet = null;
+    let rowEditContext = null;
+
+    // ================= HELPERS =================
+    function escapeHtml(str) { if(!str) return ''; return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'>'); }
+    function showLoading(msg) { 
+        if($('#global-loading-overlay').length) return;
+        $('body').append(`<div id="global-loading-overlay"><div><i class="bi bi-arrow-repeat" style="font-size:48px;color:#0f3b5f;animation:spin 1s linear infinite;"></i><p>${msg}</p></div></div>`);
+    }
+    function hideLoading() { $('#global-loading-overlay').remove(); }
+
+    // ================= FETCH ALL SHEETS DATA VIA APPS SCRIPT =================
+    async function fetchAllSheets() {
+        try {
+            const url = `${APPS_SCRIPT_URL}?action=GET_ALL_DATA`;
+            const resp = await fetch(url);
+            if (!resp.ok) {
+                throw new Error(`HTTP error! status: ${resp.status}`);
+            }
+            const data = await resp.json();
+            if (data.status === "success") {
+                return data.sheetsData;
+            } else {
+                throw new Error(data.error || "Failed to get data");
+            }
+        } catch (e) {
+            console.error('fetchAllSheets error', e);
+            Swal.fire({
+                icon: 'error',
+                title: 'Connection Error',
+                text: 'Could not connect to Apps Script. Please check:\n1. Web App URL is correct\n2. Web App is deployed\n3. Network connection'
+            });
+            return null;
+        }
+    }
+
+    // ================= RENDER ALL SHEETS =================
+    function renderAllSheets(data) {
+        sheetsData = data;
+        const sheetNames = Object.keys(data);
+        if (sheetNames.length === 0) {
+            $('#sheetContent').html(`<div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1"></i><h6>No sheets found</h6></div>`);
+            $('#sheetTabsContainer').empty();
+            return;
+        }
+
+        // render tabs
+        let tabsHtml = '';
+        sheetNames.forEach((name, idx) => {
+            const active = idx === 0 ? 'active' : '';
+            tabsHtml += `<button class="sheet-tab-btn ${active}" data-sheet="${escapeHtml(name)}"><i class="bi bi-layout-text-window"></i> ${escapeHtml(name)}</button>`;
+        });
+        $('#sheetTabsContainer').html(tabsHtml);
+
+        // show first sheet
+        const first = sheetNames[0];
+        renderSheet(first);
+        currentSheet = first;
+
+        // tab click
+        $('.sheet-tab-btn').off('click').on('click', function() {
+            const name = $(this).data('sheet');
+            $('.sheet-tab-btn').removeClass('active');
+            $(this).addClass('active');
+            renderSheet(name);
+            currentSheet = name;
+        });
+    }
+
+    // ================= RENDER SINGLE SHEET =================
+    function renderSheet(sheetName) {
+        const data = sheetsData[sheetName];
+        if (!data) {
+            $('#sheetContent').html(`<div class="alert alert-warning">Sheet "${sheetName}" not found.</div>`);
+            return;
+        }
+        const { headers, rows } = data;
+        const container = $('#sheetContent');
+        let html = `<div class="sheet-card" data-sheet="${escapeHtml(sheetName)}">`;
+        html += `<h5><i class="bi bi-table"></i> ${escapeHtml(sheetName)} <small>${rows.length} rows, ${headers.length} columns</small>`;
+        html += `<button class="btn btn-sm btn-outline-secondary ms-3 refresh-sheet-btn" data-sheet="${escapeHtml(sheetName)}"><i class="bi bi-arrow-repeat"></i></button>`;
+        html += `</h5>`;
+        html += `<div class="table-wrapper"><table class="table table-bordered table-hover table-sm">`;
+        // header
+        html += `<thead><tr>`;
+        headers.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
+        html += `<th style="min-width:80px;">Actions</th>`;
+        html += `</tr></thead><tbody>`;
+        // rows
+        rows.forEach((row, idx) => {
+            html += `<tr data-row="${idx}">`;
+            row.forEach(cell => html += `<td>${escapeHtml(cell)}</td>`);
+            html += `<td class="row-actions">
+                <button class="btn btn-sm btn-outline-primary edit-row-btn" data-sheet="${escapeHtml(sheetName)}" data-row="${idx}"><i class="bi bi-pencil"></i></button>
+                <button class="btn btn-sm btn-outline-danger delete-row-btn" data-sheet="${escapeHtml(sheetName)}" data-row="${idx}"><i class="bi bi-trash3"></i></button>
+            </td>`;
+            html += `</tr>`;
+        });
+        if (rows.length === 0) {
+            html += `<tr><td colspan="${headers.length+1}" class="text-center text-muted">No rows</td></tr>`;
+        }
+        html += `</tbody></table></div>`;
+        // add row bar
+        html += `<div class="add-row-bar" data-sheet="${escapeHtml(sheetName)}">`;
+        html += `<span class="fw-bold me-2"><i class="bi bi-plus-circle"></i> Add row:</span>`;
+        headers.forEach((h, idx) => {
+            html += `<input type="text" class="form-control form-control-sm add-row-input" placeholder="${escapeHtml(h)}" data-col="${idx}" style="width:120px;">`;
+        });
+        html += `<button class="btn btn-sm btn-success-custom add-row-btn" data-sheet="${escapeHtml(sheetName)}"><i class="bi bi-plus"></i> Add</button>`;
+        html += `</div>`;
+        html += `</div>`;
+        container.html(html);
+
+        // attach events for this sheet
+        attachSheetEvents(sheetName);
+    }
+
+    // ================= ATTACH EVENTS =================
+    function attachSheetEvents(sheetName) {
+        // refresh
+        $(`.refresh-sheet-btn[data-sheet="${sheetName}"]`).off('click').on('click', function() {
+            refreshSheet(sheetName);
+        });
+
+        // edit row
+        $(`.edit-row-btn[data-sheet="${sheetName}"]`).off('click').on('click', function() {
+            const rowIdx = parseInt($(this).data('row'));
+            openEditRowModal(sheetName, rowIdx);
+        });
+
+        // delete row
+        $(`.delete-row-btn[data-sheet="${sheetName}"]`).off('click').on('click', function() {
+            const rowIdx = parseInt($(this).data('row'));
+            deleteRow(sheetName, rowIdx);
+        });
+
+        // add row
+        $(`.add-row-btn[data-sheet="${sheetName}"]`).off('click').on('click', function() {
+            const sheet = $(this).data('sheet');
+            const inputs = $(`.add-row-bar[data-sheet="${sheet}"] .add-row-input`);
+            const values = [];
+            inputs.each(function() { values.push($(this).val()); });
+            addRow(sheet, values);
+        });
+        // press enter on add row inputs
+        $(`.add-row-bar[data-sheet="${sheetName}"] .add-row-input`).off('keypress').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $(`.add-row-btn[data-sheet="${sheetName}"]`).click();
+            }
+        });
+    }
+
+    // ================= REFRESH SHEET =================
+    async function refreshSheet(sheetName) {
+        showLoading(`Refreshing ${sheetName}...`);
+        try {
+            const url = `${APPS_SCRIPT_URL}?action=GET_SHEET_DATA&sheetName=${encodeURIComponent(sheetName)}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (data.status === "success") {
+                sheetsData[sheetName] = { headers: data.headers, rows: data.rows };
+                renderSheet(sheetName);
+            } else {
+                throw new Error(data.error || "Failed to refresh");
+            }
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to refresh sheet.' });
+        }
+        hideLoading();
+    }
+
+    // ================= OPEN EDIT ROW MODAL =================
+    function openEditRowModal(sheetName, rowIdx) {
+        const data = sheetsData[sheetName];
+        if (!data) return;
+        const { headers, rows } = data;
+        const row = rows[rowIdx] || [];
+        rowEditContext = { sheetName, rowIndex: rowIdx };
+
+        let bodyHtml = `<div class="row g-3">`;
+        headers.forEach((h, idx) => {
+            const val = row[idx] || '';
+            bodyHtml += `<div class="col-md-6"><label class="form-label">${escapeHtml(h)}</label><input type="text" class="form-control edit-row-field" data-col="${idx}" value="${escapeHtml(val)}"></div>`;
+        });
+        bodyHtml += `</div>`;
+        $('#rowModalBody').html(bodyHtml);
+        $('#rowModalLabel').html(`<i class="bi bi-pencil-square"></i> Edit row in "${sheetName}"`);
+        const modal = new bootstrap.Modal(document.getElementById('rowModal'));
+        modal.show();
+
+        // save handler
+        $('#saveRowBtn').off('click').on('click', function() {
+            saveEditedRow();
+        });
+    }
+
+    // ================= SAVE EDITED ROW =================
+    async function saveEditedRow() {
+        if (!rowEditContext) return;
+        const { sheetName, rowIndex } = rowEditContext;
+        const data = sheetsData[sheetName];
+        if (!data) return;
+        const { headers } = data;
+        const fields = $('#rowModalBody .edit-row-field');
+        const newRow = [];
+        fields.each(function() { newRow.push($(this).val()); });
+        while (newRow.length < headers.length) newRow.push('');
+        const newRowTrim = newRow.slice(0, headers.length);
+
+        data.rows[rowIndex] = newRowTrim;
+
+        await updateSheetViaAppsScript(sheetName, headers, data.rows);
+        renderSheet(sheetName);
+        bootstrap.Modal.getInstance(document.getElementById('rowModal')).hide();
+        Swal.fire({ icon: 'success', title: 'Updated', timer: 1200, showConfirmButton: false });
+        rowEditContext = null;
+    }
+
+    // ================= DELETE ROW =================
+    async function deleteRow(sheetName, rowIdx) {
+        const confirm = await Swal.fire({ title: 'Delete row?', text: 'This cannot be undone.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Delete' });
+        if (!confirm.isConfirmed) return;
+        const data = sheetsData[sheetName];
+        if (!data) return;
+        data.rows.splice(rowIdx, 1);
+        await updateSheetViaAppsScript(sheetName, data.headers, data.rows);
+        renderSheet(sheetName);
+        Swal.fire({ icon: 'success', title: 'Deleted', timer: 1000, showConfirmButton: false });
+    }
+
+    // ================= ADD ROW =================
+    async function addRow(sheetName, values) {
+        const data = sheetsData[sheetName];
+        if (!data) return;
+        const { headers } = data;
+        while (values.length < headers.length) values.push('');
+        const row = values.slice(0, headers.length);
+        data.rows.push(row);
+        $(`.add-row-bar[data-sheet="${sheetName}"] .add-row-input`).val('');
+        await updateSheetViaAppsScript(sheetName, headers, data.rows);
+        renderSheet(sheetName);
+        Swal.fire({ icon: 'success', title: 'Row added', timer: 1000, showConfirmButton: false });
+    }
+
+    // ================= UPDATE SHEET VIA APPS SCRIPT =================
+    async function updateSheetViaAppsScript(sheetName, headers, rows) {
+        showLoading('Saving changes...');
+        const payload = {
+            action: 'UPDATE_SHEET',
+            sheetName: sheetName,
+            headers: headers,
+            rows: rows
+        };
+        try {
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.status !== "success") {
+                throw new Error(result.error || "Update failed");
+            }
+        } catch (e) {
+            console.error('updateSheet error', e);
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save changes: ' + e.message });
+            throw e;
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // ================= ADD NEW SHEET =================
+    async function createNewSheet() {
+        const name = $('#newSheetName').val().trim();
+        if (!name) { Swal.fire({ icon: 'warning', title: 'Required', text: 'Enter a sheet name.' }); return; }
+        if (sheetsData[name]) { Swal.fire({ icon: 'warning', title: 'Exists', text: 'Sheet already exists.' }); return; }
+        
+        const defaultHeaders = ['Column 1', 'Column 2', 'Column 3'];
+        const payload = {
+            action: 'CREATE_SHEET',
+            sheetName: name,
+            headers: defaultHeaders,
+            rows: []
+        };
+        showLoading('Creating sheet...');
+        try {
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (result.status !== "success") {
+                throw new Error(result.error || "Creation failed");
+            }
+            await loadAllSheets();
+            bootstrap.Modal.getInstance(document.getElementById('addSheetModal')).hide();
+            Swal.fire({ icon: 'success', title: 'Created', timer: 1200, showConfirmButton: false });
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to create sheet: ' + e.message });
+        }
+        hideLoading();
+    }
+
+    // ================= LOAD ALL SHEETS =================
+    async function loadAllSheets() {
+        showLoading('Loading sheets...');
+        const data = await fetchAllSheets();
+        hideLoading();
+        if (data) {
+            renderAllSheets(data);
+        } else {
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Error', 
+                text: 'Failed to load sheets. Please check:\n1. Apps Script Web App is deployed\n2. Web App URL is correct\n3. Spreadsheet ID is correct' 
+            });
+        }
+    }
+
+    // ================= INIT =================
+    $(document).ready(function() {
+        loadAllSheets();
+
+        $('#refreshAllBtn').on('click', loadAllSheets);
+
+        $('#addSheetBtn').on('click', function() {
+            $('#newSheetName').val('');
+            const modal = new bootstrap.Modal(document.getElementById('addSheetModal'));
+            modal.show();
+        });
+        $('#createSheetBtn').on('click', createNewSheet);
+        $('#newSheetName').on('keypress', function(e) { if (e.which === 13) createNewSheet(); });
+    });
+</script>
+</body>
+</html>

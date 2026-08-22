@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Table Manager</title>
+
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+        }
+
+        .page-header {
+            margin-bottom: 20px;
+        }
+
+        .app-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.06);
+        }
+
+        .sheet-card {
+            background: #fff;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 3px 12px rgba(0,0,0,.04);
+        }
+
+        .sheet-header {
+            padding: 15px 20px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .sheet-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .sheet-body {
+            padding: 18px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .editable-cell {
+            cursor: text;
+            min-width: 120px;
+        }
+
+        .editable-cell:hover {
+            background: #f1f5f9;
+        }
+
+        .editable-cell input {
+            width: 100%;
+            border: 1px solid #0d6efd;
+            border-radius: 4px;
+            padding: 5px 8px;
+            outline: none;
+        }
+
+        .row-actions {
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,.85);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-box {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 35px rgba(0,0,0,.15);
+        }
+
+        .table-status {
+            font-size: .85rem;
+            margin-left: 10px;
+        }
+
+        .empty-table {
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="page-header">
+    <div class="page-header-left">
+        <i class="bi bi-table"></i>
+
+        <div>
+            <h1>Table Manager</h1>
+            <p>Manage data from all spreadsheet tables</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="app-card">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+
+        <div>
+            <h5 class="mb-1">
+                <i class="bi bi-database"></i>
+                Available Tables
+            </h5>
+
+            <small class="text-muted">
+                Edit, add or delete rows from any table
+            </small>
+        </div>
+
+        <button id="refreshBtn"
+                class="btn btn-outline-primary">
+
+            <i class="bi bi-arrow-repeat"></i>
+            Refresh Tables
+
+        </button>
+
+    </div>
+
+
+    <div id="tablesContainer">
+
+        <div class="text-center py-5 text-muted">
+
+            <div class="spinner-border mb-3"></div>
+
+            <h6>Loading tables...</h6>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- JavaScript -->
+
+<script src="config.js"></script>
+
+<script src="../js/jquery.min.js"></script>
+
+<script src="../js/bootstrap.bundle.min.js"></script>
+
+<script src="../js/jquery.dataTables.min.js"></script>
+
+<script src="../js/dataTables.bootstrap5.min.js"></script>
+
+<script src="../js/sweetalert2.all.min.js"></script>
+
+
+<script>
+
+    /*
+    =====================================================
+    IMPORTANT
+
+    Replace this URL after deploying the new Code.gs
+    =====================================================
+    */
+
+    const APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycby9ZSWt7v_AH1cI85ATcjAG8FxY-a_f9xa9kvDzCWfhxJhmYVPfLGnG8JsSy7ysTSJS_A/exec";
+
+
+    let allTables = {};
+
+
+    /*
+    =====================================================
+    GLOBAL LOADING
+    =====================================================
+    */
+
+    function showLoading(message = "Loading...") {
+
+        if ($("#globalLoading").length) return;
+
+        $("body").append(`
+            <div class="loading-overlay"
+                 id="globalLoading">
+
+                <div class="loading-box">
+
+                    <div class="spinner-border text-primary mb-3">
+                    </div>
+
+                    <div>${escapeHtml(message)}</div>
+
+                </div>
+
+            </div>
+        `);
+
+    }
+
+
+    function hideLoading() {
+
+        $("#globalLoading").remove();
+
+    }
+
+
+    /*
+    =====================================================
+    ESCAPE HTML
+    =====================================================
+    */
+
+    function escapeHtml(value) {
+
+        if (value === null ||
+            value === undefined) {
+            return "";
+        }
+
+        return String(value)
+
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    /*
+    =====================================================
+    API REQUEST
+    =====================================================
+    */
+
+    async function apiRequest(payload) {
+
+        const response = await fetch(
+
+            APPS_SCRIPT_URL,
+
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "text/plain;charset=utf-8"
+                },
+
+                body:
+                    JSON.stringify(payload)
+
+            }
+
+        );
+
+        return await response.json();
+
+    }
+
+
+    /*
+    =====================================================
+    LOAD ALL SHEETS
+    =====================================================
+    */
+
+    async function loadAllTables() {
+
+        showLoading("Loading tables...");
+
+        try {
+
+            const response =
+                await fetch(
+                    APPS_SCRIPT_URL
+                    + "?action=GET_ALL_TABLES"
+                );
+
+            const result =
+                await response.json();
+
+
+            if (result.status !== "success") {
+
+                throw new Error(
+                    result.error ||
+                    "Failed to load tables"
+                );
+
+            }
+
+
+            allTables = result.tables || {};
+
+
+            renderAllTables();
+
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            $("#tablesContainer").html(`
+
+                <div class="alert alert-danger">
+
+                    <i class="bi bi-exclamation-triangle"></i>
+
+                    Failed to load tables.
+
+                    <br>
+
+                    <small>
+                        ${escapeHtml(error.message)}
+                    </small>
+
+                </div>
+
+            `);
+
+        }
+
+        finally {
+
+            hideLoading();
+
+        }
+
+    }
+
+
+    /*
+    =====================================================
+    RENDER ALL TABLES
+    =====================================================
+    */
+
+    function renderAllTables() {
+
+        const container =
+            $("#tablesContainer");
+
+
+        container.empty();
+
+
+        const sheetNames =
+            Object.keys(allTables);
+
+
+        if (sheetNames.length === 0) {
+
+            container.html(`
+
+                <div class="empty-table">
+
+                    <i class="bi bi-inbox fs-1"></i>
+
+                    <h5 class="mt-3">
+                        No sheets found
+                    </h5>
+
+                </div>
+
+            `);
+
+            return;
+
+        }
+
+
+        sheetNames.forEach(
+
+            function(sheetName, sheetIndex) {
+
+                const table =
+                    allTables[sheetName];
+
+                const headers =
+                    table.headers || [];
+
+                const rows =
+                    table.rows || [];
+
+
+                const safeId =
+                    "table_" + sheetIndex;
+
+
+                let html = `
+
+                <div class="sheet-card"
+                     data-sheet="${escapeHtml(sheetName)}">
+
+                    <div class="sheet-header">
+
+                        <div>
+
+                            <h5>
+
+                                <i class="bi bi-table"></i>
+
+                                ${escapeHtml(sheetName)}
+
+                            </h5>
+
+                            <small>
+
+                                ${rows.length}
+                                row(s) •
+                                ${headers.length}
+                                column(s)
+
+                            </small>
+
+                        </div>
+
+
+                        <div>
+
+                            <button
+                                class="btn btn-sm btn-light add-row-btn"
+                                data-sheet="${escapeHtml(sheetName)}">
+
+                                <i class="bi bi-plus-circle"></i>
+
+                                Add Row
+
+                            </button>
+
+
+                            <button
+                                class="btn btn-sm btn-success save-table-btn"
+                                data-sheet="${escapeHtml(sheetName)}">
+
+                                <i class="bi bi-save"></i>
+
+                                Save Changes
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="sheet-body">
+
+                        <div class="table-responsive">
+
+                            <table
+                                id="${safeId}"
+                                class="table table-bordered table-hover align-middle dynamic-table">
+
+                                <thead>
+
+                                    <tr>
+
+                `;
+
+
+                headers.forEach(
+
+                    header => {
+
+                        html += `
+                            <th>
+                                ${escapeHtml(header)}
+                            </th>
+                        `;
+
+                    }
+
+                );
+
+
+                html += `
+                                <th width="110">
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+                `;
+
+
+                rows.forEach(
+
+                    function(row, rowIndex) {
+
+                        html += `
+                            <tr
+                                data-row-index="${rowIndex}">
+                        `;
+
+
+                        headers.forEach(
+
+                            function(header, columnIndex) {
+
+                                const value =
+                                    row[columnIndex] ?? "";
+
+
+                                html += `
+
+                                    <td
+                                        class="editable-cell"
+                                        data-column-index="${columnIndex}">
+
+                                        ${escapeHtml(value)}
+
+                                    </td>
+
+                                `;
+
+                            }
+
+                        );
+
+
+                        html += `
+
+                            <td class="row-actions">
+
+                                <button
+                                    class="btn btn-sm btn-outline-danger delete-row-btn"
+                                    title="Delete Row">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                        `;
+
+                    }
+
+                );
+
+
+                html += `
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+                `;
+
+
+                container.append(html);
+
+
+                initializeEditableTable(
+                    $("#" + safeId)
+                );
+
+            }
+
+        );
+
+
+        attachEventHandlers();
+
+    }
+
+
+    /*
+    =====================================================
+    INITIALIZE DATATABLE
+    =====================================================
+    */
+
+    function initializeEditableTable(table) {
+
+        table.DataTable({
+
+            destroy: true,
+
+            paging: true,
+
+            searching: true,
+
+            ordering: true,
+
+            pageLength: 10,
+
+            columnDefs: [
+
+                {
+                    targets: -1,
+                    orderable: false,
+                    searchable: false
+                }
+
+            ]
+
+        });
+
+    }
+
+
+    /*
+    =====================================================
+    EVENT HANDLERS
+    =====================================================
+    */
+
+    function attachEventHandlers() {
+
+
+        /*
+        EDIT CELL
+        */
+
+        $(".editable-cell")
+
+            .off("dblclick")
+
+            .on(
+
+                "dblclick",
+
+                function() {
+
+                    const cell =
+                        $(this);
+
+
+                    if (
+                        cell.find("input").length
+                    ) {
+                        return;
+                    }
+
+
+                    const oldValue =
+                        cell.text().trim();
+
+
+                    cell.html(`
+
+                        <input
+                            type="text"
+                            value="${escapeHtml(oldValue)}">
+
+                    `);
+
+
+                    const input =
+                        cell.find("input");
+
+
+                    input.focus();
+
+
+                    input.on(
+
+                        "blur",
+
+                        function() {
+
+                            const newValue =
+                                $(this)
+                                .val();
+
+                            cell.text(newValue);
+
+                            markTableChanged(
+                                cell.closest(".sheet-card")
+                            );
+
+                        }
+
+                    );
+
+
+                    input.on(
+
+                        "keydown",
+
+                        function(event) {
+
+                            if (
+                                event.key === "Enter"
+                            ) {
+
+                                $(this).blur();
+
+                            }
+
+
+                            if (
+                                event.key === "Escape"
+                            ) {
+
+                                cell.text(oldValue);
+
+                            }
+
+                        }
+
+                    );
+
+                }
+
+            );
+
+
+        /*
+        ADD ROW
+        */
+
+        $(".add-row-btn")
+
+            .off("click")
+
+            .on(
+
+                "click",
+
+                function() {
+
+                    const sheetName =
+                        $(this).data("sheet");
+
+
+                    addNewRow(sheetName);
+
+                }
+
+            );
+
+
+        /*
+        SAVE TABLE
+        */
+
+        $(".save-table-btn")
+
+            .off("click")
+
+            .on(
+
+                "click",
+
+                function() {
+
+                    const sheetName =
+                        $(this).data("sheet");
+
+
+                    saveTable(sheetName);
+
+                }
+
+            );
+
+
+        /*
+        DELETE ROW
+        */
+
+        $(".delete-row-btn")
+
+            .off("click")
+
+            .on(
+
+                "click",
+
+                function() {
+
+                    const button =
+                        $(this);
+
+
+                    const sheetCard =
+                        button.closest(".sheet-card");
+
+
+                    const sheetName =
+                        sheetCard.data("sheet");
+
+
+                    const row =
+                        button.closest("tr");
+
+
+                    deleteRow(
+                        sheetName,
+                        row
+                    );
+
+                }
+
+            );
+
+    }
+
+
+    /*
+    =====================================================
+    MARK TABLE CHANGED
+    =====================================================
+    */
+
+    function markTableChanged(sheetCard) {
+
+        sheetCard
+            .find(".save-table-btn")
+
+            .removeClass("btn-success")
+
+            .addClass("btn-warning")
+
+            .html(`
+
+                <i class="bi bi-save"></i>
+                Unsaved Changes
+
+            `);
+
+    }
+
+
+    /*
+    =====================================================
+    ADD NEW ROW
+    =====================================================
+    */
+
+    function addNewRow(sheetName) {
+
+        const sheet =
+            allTables[sheetName];
+
+
+        if (!sheet) return;
+
+
+        const headers =
+            sheet.headers;
+
+
+        const sheetCard =
+            $(
+                `.sheet-card[data-sheet="${sheetName}"]`
+            );
+
+
+        const table =
+            sheetCard.find("table");
+
+
+        const dataTable =
+            table.DataTable();
+
+
+        let newRow = [];
+
+
+        headers.forEach(
+            () => newRow.push("")
+        );
+
+
+        newRow.push(`
+
+            <button
+                class="btn btn-sm btn-outline-danger delete-row-btn">
+
+                <i class="bi bi-trash"></i>
+
+            </button>
+
+        `);
+
+
+        const node =
+            dataTable
+                .row
+                .add(newRow)
+                .draw(false)
+                .node();
+
+
+        $(node)
+            .attr(
+                "data-new-row",
+                "true"
+            );
+
+
+        $(node)
+            .find("td")
+            .not(":last")
+            .each(
+
+                function(columnIndex) {
+
+                    $(this)
+
+                        .addClass("editable-cell")
+
+                        .attr(
+                            "data-column-index",
+                            columnIndex
+                        );
+
+                }
+
+            );
+
+
+        attachEventHandlers();
+
+
+        markTableChanged(sheetCard);
+
+    }
+
+
+    /*
+    =====================================================
+    DELETE ROW
+    =====================================================
+    */
+
+    async function deleteRow(
+        sheetName,
+        row
+    ) {
+
+        const sheetCard =
+            row.closest(".sheet-card");
+
+
+        Swal.fire({
+
+            title: "Delete Row?",
+
+            text:
+                "This row will be permanently deleted.",
+
+            icon: "warning",
+
+            showCancelButton: true,
+
+            confirmButtonText:
+                "Yes, Delete",
+
+            confirmButtonColor:
+                "#dc3545"
+
+        })
+
+        .then(
+
+            async function(result) {
+
+                if (
+                    !result.isConfirmed
+                ) {
+                    return;
+                }
+
+
+                const table =
+                    sheetCard
+                    .find("table");
+
+
+                const dataTable =
+                    table.DataTable();
+
+
+                dataTable
+                    .row(row)
+                    .remove()
+                    .draw();
+
+
+                markTableChanged(
+                    sheetCard
+                );
+
+
+                Swal.fire({
+
+                    icon: "success",
+
+                    title: "Removed",
+
+                    text:
+                        "Row marked for deletion. Click Save Changes to update the spreadsheet.",
+
+                    timer: 1800,
+
+                    showConfirmButton: false
+
+                });
+
+            }
+
+        );
+
+    }
+
+
+    /*
+    =====================================================
+    COLLECT TABLE DATA
+    =====================================================
+    */
+
+    function getTableData(sheetName) {
+
+        const sheetCard =
+            $(
+                `.sheet-card[data-sheet="${sheetName}"]`
+            );
+
+
+        const table =
+            sheetCard.find("table");
+
+
+        const dataTable =
+            table.DataTable();
+
+
+        const rows = [];
+
+
+        dataTable.rows().every(
+
+            function() {
+
+                const rowNode =
+                    $(this.node());
+
+
+                const row = [];
+
+
+                rowNode
+
+                    .find("td")
+
+                    .not(":last")
+
+                    .each(
+
+                        function() {
+
+                            const input =
+                                $(this)
+                                .find("input");
+
+
+                            if (
+                                input.length
+                            ) {
+
+                                row.push(
+                                    input.val()
+                                );
+
+                            }
+                            else {
+
+                                row.push(
+                                    $(this)
+                                    .text()
+                                    .trim()
+                                );
+
+                            }
+
+                        }
+
+                    );
+
+
+                rows.push(row);
+
+            }
+
+        );
+
+
+        return rows;
+
+    }
+
+
+    /*
+    =====================================================
+    SAVE TABLE
+    =====================================================
+    */
+
+    async function saveTable(sheetName) {
+
+        const rows =
+            getTableData(sheetName);
+
+
+        showLoading(
+            "Saving changes..."
+        );
+
+
+        try {
+
+            const result =
+                await apiRequest({
+
+                    action:
+                        "SAVE_TABLE",
+
+                    sheetName:
+                        sheetName,
+
+                    rows:
+                        rows
+
+                });
+
+
+            if (
+                result.status !==
+                "success"
+            ) {
+
+                throw new Error(
+                    result.error ||
+                    "Failed to save"
+                );
+
+            }
+
+
+            Swal.fire({
+
+                icon: "success",
+
+                title: "Saved",
+
+                text:
+                    `"${sheetName}" updated successfully.`,
+
+                timer: 1800,
+
+                showConfirmButton: false
+
+            });
+
+
+            await loadAllTables();
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            Swal.fire({
+
+                icon: "error",
+
+                title: "Error",
+
+                text:
+                    error.message
+
+            });
+
+        }
+
+        finally {
+
+            hideLoading();
+
+        }
+
+    }
+
+
+    /*
+    =====================================================
+    REFRESH
+    =====================================================
+    */
+
+    $("#refreshBtn").on(
+
+        "click",
+
+        function() {
+
+            loadAllTables();
+
+        }
+
+    );
+
+
+    /*
+    =====================================================
+    INITIAL LOAD
+    =====================================================
+    */
+
+    $(document).ready(
+
+        function() {
+
+            loadAllTables();
+
+        }
+
+    );
+
+</script>
+
+</body>
+</html>
