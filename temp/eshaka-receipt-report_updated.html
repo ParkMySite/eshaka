@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Payment Report</title>
+    
+    <!-- Local CSS Resources -->
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="../css/select2.min.css">
+    <link rel="stylesheet" href="../css/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="../css/flatpickr.min.css">
+    <link rel="stylesheet" href="../css/sweetalert2.min.css">
+    <link rel="stylesheet" href="../css/common.css">
+    
+    <style>
+       
+        .content-pane {
+            background: white;
+            border-radius: 0 0 16px 16px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+        }
+        .filter-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            border: 1px solid #cbd5e1;
+            transition: 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0f3b6a;
+            box-shadow: 0 0 0 3px rgba(15, 59, 106, 0.1);
+        }
+        .btn-primary-custom {
+            background: #0f3b6a;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+        }
+        .btn-primary-custom:hover {
+            background: #0a2c46;
+            transform: translateY(-1px);
+        }
+        .btn-secondary-custom {
+            background: #64748b;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+        }
+        .btn-secondary-custom:hover {
+            background: #475569;
+        }
+        .btn-success-custom {
+            background: #16a34a;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            font-weight: 600;
+            border-radius: 40px;
+            transition: 0.2s;
+        }
+        .btn-success-custom:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+        .select2-container--bootstrap-5 .select2-selection {
+            border-radius: 10px !important;
+            border-color: #cbd5e1 !important;
+            min-height: 46px !important;
+        }
+        .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            line-height: 44px !important;
+        }
+        .stats-badge {
+            background: #e2e8f0;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-verified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-duplicate {
+            background: #f3e8ff;
+            color: #6d28d9;
+        }
+        .status-onhold {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+        .paid-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .paid-status.paid {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .paid-status.not-paid {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .paid-status.partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .report-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            padding-top: 8px;
+        }
+        .radio-group .form-check {
+            padding-left: 28px;
+        }
+        .radio-group .form-check-input:checked {
+            background-color: #0f3b6a;
+            border-color: #0f3b6a;
+        }
+        .radio-group .form-check-label {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+        /* Mobile-friendly horizontal scrolling for the wide report table */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        #reportTable {
+            min-width: 1250px;
+            width: max-content !important;
+        }
+
+        #reportTable th,
+        #reportTable td {
+            white-space: nowrap;
+        }
+
+        #reportTable th:nth-child(3),
+        #reportTable td:nth-child(3) {
+            min-width: 220px;
+            max-width: 320px;
+            white-space: normal;
+        }
+
+        .address-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .address-cell:hover {
+            overflow: visible;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+        .toast-custom {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            max-width: 450px;
+            width: calc(100% - 32px);
+            background: #1f1f1f;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            z-index: 1090;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+            text-align: center;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .toast-custom.show { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast-custom.error { 
+            background: #dc2626; 
+        }
+        .toast-custom.success { 
+            background: #16a34a; 
+        }
+        .toast-custom.info { 
+            background: #0f3b6a; 
+        }
+        .address-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 500px;
+            width: 90%;
+            padding: 24px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .address-popup.active {
+            display: block;
+        }
+        .address-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .address-popup-header h5 {
+            margin: 0;
+            color: #0f3b6a;
+        }
+        .address-popup-header .close-popup {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        .address-popup-header .close-popup:hover {
+            color: #dc2626;
+        }
+        .address-popup-body {
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+        .address-popup-body .address-line {
+            padding: 4px 0;
+        }
+        .address-popup-body .label {
+            font-weight: 600;
+            color: #64748b;
+            min-width: 80px;
+            display: inline-block;
+        }
+        .address-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+        .address-popup-overlay.active {
+            display: block;
+        }
+        @media (max-width: 480px) {
+            .content-pane { padding: 16px; }
+            .radio-group { flex-direction: column; gap: 8px; }
+            .report-actions { flex-direction: column; }
+            .report-actions .btn { width: 100%; }
+        }
+    
+        #reportTable tfoot td { white-space: nowrap; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="container-fluid" style="max-width: 98%; margin: 0 auto; padding: 16px;">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <i class="bi bi-file-earmark-text"></i>
+            <div>
+                <h1>Payment Report</h1>
+                <p>View paid and not paid users with filters</p>
+            </div>
+        </div>
+        <div>
+            <span class="stats-badge" id="recordCount">0 Records</span>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-pane">
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <label class="form-label">Receipt Category</label>
+                    <select id="filterCategory" class="form-select select2-filter">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Financial Year</label>
+                    <select id="filterYear" class="form-select select2-filter">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Receipt Status</label>
+                    <select id="filterStatus" class="form-select select2-filter">
+                        <option value="">All Status</option>
+                        <option value="Verified">Verified</option>
+                        <option value="Pending Verification">Pending Verification</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Duplicate">Duplicate</option>
+                        <option value="On Hold">On Hold</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Receipt Type</label>
+                    <div class="radio-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentType" id="paidUsers" value="paid">
+                            <label class="form-check-label" for="paidUsers">
+                                <i class="bi bi-check-circle-fill" style="color:#16a34a;"></i> Paid
+                            </label>
+                           
+                        </div>
+                         <div class="form-check">
+                                   <input class="form-check-input ms-3" type="radio" name="paymentType" id="partialUsers" value="partial">
+                                   <label class="form-check-label" for="partialUsers">
+                                   <i class="bi bi-exclamation-triangle text-warning"></i> Partially Paid
+                            </label>
+                              </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="paymentType" id="notPaidUsers" value="notpaid" checked>
+                            <label class="form-check-label" for="notPaidUsers">
+                                <i class="bi bi-x-circle-fill" style="color:#dc2626;"></i> Not Paid
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="report-actions">
+                        <button id="applyFilter" class="btn btn-primary-custom">
+                            <i class="bi bi-funnel"></i> Apply Filters
+                        </button>
+                        <button id="resetFilter" class="btn btn-secondary-custom">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                        <button id="exportBtn" class="btn btn-success-custom">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <h5 class="fs-6 mb-0"><i class="bi bi-list-ul"></i> Records</h5>
+            </div>
+            <div>
+                <span class="stats-badge" id="totalCount">Total: 0</span>
+                <span class="stats-badge ms-2" id="paidCount">Paid: 0</span>
+                <span class="stats-badge ms-2" id="notPaidCount">Not Paid: 0</span>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table id="reportTable" class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Branch ID</th>
+                        <th>Home ID</th>
+                        <th>Address</th>
+                        <th>Member Name</th>
+                        <th>Receipt No</th>
+                        <th>Category</th>
+                        <th>Financial Year</th>
+                        <th>Amount</th>
+                        <th>Receipt Amount</th>
+                        <th>Balance</th>
+                        <th>Receipt Status</th>
+                        <th>Receipt Type</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="13" class="text-center py-5 text-muted">
+                            <i class="bi bi-funnel fs-1"></i>
+                            <h6>Apply filters to load data</h6>
+                            <p>Select your filters and click "Apply Filters" to generate the report.</p>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary fw-bold">
+                        <td colspan="7" class="text-end">Overall Grand Total</td>
+                        <td id="grandTotalAmount" class="text-end">0.00</td>
+                        <td id="grandTotalReceiptAmount" class="text-end">0.00</td>
+                        <td id="grandTotalBalance" class="text-end">0.00</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Address Popup -->
+<div class="address-popup-overlay" id="addressPopupOverlay"></div>
+<div class="address-popup" id="addressPopup">
+    <div class="address-popup-header">
+        <h5><i class="bi bi-geo-alt"></i> Home Address</h5>
+        <button class="close-popup" id="closeAddressPopup">&times;</button>
+    </div>
+    <div class="address-popup-body" id="addressPopupBody">
+        <div class="address-line"><span class="label">Branch:</span> <span id="popupBranch">—</span></div>
+        <div class="address-line"><span class="label">Home ID:</span> <span id="popupHomeId">—</span></div>
+        <div class="address-line"><span class="label">Address:</span> <span id="popupAddress">—</span></div>
+        <div class="address-line"><span class="label">Area:</span> <span id="popupArea">—</span></div>
+        <div class="address-line"><span class="label">Location:</span> <span id="popupLocation">—</span></div>
+        <div class="address-line"><span class="label">Post Office:</span> <span id="popupPostOffice">—</span></div>
+        <div class="address-line"><span class="label">District:</span> <span id="popupDistrict">—</span></div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="liveToast" class="toast-custom">
+    <span class="toast-icon" id="toastIcon"><i class="bi bi-info-circle-fill"></i></span>
+    <span id="toastMsg">Message</span>
+    <button class="toast-close" onclick="hideToast()">&times;</button>
+</div>
+
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../js/dataTables.bootstrap5.min.js"></script>
+<script src="../js/select2.min.js"></script>
+<script src="../js/sweetalert2.all.min.js"></script>
+<script src="config.js"></script>
+
+<script>
+// ================= CONFIGURATION =================
+const PAYMENT_SPREADSHEET_ID = "1FKCX4TODUcQ_0o8xP14fGENYT17k4Mcm_rJe6eFSTjE";
+const MASTER_SPREADSHEET_ID = "1Q7fGIi2ky6b7cYt49ljwIwGEJv3kQ8pmz47bFaPBEDs";
+const DATA_SHEET_NAME = "Data";
+const MASTER_SHEET_NAME = "Master";
+const MEMBERS_SHEET_NAME = "Members";
+
+// Column mapping for Data sheet
+const COL = {
+    BRANCH_ID: 0,
+    HOME_ID: 1,
+    RECEIPT_NO: 2,
+    TRANSACTION_ID: 3,
+    CATEGORY: 4,
+    FINANCIAL_YEAR: 5,
+    SENDER_UPI: 6,
+    AMOUNT: 7,
+    RECEIPT_AMOUNT: 8,
+    BALANCE: 9,
+    PAYMENT_CONFIRM: 10,
+    REMARKS: 11,
+    TIME_STAMP: 12,
+    DATE: 13,
+    SCREENSHOT: 14,
+    SCREENSHOT_URL: 15,
+    OCR_TRANSACTION_ID: 16,
+    OCR_AMOUNT: 17,
+    OCR_DATE: 18,
+    OCR_UPI_ID: 19,
+    OCR_STATUS: 20,
+    OCR_TEXT: 21
+};
+
+// Master sheet columns
+const MASTER_COL = {
+    BRANCH: 0,
+    HOME_ID: 1,
+    ADDRESS_LINE_1: 2,
+    ADDRESS_LINE_2: 3,
+    AREA: 4,
+    LOCATION: 5,
+    POST_OFFICE: 6,
+    DISTRICT: 7,
+    STATUS: 8,
+    REMARKS: 9
+};
+
+// Members sheet columns
+const MEMBERS_COL = {
+    MEMBER_ID: 0,
+    RELATION: 1,
+    NAME: 2,
+    DOB: 3,
+    GENDER: 4,
+    CONTACT: 5,
+    EDUCATION: 6,
+    MARITAL_STATUS: 7,
+    PHOTO: 8,
+    REMARKS: 9,
+    BRANCH: 10,
+    HOME_ID: 11,
+    STATUS: 12,
+    JOB: 13
+};
+
+let dataTable = null;
+let allData = [];
+let masterData = [];
+let memberData = [];
+let toastTimeout = null;
+let receiptCategories = [];
+let financialYears = [];
+
+// ================= TOAST FUNCTIONS =================
+function showToast(msg, type = 'info', duration = 4000) {
+    const toast = document.getElementById('liveToast');
+    const msgSpan = document.getElementById('toastMsg');
+    const icon = document.getElementById('toastIcon');
+    
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+    }
+    
+    msgSpan.innerText = msg;
+    toast.className = 'toast-custom';
+    
+    if (type === 'error') {
+        toast.classList.add('error');
+        icon.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i>';
+    } else if (type === 'success') {
+        toast.classList.add('success');
+        icon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+    } else {
+        toast.classList.add('info');
+        icon.innerHTML = '<i class="bi bi-info-circle-fill"></i>';
+    }
+    
+    toast.classList.add('show');
+    
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        toastTimeout = null;
+    }, duration);
+}
+
+function hideToast() {
+    const toast = document.getElementById('liveToast');
+    toast.classList.remove('show');
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+    }
+}
+
+// ================= HELPER FUNCTIONS =================
+function escapeHtml(str) { 
+    if (!str) return ''; 
+    return String(str).replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;':m); 
+}
+
+function getStatusBadge(status) {
+    const statusMap = {
+        'Pending Verification': 'status-pending',
+        'Verified': 'status-verified',
+        'Rejected': 'status-rejected',
+        'Duplicate': 'status-duplicate',
+        'On Hold': 'status-onhold'
+    };
+    const cls = statusMap[status] || 'status-pending';
+    return `<span class="status-badge ${cls}">${escapeHtml(status || 'Pending Verification')}</span>`;
+}
+
+function getPaymentTypeBadge(balance, hasPayment) {
+    if (!hasPayment) {
+        return `<span class="paid-status not-paid"><i class="bi bi-x-circle"></i> Not Paid</span>`;
+    }
+    if (balance <= 0) {
+        return `<span class="paid-status paid"><i class="bi bi-check-circle"></i> Paid</span>`;
+    }
+    return `<span class="paid-status partial"><i class="bi bi-exclamation-triangle"></i> Partially Paid</span>`;
+}
+
+function buildAddress(row) {
+    const parts = [];
+    if (row[MASTER_COL.ADDRESS_LINE_1]) parts.push(row[MASTER_COL.ADDRESS_LINE_1]);
+    if (row[MASTER_COL.ADDRESS_LINE_2]) parts.push(row[MASTER_COL.ADDRESS_LINE_2]);
+    if (row[MASTER_COL.AREA]) parts.push(row[MASTER_COL.AREA]);
+    if (row[MASTER_COL.LOCATION]) parts.push(row[MASTER_COL.LOCATION]);
+    if (row[MASTER_COL.POST_OFFICE]) parts.push(row[MASTER_COL.POST_OFFICE]);
+    if (row[MASTER_COL.DISTRICT]) parts.push(row[MASTER_COL.DISTRICT]);
+    return parts.join(', ');
+}
+
+function getFullAddress(row) {
+    return {
+        branch: row[MASTER_COL.BRANCH] || '',
+        homeId: row[MASTER_COL.HOME_ID] || '',
+        address: buildAddress(row),
+        addressLine1: row[MASTER_COL.ADDRESS_LINE_1] || '',
+        addressLine2: row[MASTER_COL.ADDRESS_LINE_2] || '',
+        area: row[MASTER_COL.AREA] || '',
+        location: row[MASTER_COL.LOCATION] || '',
+        postOffice: row[MASTER_COL.POST_OFFICE] || '',
+        district: row[MASTER_COL.DISTRICT] || ''
+    };
+}
+
+// ================= FETCH DATA =================
+async function fetchData() {
+    try {
+        // Master is the authoritative source for the list of homes.
+        const masterUrl = `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SPREADSHEET_ID}/values/${MASTER_SHEET_NAME}!A:J?key=${API_KEY}&_=${Date.now()}`;
+        const masterResp = await fetch(masterUrl);
+        if (!masterResp.ok) throw new Error(`Master sheet request failed: ${masterResp.status}`);
+        const masterDataJson = await masterResp.json();
+        masterData = masterDataJson.values || [];
+
+        // Members are only used to display member names.
+        const membersUrl = `https://sheets.googleapis.com/v4/spreadsheets/${MASTER_SPREADSHEET_ID}/values/${MEMBERS_SHEET_NAME}!A:N?key=${API_KEY}&_=${Date.now()}`;
+        const membersResp = await fetch(membersUrl);
+        if (!membersResp.ok) throw new Error(`Members sheet request failed: ${membersResp.status}`);
+        const membersDataJson = await membersResp.json();
+        memberData = membersDataJson.values || [];
+
+        // Data sheet is used only to identify branch/home combinations
+        // that already have a payment record and to display payment details.
+        const paymentUrl = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/${DATA_SHEET_NAME}!A:N?key=${API_KEY}&_=${Date.now()}`;
+        const paymentResp = await fetch(paymentUrl);
+        if (!paymentResp.ok) throw new Error(`Payment Data sheet request failed: ${paymentResp.status}`);
+        const paymentDataJson = await paymentResp.json();
+        const paymentRows = paymentDataJson.values || [];
+
+        const normalizeKeyPart = value => String(value ?? '').trim();
+        const makeKey = (branch, homeId) =>
+            `${normalizeKeyPart(branch)}|${normalizeKeyPart(homeId)}`;
+
+        // ------------------------------------------------------------
+        // 1. Build Master map.
+        //    Branch = Master column A, Home ID = Master column B.
+        //    Address = Master columns C:H combined.
+        // ------------------------------------------------------------
+        const masterMap = new Map();
+        const masterHomes = [];
+
+        for (let i = 1; i < masterData.length; i++) {
+            const row = masterData[i] || [];
+            const branchId = normalizeKeyPart(row[MASTER_COL.BRANCH]);
+            const homeId = normalizeKeyPart(row[MASTER_COL.HOME_ID]);
+
+            if (!branchId || !homeId) continue;
+
+            const key = makeKey(branchId, homeId);
+
+            // If duplicate branch/home rows exist, keep the first Master row.
+            if (!masterMap.has(key)) {
+                masterMap.set(key, row);
+                masterHomes.push({
+                    key,
+                    branchId,
+                    homeId,
+                    masterRow: row
+                });
+            }
+        }
+
+        // ------------------------------------------------------------
+        // 2. Build member map using the same Branch + Home ID key.
+        // ------------------------------------------------------------
+        const memberMap = new Map();
+
+        for (let i = 1; i < memberData.length; i++) {
+            const row = memberData[i] || [];
+            const branchId = normalizeKeyPart(row[MEMBERS_COL.BRANCH]);
+            const homeId = normalizeKeyPart(row[MEMBERS_COL.HOME_ID]);
+
+            if (!branchId || !homeId) continue;
+
+            const key = makeKey(branchId, homeId);
+
+            if (!memberMap.has(key)) {
+                memberMap.set(key, []);
+            }
+
+            const name = normalizeKeyPart(row[MEMBERS_COL.NAME]);
+            if (name) memberMap.get(key).push(name);
+        }
+
+        // ------------------------------------------------------------
+        // 3. Build payment map.
+        //    IMPORTANT:
+        //    A branch/home combination in Data is considered "paid/existing"
+        //    for the Not Paid calculation, irrespective of receipt status.
+        // ------------------------------------------------------------
+        const paymentMap = new Map();
+
+        for (let i = 1; i < paymentRows.length; i++) {
+            const row = paymentRows[i] || [];
+            const branchId = normalizeKeyPart(row[COL.BRANCH_ID]);
+            const homeId = normalizeKeyPart(row[COL.HOME_ID]);
+
+            if (!branchId || !homeId || !row[COL.RECEIPT_NO]) continue;
+
+            const key = makeKey(branchId, homeId);
+
+            const payment = {
+                rowIndex: i,
+                branchId,
+                homeId,
+                receiptNo: row[COL.RECEIPT_NO] || '',
+                transactionId: row[COL.TRANSACTION_ID] || '',
+                category: row[COL.CATEGORY] || '',
+                financialYear: row[COL.FINANCIAL_YEAR] || '',
+                senderUpi: row[COL.SENDER_UPI] || '',
+                amount: parseFloat(row[COL.AMOUNT]) || 0,
+                receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
+                balance: parseFloat(row[COL.BALANCE]) || 0,
+                paymentConfirm: row[COL.PAYMENT_CONFIRM] || 'Pending Verification',
+                remarks: row[COL.REMARKS] || '',
+                date: row[COL.DATE] || ''
+            };
+
+            // Keep the latest Data record for a branch/home combination.
+            paymentMap.set(key, payment);
+        }
+
+        // ------------------------------------------------------------
+        // 4. Build the report datasets.
+        //
+        // NOT PAID: Master is authoritative. Every Master Branch + Home ID
+        // combination is included, and combinations found in Data are excluded.
+        //
+        // PAID: Data/receipt sheet is authoritative. Every receipt record
+        // matching the selected criteria is included, even when its Branch +
+        // Home ID combination is NOT present in Master. Multiple receipt
+        // records for the same Branch + Home ID are preserved.
+        // ------------------------------------------------------------
+        const combinedData = [];
+
+        // Master-only records are used for the Not Paid report.
+        for (const home of masterHomes) {
+            combinedData.push({
+                key: home.key,
+                branchId: home.branchId,
+                homeId: home.homeId,
+                receiptNo: '', transactionId: '', category: '', financialYear: '',
+                senderUpi: '', amount: 0, receiptAmount: 0, balance: 0,
+                paymentConfirm: '', remarks: '', date: '',
+                masterRow: home.masterRow,
+                members: memberMap.get(home.key) || [],
+                hasPayment: false,
+                isDataRecord: false,
+                rowIndex: null
+            });
+        }
+
+        // Every Data/receipt record is added separately. If it exists in
+        // Master, use Master address/member information; otherwise still
+        // show the complete receipt record with blank Master-only fields.
+        for (let i = 1; i < paymentRows.length; i++) {
+            const row = paymentRows[i] || [];
+            const branchId = normalizeKeyPart(row[COL.BRANCH_ID]);
+            const homeId = normalizeKeyPart(row[COL.HOME_ID]);
+            if (!branchId || !homeId || !row[COL.RECEIPT_NO]) continue;
+
+            const key = makeKey(branchId, homeId);
+            combinedData.push({
+                key,
+                branchId,
+                homeId,
+                receiptNo: row[COL.RECEIPT_NO] || '',
+                transactionId: row[COL.TRANSACTION_ID] || '',
+                category: row[COL.CATEGORY] || '',
+                financialYear: row[COL.FINANCIAL_YEAR] || '',
+                senderUpi: row[COL.SENDER_UPI] || '',
+                amount: parseFloat(row[COL.AMOUNT]) || 0,
+                receiptAmount: parseFloat(row[COL.RECEIPT_AMOUNT]) || 0,
+                balance: parseFloat(row[COL.BALANCE]) || 0,
+                paymentConfirm: row[COL.PAYMENT_CONFIRM] || 'Pending Verification',
+                remarks: row[COL.REMARKS] || '',
+                date: row[COL.DATE] || '',
+                masterRow: masterMap.get(key) || null,
+                members: memberMap.get(key) || [],
+                hasPayment: true,
+                isDataRecord: true,
+                rowIndex: i
+            });
+        }
+
+        allData = combinedData;
+        return combinedData;
+
+    } catch (e) {
+        console.error('Error fetching data:', e);
+        showToast('Failed to load data. Please try again.', 'error', 4000);
+        return [];
+    }
+}
+
+// ================= FETCH FILTER OPTIONS =================
+async function fetchFilterOptions() {
+    try {
+        const [categories, years] = await Promise.all([
+            fetchReceiptCategories(),
+            fetchFinancialYears()
+        ]);
+        receiptCategories = categories;
+        financialYears = years;
+        return { categories, years };
+    } catch (e) {
+        console.error('Error fetching filter options:', e);
+        return { categories: [], years: [] };
+    }
+}
+
+async function fetchReceiptCategories() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/'Receipt Category and Amount'!B:B?key=${API_KEY}&_=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const rows = data.values || [];
+        const categories = [];
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i] && rows[i][0]) {
+                categories.push(rows[i][0]);
+            }
+        }
+        return categories;
+    } catch (e) {
+        console.error('Error fetching receipt categories:', e);
+        return [];
+    }
+}
+
+async function fetchFinancialYears() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${PAYMENT_SPREADSHEET_ID}/values/'Financial Years'!A:A?key=${API_KEY}&_=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        const rows = data.values || [];
+        const years = [];
+        for (let i = 1; i < rows.length; i++) {
+            if (rows[i] && rows[i][0]) {
+                years.push(rows[i][0]);
+            }
+        }
+        return years;
+    } catch (e) {
+        console.error('Error fetching financial years:', e);
+        return [];
+    }
+}
+
+// ================= POPULATE FILTERS =================
+function populateFilters(categories, years) {
+    // Populate Category filter
+    const catSelect = document.getElementById('filterCategory');
+    catSelect.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach(cat => {
+        catSelect.innerHTML += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
+    });
+
+    // Populate Year filter
+    const yearSelect = document.getElementById('filterYear');
+    yearSelect.innerHTML = '<option value="">All Years</option>';
+    years.forEach(year => {
+        yearSelect.innerHTML += `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`;
+    });
+
+    // Initialize Select2
+    $('#filterCategory').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'All Categories',
+        allowClear: true,
+        width: '100%'
+    });
+
+    $('#filterYear').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'All Years',
+        allowClear: true,
+        width: '100%'
+    });
+
+    $('#filterStatus').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'All Status',
+        allowClear: true,
+        width: '100%'
+    });
+}
+
+// ================= RENDER TABLE =================
+function renderTable(data) {
+    if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+        $('#reportTable tbody').empty();
+    }
+
+    if (!data || data.length === 0) {
+        $('#reportTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1"></i>
+            <h6>No records found</h6>
+            <p>Try adjusting your filters</p>
+        </td></tr>`);
+        updateStats(data);
+        return;
+    }
+
+    updateStats(data);
+
+    dataTable = $('#reportTable').DataTable({
+        data: data,
+        columns: [
+            { 
+                data: null,
+                render: function(row) {
+                    return escapeHtml(row.branchId);
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return escapeHtml(row.homeId);
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    if (row.masterRow) {
+                        const fullAddress = getFullAddress(row.masterRow);
+                        const shortAddr = fullAddress.address.length > 40 ? 
+                            fullAddress.address.substring(0, 40) + '...' : 
+                            fullAddress.address;
+                        return `<span class="address-cell address-link" data-branch="${escapeHtml(row.branchId)}" data-home="${escapeHtml(row.homeId)}" style="cursor:pointer;color:#0f3b6a;text-decoration:underline;" title="Click to view full address">
+                            <i class="bi bi-geo-alt"></i> ${escapeHtml(shortAddr)}
+                        </span>`;
+                    }
+                    return '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    if (row.members && row.members.length > 0) {
+                        return escapeHtml(row.members.join(', '));
+                    }
+                    return '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.receiptNo ? `<span style="font-family:monospace;">${escapeHtml(row.receiptNo)}</span>` : '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.category || '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.financialYear || '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.hasPayment ? `₹${row.amount.toFixed(2)}` : '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.hasPayment ? `₹${row.receiptAmount.toFixed(2)}` : '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.hasPayment ? `₹${row.balance.toFixed(2)}` : '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return row.hasPayment ? getStatusBadge(row.paymentConfirm) : '<span class="text-muted">—</span>';
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    return getPaymentTypeBadge(row.balance, row.hasPayment);
+                }
+            },
+            { 
+                data: null,
+                render: function(row) {
+                    if (row.date) {
+                        const d = new Date(row.date);
+                        if (!isNaN(d)) return d.toLocaleDateString('en-IN');
+                        return row.date;
+                    }
+                    return '<span class="text-muted">—</span>';
+                }
+            }
+        ],
+        order: [[0, 'asc']],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+        language: { 
+            search: "Filter:",
+            searchPlaceholder: "Search records...",
+            emptyTable: "No records found"
+        },
+        scrollX: true,
+        autoWidth: true,
+        dom: '<"d-flex justify-content-between align-items-center flex-wrap"lf>tip'
+    });
+
+    // Overall Grand Total for the currently displayed report.
+    const grandTotalAmount = data.reduce((sum, row) => sum + (row.hasPayment ? (parseFloat(row.amount) || 0) : 0), 0);
+    const grandTotalReceiptAmount = data.reduce((sum, row) => sum + (row.hasPayment ? (parseFloat(row.receiptAmount) || 0) : 0), 0);
+    const grandTotalBalance = data.reduce((sum, row) => sum + (row.hasPayment ? (parseFloat(row.balance) || 0) : 0), 0);
+    document.getElementById('grandTotalAmount').textContent = grandTotalAmount.toFixed(2);
+    document.getElementById('grandTotalReceiptAmount').textContent = grandTotalReceiptAmount.toFixed(2);
+    document.getElementById('grandTotalBalance').textContent = grandTotalBalance.toFixed(2);
+}
+
+// ================= UPDATE STATS =================
+function updateStats(data) {
+    const total = data.length;
+    const paid = data.filter(d => d.hasPayment && d.balance <= 0).length;
+    const notPaid = data.filter(d => !d.hasPayment || d.balance > 0).length;
+    
+    document.getElementById('recordCount').textContent = `${total} Records`;
+    document.getElementById('totalCount').textContent = `Total: ${total}`;
+    document.getElementById('paidCount').textContent = `Paid: ${paid}`;
+    document.getElementById('notPaidCount').textContent = `Not Paid: ${notPaid}`;
+}
+
+// ================= ADDRESS POPUP =================
+function showAddressPopup(branchId, homeId) {
+    const popup = document.getElementById('addressPopup');
+    const overlay = document.getElementById('addressPopupOverlay');
+    
+    // Find the data
+    const key = `${String(branchId ?? '').trim()}|${String(homeId ?? '').trim()}`;
+    const record = allData.find(d => d.key === key);
+    if (!record || !record.masterRow) {
+        showToast('Address not found.', 'error', 3000);
+        return;
+    }
+    
+    const fullAddress = getFullAddress(record.masterRow);
+    
+    document.getElementById('popupBranch').textContent = fullAddress.branch;
+    document.getElementById('popupHomeId').textContent = fullAddress.homeId;
+    document.getElementById('popupAddress').textContent = fullAddress.address;
+    document.getElementById('popupArea').textContent = fullAddress.area || '—';
+    document.getElementById('popupLocation').textContent = fullAddress.location || '—';
+    document.getElementById('popupPostOffice').textContent = fullAddress.postOffice || '—';
+    document.getElementById('popupDistrict').textContent = fullAddress.district || '—';
+    
+    popup.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAddressPopup() {
+    document.getElementById('addressPopup').classList.remove('active');
+    document.getElementById('addressPopupOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// ================= APPLY FILTERS =================
+async function applyFilters() {
+    const category = document.getElementById('filterCategory').value;
+    const year = document.getElementById('filterYear').value;
+    const status = document.getElementById('filterStatus').value;
+    const paymentType = document.querySelector('input[name="paymentType"]:checked').value;
+
+    const button = document.getElementById('applyFilter');
+    const originalButtonHtml = button.innerHTML;
+
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
+    showToast('Loading latest data...', 'info', 2000);
+
+    try {
+        // Fetch fresh data ONLY when the user presses Apply Filters.
+        let data = await fetchData();
+
+        // ------------------------------------------------------------
+        // NOT PAID:
+        // Master is the source of truth.
+        // A home is Not Paid when its Branch + Home ID combination
+        // does not exist in the Data sheet.
+        //
+        // Category / Financial Year / Receipt Status are payment-side
+        // fields and therefore do not change the Master-vs-Data
+        // Not Paid calculation.
+        // ------------------------------------------------------------
+        if (paymentType === 'notpaid') {
+            data = data.filter(d => !d.hasPayment);
+        }
+
+        // ------------------------------------------------------------
+        // PAID:
+        // A Master combination that exists in Data is an existing
+        // payment combination. Balance <= 0 is shown as Paid;
+        // balance > 0 is shown as Partial/Not Paid in the badge.
+        // ------------------------------------------------------------
+        if (paymentType === 'paid') {
+            data = data.filter(d => d.hasPayment && d.balance <= 0);
+        }
+
+        if (paymentType === 'partial') {
+            // Partially Paid = receipt exists and balance is still outstanding.
+            data = data.filter(d => d.isDataRecord && d.balance > 0 && d.receiptAmount > 0);
+        }
+
+        // Receipt-side criteria apply to actual Data/receipt records.
+        // Master-only Not Paid records remain unaffected by these fields.
+        if (category) {
+            data = data.filter(d => !d.isDataRecord || d.category === category);
+        }
+
+        if (year) {
+            data = data.filter(d => !d.isDataRecord || d.financialYear === year);
+        }
+
+        if (status) {
+            data = data.filter(d => !d.isDataRecord || d.paymentConfirm === status);
+        }
+
+        renderTable(data);
+        showToast(`Showing ${data.length} records`, 'success', 2000);
+
+    } catch (e) {
+        console.error('Error applying filters:', e);
+        showToast('Failed to load data. Please try again.', 'error', 4000);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalButtonHtml;
+    }
+}
+
+// ================= RESET FILTERS =================
+function resetFilters() {
+    document.getElementById('filterCategory').value = '';
+    $('#filterCategory').trigger('change');
+    document.getElementById('filterYear').value = '';
+    $('#filterYear').trigger('change');
+    document.getElementById('filterStatus').value = '';
+    $('#filterStatus').trigger('change');
+    document.getElementById('paidUsers').checked = false;
+        document.getElementById('partialUsers').checked = false;
+        document.getElementById('notPaidUsers').checked = true;
+    
+    // Clear table
+    if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+    }
+    $('#reportTable tbody').html(`<tr><td colspan="13" class="text-center py-5 text-muted">
+        <i class="bi bi-funnel fs-1"></i>
+        <h6>Apply filters to load data</h6>
+        <p>Select your filters and click "Apply Filters" to generate the report.</p>
+    </td></tr>`);
+    document.getElementById('recordCount').textContent = '0 Records';
+    document.getElementById('totalCount').textContent = 'Total: 0';
+    document.getElementById('paidCount').textContent = 'Paid: 0';
+    document.getElementById('notPaidCount').textContent = 'Not Paid: 0';
+    
+    showToast('Filters reset', 'info', 2000);
+}
+
+// ================= EXPORT CSV =================
+function exportCSV() {
+    const data = dataTable ? dataTable.data().toArray() : [];
+    
+    if (data.length === 0) {
+        showToast('No data to export.', 'error', 3000);
+        return;
+    }
+    
+    const headers = ['Branch ID', 'Home ID', 'Address', 'Member Name', 'Receipt No', 'Category', 'Financial Year', 'Amount', 'Receipt Amount', 'Balance', 'Receipt Status', 'Receipt Type', 'Date'];
+    
+    let csv = headers.join(',') + '\n';
+    
+    data.forEach(row => {
+        const address = row.masterRow ? getFullAddress(row.masterRow).address : '';
+        const members = row.members && row.members.length > 0 ? row.members.join('; ') : '';
+        const paymentType = row.hasPayment ? (row.balance <= 0 ? 'Paid' : 'Partial') : 'Not Paid';
+        
+        const values = [
+            row.branchId,
+            row.homeId,
+            `"${address}"`,
+            `"${members}"`,
+            row.receiptNo || '',
+            row.category || '',
+            row.financialYear || '',
+            row.hasPayment ? row.amount.toFixed(2) : '',
+            row.hasPayment ? row.receiptAmount.toFixed(2) : '',
+            row.hasPayment ? row.balance.toFixed(2) : '',
+            row.paymentConfirm || '',
+            paymentType,
+            row.date || ''
+        ];
+        csv += values.join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `receipt_report_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    showToast('CSV exported successfully!', 'success', 3000);
+}
+
+// ================= INIT =================
+async function init() {
+    try {
+        // Default report type is Not Paid.
+        // Do NOT generate/load the report automatically on page load.
+        document.getElementById('paidUsers').checked = false;
+        document.getElementById('partialUsers').checked = false;
+        document.getElementById('notPaidUsers').checked = true;
+
+        // Filter option lists can be loaded on page load, but the actual
+        // report data is fetched only after the user clicks Apply Filters.
+        const { categories, years } = await fetchFilterOptions();
+        populateFilters(categories, years);
+
+        console.log('Filter initialization complete!');
+        console.log('Categories:', categories);
+        console.log('Years:', years);
+
+    } catch (e) {
+        console.error('Error initializing:', e);
+        showToast('Failed to load filter options. You can still try Apply Filters.', 'error', 4000);
+    }
+}
+
+// ================= EVENT LISTENERS =================
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if jQuery and Select2 are loaded
+    if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+        init();
+    } else {
+        const checkReady = setInterval(function() {
+            if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+                clearInterval(checkReady);
+                init();
+            }
+        }, 100);
+    }
+    
+    // Event listeners
+    document.getElementById('applyFilter').addEventListener('click', applyFilters);
+    document.getElementById('resetFilter').addEventListener('click', resetFilters);
+    document.getElementById('exportBtn').addEventListener('click', exportCSV);
+    
+    // Address popup close
+    document.getElementById('closeAddressPopup').addEventListener('click', closeAddressPopup);
+
+    // Address cells use data attributes so branch/home IDs containing
+    // quotes or special characters cannot break the click handler.
+    document.getElementById('reportTable').addEventListener('click', function(e) {
+        const addressCell = e.target.closest('.address-link');
+        if (addressCell) {
+            showAddressPopup(addressCell.dataset.branch, addressCell.dataset.home);
+        }
+    });
+    document.getElementById('addressPopupOverlay').addEventListener('click', closeAddressPopup);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const popup = document.getElementById('addressPopup');
+            if (popup.classList.contains('active')) {
+                closeAddressPopup();
+            }
+        }
+    });
+    
+    // Payment type changes do NOT automatically generate a report.
+    // The user must click "Apply Filters".
+});
+</script>
+</body>
+</html>
